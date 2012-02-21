@@ -7,7 +7,7 @@
 #include "rs232.h"
 
 //#define CONNECTED
-#define DEBUG
+//#define DEBUG
 
 class ReadThread : public QThread
 {
