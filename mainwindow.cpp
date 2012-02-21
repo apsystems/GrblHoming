@@ -398,6 +398,7 @@ void MainWindow::receiveList(QString msg)
 
 void MainWindow::receiveAxis(QString axis)
 {
+    axis.replace("^\\s+"," ");
     UpdateAxis(axis.trimmed());
     ui->listWidget->addItem(axis.trimmed());
     if(ui->listWidget->count()>12)
