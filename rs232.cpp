@@ -4,6 +4,7 @@ RS232::RS232()
 {
 }
 #ifdef Q_WS_X11
+
 int Cport[12],
     error;
 
@@ -88,6 +89,7 @@ void RS232::CloseComport(int comport_number)
 }
 
 #else
+
 HANDLE Cport[16];
 
 char comports[16][10]={"\\\\.\\COM1",  "\\\\.\\COM2",  "\\\\.\\COM3",  "\\\\.\\COM4",

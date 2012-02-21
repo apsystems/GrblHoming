@@ -3,8 +3,7 @@
 
 #include <QMainWindow>
 #include <QFileDialog>
-#include <QTextStream>
-#include <QThread>
+#include "readthread.h"
 
 namespace Ui {
 class MainWindow;
@@ -18,6 +17,9 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
+signals:
+    void Stop();
+
 private slots:
     void incX();
     void incY();
@@ -25,17 +27,21 @@ private slots:
     void decX();
     void decY();
     void decZ();
-    void adjust();
-    void send();
+    void adjustBtn();
+    void sendBtn();
     void open();
     void begin();
     void stop();
+    void receiveList(QString msg);
+    void receiveMsg(QString msg);
+    void receiveAxis(QString axis);
     
 private:
     Ui::MainWindow *ui;
     int SendJog(float X, float Y, float Z);
     int SendGcode(char* line, int length);
     void UpdateAxis(QString code);
+    ReadThread readthread;
 };
 
 #endif // MAINWINDOW_H

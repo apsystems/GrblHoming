@@ -2,9 +2,7 @@
 #include "ui_mainwindow.h"
 #include "rs232.h"
 
-#define DEBUG
-
-bool interrupt=false;
+//#define DEBUG
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -18,11 +16,16 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->IncXBtn,SIGNAL(clicked()),this,SLOT(incX()));
     connect(ui->IncYBtn,SIGNAL(clicked()),this,SLOT(incY()));
     connect(ui->IncZBtn,SIGNAL(clicked()),this,SLOT(incZ()));
-    connect(ui->rbutSend,SIGNAL(toggled(bool)),this,SLOT(send()));
-    connect(ui->rbutAdj,SIGNAL(toggled(bool)),this,SLOT(adjust()));
+    connect(ui->rbutSend,SIGNAL(toggled(bool)),this,SLOT(sendBtn()));
+    connect(ui->rbutAdj,SIGNAL(toggled(bool)),this,SLOT(adjustBtn()));
     connect(ui->openFile,SIGNAL(clicked()),this,SLOT(open()));
     connect(ui->Begin,SIGNAL(clicked()),this,SLOT(begin()));
     connect(ui->Stop,SIGNAL(clicked()),this,SLOT(stop()));
+    connect(ui->Stop,SIGNAL(clicked()),&readthread,SLOT(stopsig()));
+    connect(this,SIGNAL(Stop()),&readthread,SLOT(stopsig()));
+    connect(&readthread,SIGNAL(addList(QString)),this,SLOT(receiveList(QString)));
+    connect(&readthread,SIGNAL(sendMsg(QString)),this,SLOT(receiveMsg(QString)));
+    connect(&readthread,SIGNAL(sendAxis(QString)),this,SLOT(receiveAxis(QString)));
     ui->comboStep->addItem("0.0001");
     ui->comboStep->addItem("0.001");
     ui->comboStep->addItem("0.01");
@@ -141,23 +144,25 @@ void MainWindow::decZ()
         ui->centralWidget->setStatusTip("Connection error.");
 }
 
-void MainWindow::send()
+void MainWindow::sendBtn()
 {
     if(ui->rbutSend->isChecked())
     {
         ui->groupBoxAxis->setEnabled(false);
         ui->groupBoxSend->setEnabled(true);
         ui->rbutAdj->setChecked(false);
+        ui->returnHome->setEnabled(true);
     }
 }
 
-void MainWindow::adjust()
+void MainWindow::adjustBtn()
 {
     if(ui->rbutAdj->isChecked())
     {
         ui->groupBoxAxis->setEnabled(true);
         ui->groupBoxSend->setEnabled(false);
         ui->rbutSend->setChecked(false);
+        ui->returnHome->setEnabled(false);
     }
 }
 
@@ -178,57 +183,39 @@ void MainWindow::open()
 
 void MainWindow::begin()
 {
-    int i;
-    QFile file(ui->filePath->text());
-    if(file.open(QFile::ReadOnly))
-    {
-        QTextStream code(&file);
-        QString strline = code.readLine();
-
-        while((strline!=NULL)&&(!interrupt))
-        {
-            char line[50];
-            if(strline.at(0)=='(')
-            {}
-            else
-            {
-                strline.append("\n");
-                for(i=0;i<strline.length();i++)
-                    line[i]=strline.at(i).toAscii();
-#ifndef DEBUG
-                if(!SendGcode(line,strline.length()))
-                {
-                    ui->centralWidget->setStatusTip("Connection error.");
-                    break;
-                }
-                else
-#endif
-                {
-                    UpdateAxis(strline);
-                    ui->listWidget->addItem(strline.trimmed());
-                    MainWindow::repaint();
-                    if(ui->listWidget->count()>12)
-                    {
-                        delete ui->listWidget->item(0);
-                    }
-                }
-            }
-            strline=code.readLine();
-        }
-        file.close();
-    }
-    //QTextStream file = QTextStream(ui->filePath->text(),QIODevice::OpenMode=QIODevice::ReadWrite);
+    ui->listWidget->clear();
+    readthread.goHome=ui->returnHome->QAbstractButton::isChecked();
+    readthread.path=ui->filePath->text();
+    readthread.cport_nr=ui->cmbPort->currentIndex();
+    readthread.start();
 }
 
 void MainWindow::stop()
 {
     ui->centralWidget->setStatusTip("Process stopped.");
-    interrupt=true;
-
+    emit Stop();
 }
 
 int MainWindow::SendJog(float X, float Y, float Z)
 {
+    /*QString strline;
+    char line[35];
+    int i;
+    strline="G00 X";
+    strline.append(QString::number(X,'g',6));
+    strline.append(" Y");
+    strline.append(QString::number(Y,'g',6));
+    strline.append(" Z");
+    strline.append(QString::number(Z,'g',6));
+    for(i=0;i<strline.length();i++)
+    {
+        line[i]=strline.at(i).toAscii();
+    }
+    line[i++]='\n';
+    if(SendGcode(line,i))
+        return(1);
+    else
+        return (0);*/
     QString strline;
     char line[35];
     int i;
@@ -255,7 +242,7 @@ int MainWindow::SendGcode(char* line, int length)
     int cport_nr = ui->cmbPort->currentIndex();
     //ui->lineEdit->setText(QString::number(cport_nr,10));
     int i, n=0;
-    char buf[50],buff[]="\n";
+    char buf[50];
     //ui->lineEdit->setText(strline);
     for(i=0;i<50;i++)
         buf[i]=0;
@@ -265,13 +252,17 @@ int MainWindow::SendGcode(char* line, int length)
     }
     else
     {
-        port.SendBuf(cport_nr,buff,1);
+#ifdef Q_WS_WIN32
+        buf[0]='\n';
+        port.SendBuf(cport_nr,buf,1);
+        buf[0]=0;
+#endif
         while(n==0)
         {
             //usleep(100000);  /* sleep for 100 milliSeconds */
             n = port.PollComport(cport_nr, buf, 50);
 #ifdef Q_WS_X11
-            usleep(100000);  /* sleep for 100 milliSeconds */
+            usleep(100000);  // sleep for 100 milliSeconds
 #else
             Sleep(100);
 #endif
@@ -321,8 +312,8 @@ int MainWindow::SendGcode(char* line, int length)
             }
 #endif
             //->usleep(50000);  /* sleep for 100 milliSeconds */
-            while((n==0)||(port.find_txt(buf)==0))
-            //while (n==0)
+            //while((n==0)||(port.find_txt(buf)==0))
+            while (n==0)
             {
                 n = port.PollComport(cport_nr, buf, 50);
                 //usleep(50000);
@@ -390,3 +381,28 @@ void MainWindow::UpdateAxis(QString code)
     }
 }
 
+void MainWindow::receiveMsg(QString msg)
+{
+    ui->centralWidget->setStatusTip(msg);
+}
+
+void MainWindow::receiveList(QString msg)
+{
+    ui->listWidget->addItem(msg.trimmed());
+    if(ui->listWidget->count()>12)
+    {
+        delete ui->listWidget->item(0);
+    }
+    MainWindow::repaint();
+}
+
+void MainWindow::receiveAxis(QString axis)
+{
+    UpdateAxis(axis.trimmed());
+    ui->listWidget->addItem(axis.trimmed());
+    if(ui->listWidget->count()>12)
+    {
+        delete ui->listWidget->item(0);
+    }
+    MainWindow::repaint();
+}

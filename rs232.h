@@ -1,6 +1,8 @@
 #ifndef RS232_H
 #define RS232_H
 
+#include <QtGlobal>
+
 #include <stdio.h>
 #include <string.h>
 #ifdef Q_WS_X11

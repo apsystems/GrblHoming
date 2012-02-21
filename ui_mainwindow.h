@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created: Tue 14. Feb 13:31:08 2012
+** Created: Mon 20. Feb 15:48:27 2012
 **      by: Qt User Interface Compiler version 4.8.0
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -14,6 +14,7 @@
 #include <QtGui/QAction>
 #include <QtGui/QApplication>
 #include <QtGui/QButtonGroup>
+#include <QtGui/QCheckBox>
 #include <QtGui/QComboBox>
 #include <QtGui/QGridLayout>
 #include <QtGui/QGroupBox>
@@ -69,7 +70,7 @@ public:
     QLabel *lblStep;
     QComboBox *comboStep;
     QGroupBox *groupBoxSend;
-    QWidget *widget;
+    QWidget *layoutWidget6;
     QGridLayout *gridLayout_3;
     QPushButton *openFile;
     QLineEdit *filePath;
@@ -77,10 +78,11 @@ public:
     QSpacerItem *horizontalSpacer_2;
     QSpacerItem *horizontalSpacer;
     QPushButton *Stop;
-    QWidget *widget1;
+    QWidget *layoutWidget7;
     QVBoxLayout *verticalLayout_4;
     QRadioButton *rbutSend;
     QRadioButton *rbutAdj;
+    QCheckBox *returnHome;
     QStatusBar *statusBar;
 
     void setupUi(QMainWindow *MainWindow)
@@ -94,7 +96,7 @@ public:
         centralWidget->setObjectName(QString::fromUtf8("centralWidget"));
         layoutWidget = new QWidget(centralWidget);
         layoutWidget->setObjectName(QString::fromUtf8("layoutWidget"));
-        layoutWidget->setGeometry(QRect(40, 10, 91, 41));
+        layoutWidget->setGeometry(QRect(40, 20, 91, 48));
         verticalLayout = new QVBoxLayout(layoutWidget);
         verticalLayout->setSpacing(6);
         verticalLayout->setContentsMargins(11, 11, 11, 11);
@@ -200,7 +202,7 @@ public:
 
         listWidget = new QListWidget(centralWidget);
         listWidget->setObjectName(QString::fromUtf8("listWidget"));
-        listWidget->setGeometry(QRect(20, 150, 371, 221));
+        listWidget->setGeometry(QRect(20, 170, 371, 161));
         groupBoxAxis = new QGroupBox(centralWidget);
         groupBoxAxis->setObjectName(QString::fromUtf8("groupBoxAxis"));
         groupBoxAxis->setEnabled(false);
@@ -306,26 +308,26 @@ public:
 
         groupBoxSend = new QGroupBox(centralWidget);
         groupBoxSend->setObjectName(QString::fromUtf8("groupBoxSend"));
-        groupBoxSend->setGeometry(QRect(10, 60, 391, 80));
-        widget = new QWidget(groupBoxSend);
-        widget->setObjectName(QString::fromUtf8("widget"));
-        widget->setGeometry(QRect(10, 20, 371, 54));
-        gridLayout_3 = new QGridLayout(widget);
+        groupBoxSend->setGeometry(QRect(10, 70, 391, 80));
+        layoutWidget6 = new QWidget(groupBoxSend);
+        layoutWidget6->setObjectName(QString::fromUtf8("layoutWidget6"));
+        layoutWidget6->setGeometry(QRect(10, 20, 371, 60));
+        gridLayout_3 = new QGridLayout(layoutWidget6);
         gridLayout_3->setSpacing(6);
         gridLayout_3->setContentsMargins(11, 11, 11, 11);
         gridLayout_3->setObjectName(QString::fromUtf8("gridLayout_3"));
         gridLayout_3->setContentsMargins(0, 0, 0, 0);
-        openFile = new QPushButton(widget);
+        openFile = new QPushButton(layoutWidget6);
         openFile->setObjectName(QString::fromUtf8("openFile"));
 
         gridLayout_3->addWidget(openFile, 0, 0, 1, 1);
 
-        filePath = new QLineEdit(widget);
+        filePath = new QLineEdit(layoutWidget6);
         filePath->setObjectName(QString::fromUtf8("filePath"));
 
         gridLayout_3->addWidget(filePath, 0, 1, 1, 3);
 
-        Begin = new QPushButton(widget);
+        Begin = new QPushButton(layoutWidget6);
         Begin->setObjectName(QString::fromUtf8("Begin"));
 
         gridLayout_3->addWidget(Begin, 1, 0, 1, 1);
@@ -338,44 +340,43 @@ public:
 
         gridLayout_3->addItem(horizontalSpacer, 1, 3, 1, 1);
 
-        Stop = new QPushButton(widget);
+        Stop = new QPushButton(layoutWidget6);
         Stop->setObjectName(QString::fromUtf8("Stop"));
 
         gridLayout_3->addWidget(Stop, 1, 2, 1, 1);
 
-        widget1 = new QWidget(centralWidget);
-        widget1->setObjectName(QString::fromUtf8("widget1"));
-        widget1->setGeometry(QRect(160, 10, 98, 42));
-        verticalLayout_4 = new QVBoxLayout(widget1);
+        layoutWidget7 = new QWidget(centralWidget);
+        layoutWidget7->setObjectName(QString::fromUtf8("layoutWidget7"));
+        layoutWidget7->setGeometry(QRect(160, 20, 211, 50));
+        verticalLayout_4 = new QVBoxLayout(layoutWidget7);
         verticalLayout_4->setSpacing(6);
         verticalLayout_4->setContentsMargins(11, 11, 11, 11);
         verticalLayout_4->setObjectName(QString::fromUtf8("verticalLayout_4"));
         verticalLayout_4->setContentsMargins(0, 0, 0, 0);
-        rbutSend = new QRadioButton(widget1);
+        rbutSend = new QRadioButton(layoutWidget7);
         rbutSend->setObjectName(QString::fromUtf8("rbutSend"));
         rbutSend->setChecked(true);
 
         verticalLayout_4->addWidget(rbutSend);
 
-        rbutAdj = new QRadioButton(widget1);
+        rbutAdj = new QRadioButton(layoutWidget7);
         rbutAdj->setObjectName(QString::fromUtf8("rbutAdj"));
 
         verticalLayout_4->addWidget(rbutAdj);
 
+        returnHome = new QCheckBox(centralWidget);
+        returnHome->setObjectName(QString::fromUtf8("returnHome"));
+        returnHome->setGeometry(QRect(20, 350, 371, 17));
+        returnHome->setChecked(true);
         MainWindow->setCentralWidget(centralWidget);
         layoutWidget->raise();
         layoutWidget->raise();
         layoutWidget->raise();
-        rbutSend->raise();
-        rbutAdj->raise();
-        lblPort->raise();
+        layoutWidget->raise();
         listWidget->raise();
         groupBoxAxis->raise();
-        openFile->raise();
-        Begin->raise();
-        Stop->raise();
-        filePath->raise();
         groupBoxSend->raise();
+        returnHome->raise();
         statusBar = new QStatusBar(MainWindow);
         statusBar->setObjectName(QString::fromUtf8("statusBar"));
         MainWindow->setStatusBar(statusBar);
@@ -410,6 +411,7 @@ public:
         Stop->setText(QApplication::translate("MainWindow", "Stop", 0, QApplication::UnicodeUTF8));
         rbutSend->setText(QApplication::translate("MainWindow", "Send Gcode", 0, QApplication::UnicodeUTF8));
         rbutAdj->setText(QApplication::translate("MainWindow", "Adjust machine", 0, QApplication::UnicodeUTF8));
+        returnHome->setText(QApplication::translate("MainWindow", "Return Home after completion", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 
 };
