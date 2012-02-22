@@ -1,6 +1,5 @@
 #include "readthread.h"
 
-//#define DEBUG
 
 ReadThread::ReadThread(QObject *parent) :
     QThread(parent)
@@ -32,7 +31,7 @@ void ReadThread::run()
     {
         QTextStream code(&file);
         QString strline = code.readLine();
-#ifndef CONNECTED
+#ifndef DISCONNECTED
         if(port.OpenComport(cport_nr))
             emit sendMsg("Error opening port");
         else
@@ -40,7 +39,7 @@ void ReadThread::run()
         {
             while((strline!=NULL)&&(!abort))
             {
-                char line[50];
+                char line[75];
                 if(strline.at(0)=='(')
                 {}//ignore comments
                 else
@@ -48,7 +47,7 @@ void ReadThread::run()
                     strline.append("\n");
                     for(i=0;i<strline.length();i++)
                         line[i]=strline.at(i).toAscii();
-#ifndef CONNECTED
+#ifndef DISCONNECTED
 #ifdef Q_WS_WIN32
                     buf[0]='\n';
                     port.SendBuf(cport_nr,buf,1);
@@ -91,7 +90,7 @@ void ReadThread::run()
                     }
 #endif
                     //while(n==0)
-#ifndef CONNECTED
+#ifndef DISCONNECTED
                     //while(((n==0)||(port.find_txt(buf)==0))&&(!abort))
                     while((n==0)&&(!abort))
                     {
@@ -125,7 +124,7 @@ void ReadThread::run()
                 addList("Gone Home.");
             }
         }
-#ifndef CONNECTED
+#ifndef DISCONNECTED
         port.CloseComport(cport_nr);
 #endif
     }

@@ -6,7 +6,7 @@
 #include <QFile>
 #include "rs232.h"
 
-#define CONNECTED
+#define DISCONNECTED
 #define DEBUG
 
 class ReadThread : public QThread

@@ -2,7 +2,6 @@
 #include "ui_mainwindow.h"
 #include "rs232.h"
 
-//#define DEBUG
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -230,20 +229,24 @@ int MainWindow::SendJog(float X, float Y, float Z)
         line[i]=strline.at(i).toAscii();
     }
     line[i++]='\n';
+#ifndef DISCONNECTED
+    {
     if(SendGcode(line,i))
         return(1);
     else
         return (0);
+    }
+#else
+    return(1);
+#endif
 }
 
 int MainWindow::SendGcode(char* line, int length)
 {
     RS232 port = RS232();
     int cport_nr = ui->cmbPort->currentIndex();
-    //ui->lineEdit->setText(QString::number(cport_nr,10));
     int i, n=0;
     char buf[50];
-    //ui->lineEdit->setText(strline);
     for(i=0;i<50;i++)
         buf[i]=0;
     if(port.OpenComport(cport_nr))
@@ -259,82 +262,42 @@ int MainWindow::SendGcode(char* line, int length)
 #endif
         while(n==0)
         {
-            //usleep(100000);  /* sleep for 100 milliSeconds */
+            //usleep(100000);  // sleep for 100 milliSeconds
             n = port.PollComport(cport_nr, buf, 50);
 #ifdef Q_WS_X11
             usleep(100000);  // sleep for 100 milliSeconds
 #else
             Sleep(100);
 #endif
-            //perror("esperando\n");
-            /*if(n > 0)
-            {
-                buf[n] = 0;   // always put a "null" at the end of a string!
-                for(i=0; i < n; i++)
-                {
-                    if(buf[i] < 32)  // replace unreadable control-codes by dots
-                    {
-                        buf[i] = '.';
-                    }
-                }
-                printf("received %i bytes: %s\n", n, (char *)buf);
-                printf("%s\n",(char *)buf);
-            }
-            else
-            {
-                printf("received %i bytes.\n", n);
-            }*/
         }
-        //perror("Success\n");
-        //while(!exit)
-        {
-            //usleep(150000);
-            port.SendBuf(cport_nr,line,length);
-            //->usleep(50000);
-            n = port.PollComport(cport_nr, buf, 50);
+        //usleep(150000);
+        port.SendBuf(cport_nr,line,length);
+        //->usleep(50000);
+        n = port.PollComport(cport_nr, buf, 50);
 #ifdef DEBUG
-            if(n > 0)
+        if(n > 0)
+        {
+            buf[n] = 0;   // always put a "null" at the end of a string!
+            for(i=0; i < n; i++)
             {
-                buf[n] = 0;   // always put a "null" at the end of a string!
-                for(i=0; i < n; i++)
+                if(buf[i] < 32)  // replace unreadable control-codes by dots
                 {
-                    if(buf[i] < 32)  // replace unreadable control-codes by dots
-                    {
-                        buf[i] = '.';
-                    }
+                    buf[i] = '.';
                 }
-                printf("received %i bytes: %s\n", n, (char *)buf);
-                printf("%s\n",(char *)buf);
             }
-            else
-            {
-                printf("received %i bytes.\n", n);
-            }
+            printf("received %i bytes: %s\n", n, (char *)buf);
+            printf("%s\n",(char *)buf);
+        }
+        else
+        {
+            printf("received %i bytes.\n", n);
+        }
 #endif
-            //->usleep(50000);  /* sleep for 100 milliSeconds */
-            //while((n==0)||(port.find_txt(buf)==0))
-            while (n==0)
-            {
-                n = port.PollComport(cport_nr, buf, 50);
-                //usleep(50000);
-                /*if(n > 0)
-                {
-                    buf[n] = 0;   // always put a "null" at the end of a string!
-                    for(i=0; i < n; i++)
-                    {
-                        if(buf[i] < 32)  // replace unreadable control-codes by dots
-                        {
-                            buf[i] = '.';
-                        }
-                    }
-                    printf("Last received %i bytes: %s\n", n, (char *)buf);
-                    printf("%s\n",(char *)buf);
-                }
-                else
-                {
-                    printf("Last received %i bytes.\n", n);
-                }*/
-            }
+        //->usleep(50000);  // sleep for 100 milliSeconds
+        //while((n==0)||(port.find_txt(buf)==0))
+        while (n==0)
+        {
+            n = port.PollComport(cport_nr, buf, 50);
         }
         port.CloseComport(cport_nr);
     }
@@ -344,40 +307,29 @@ int MainWindow::SendGcode(char* line, int length)
 void MainWindow::UpdateAxis(QString code)
 {
     QStringList list;
-    list = code.split(QRegExp("\\s+"),QString::SkipEmptyParts);
-    if((list.at(0)=="G00")||(list.at(0)=="G01"))
+    code = code.trimmed();
+    code.toUpper();
+    if(code.indexOf(QRegExp("[XYZ]"))!=-1)
     {
-        if(list.count()==2)
+        list = code.split(QRegExp("\\s+"),QString::SkipEmptyParts);
+        QString s;
+        foreach(s,list)
         {
-            if(list.at(1).at(0)=='Z')
-                ui->lcdNumberZ->display(list.at(1).mid(1,-1).toFloat(0));
-        }
-        else if(list.count()==3)
-        {
-            if(list.at(1).at(0)=='X')
+            if(s.indexOf('X')!=-1)
             {
-                ui->lcdNumberX->display(list.at(1).mid(1,-1).toFloat(0));
-                ui->lcdNumberY->display(list.at(2).mid(1,-1).toFloat(0));
+                ui->lcdNumberX->display(s.mid(1,-1).toFloat());
             }
-            //if(list.at(1).at(0)=='Z')
+            else if(s.indexOf('Y')!=-1)
+            {
+                ui->lcdNumberY->display(s.mid(1,-1).toFloat());
+            }
+            else if(s.indexOf('Z')!=-1)
+            {
+                ui->lcdNumberZ->display(s.mid(1,-1).toFloat());
+            }
             else
-                ui->lcdNumberZ->display(list.at(1).mid(1,-1).toFloat(0));
-            /*if(list.at(2).length()>0)
-                if(list.at(2).at(0)=='Y')
-                    ui->lcdNumberY->display(list.at(2).mid(1,-1).toFloat(0));*/
+            {}
         }
-        else if(list.count()==4)
-        {
-            if(list.at(1).at(0)=='X')
-            {
-                ui->lcdNumberX->display(list.at(1).mid(1,-1).toFloat(0));
-            //if(list.at(2).at(0)=='Y')
-                ui->lcdNumberY->display(list.at(2).mid(1,-1).toFloat(0));
-            }
-            if(list.at(3).at(0)=='Z')
-                    ui->lcdNumberZ->display(list.at(3).mid(1,-1).toFloat(0));
-        }
-        else{}
     }
 }
 
@@ -398,7 +350,7 @@ void MainWindow::receiveList(QString msg)
 
 void MainWindow::receiveAxis(QString axis)
 {
-    axis.replace("^\\s+"," ");
+    axis.replace(QRegExp("\\s+")," ");
     UpdateAxis(axis.trimmed());
     ui->listWidget->addItem(axis.trimmed());
     if(ui->listWidget->count()>12)
