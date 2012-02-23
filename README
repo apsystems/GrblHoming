@@ -1,5 +1,14 @@
 Gcode sender, monitor and homing tool for GRBL for Windows and Linux systems.
 
-Known bugs:
+V1.0b
 
-- There's a problem updating the dials with some code formats.
+Bug fixes
+
+- Corrected a bug in the adjusting script.
+
+V1.0a
+
+Bug fixes
+
+- Fixed a bug reading some file formats that avoided the dials from updating.
+
