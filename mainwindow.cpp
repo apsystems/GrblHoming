@@ -79,7 +79,7 @@ MainWindow::~MainWindow()
 
 void MainWindow::incX()
 {
-    if(SendJog(ui->lcdNumberX->value(),ui->lcdNumberY->value(),ui->lcdNumberZ->value()))
+    if(SendJog(ui->lcdNumberX->value()+ui->comboStep->currentText().toFloat(),ui->lcdNumberY->value(),ui->lcdNumberZ->value()))
     {
         ui->lcdNumberX->display(ui->lcdNumberX->value()+ui->comboStep->currentText().toFloat());
         ui->centralWidget->setStatusTip("");
@@ -90,7 +90,7 @@ void MainWindow::incX()
 
 void MainWindow::incY()
 {
-    if(SendJog(ui->lcdNumberX->value(),ui->lcdNumberY->value(),ui->lcdNumberZ->value()))
+    if(SendJog(ui->lcdNumberX->value(),ui->lcdNumberY->value()+ui->comboStep->currentText().toFloat(),ui->lcdNumberZ->value()))
     {
         ui->lcdNumberY->display(ui->lcdNumberY->value()+ui->comboStep->currentText().toFloat());
         ui->centralWidget->setStatusTip("");
@@ -101,7 +101,7 @@ void MainWindow::incY()
 
 void MainWindow::incZ()
 {
-    if(SendJog(ui->lcdNumberX->value(),ui->lcdNumberY->value(),ui->lcdNumberZ->value()))
+    if(SendJog(ui->lcdNumberX->value(),ui->lcdNumberY->value(),ui->lcdNumberZ->value()+ui->comboStep->currentText().toFloat()))
     {
         ui->lcdNumberZ->display(ui->lcdNumberZ->value()+ui->comboStep->currentText().toFloat());
         ui->centralWidget->setStatusTip("");
@@ -112,7 +112,7 @@ void MainWindow::incZ()
 
 void MainWindow::decX()
 {
-    if(SendJog(ui->lcdNumberX->value(),ui->lcdNumberY->value(),ui->lcdNumberZ->value()))
+    if(SendJog(ui->lcdNumberX->value()-ui->comboStep->currentText().toFloat(),ui->lcdNumberY->value(),ui->lcdNumberZ->value()))
     {
         ui->lcdNumberX->display(ui->lcdNumberX->value()-ui->comboStep->currentText().toFloat());
         ui->centralWidget->setStatusTip("");
@@ -123,7 +123,7 @@ void MainWindow::decX()
 
 void MainWindow::decY()
 {
-    if(SendJog(ui->lcdNumberX->value(),ui->lcdNumberY->value(),ui->lcdNumberZ->value()))
+    if(SendJog(ui->lcdNumberX->value(),ui->lcdNumberY->value()-ui->comboStep->currentText().toFloat(),ui->lcdNumberZ->value()))
     {
         ui->lcdNumberY->display(ui->lcdNumberY->value()-ui->comboStep->currentText().toFloat());
         ui->centralWidget->setStatusTip("");
@@ -134,7 +134,7 @@ void MainWindow::decY()
 
 void MainWindow::decZ()
 {
-    if(SendJog(ui->lcdNumberX->value(),ui->lcdNumberY->value(),ui->lcdNumberZ->value()))
+    if(SendJog(ui->lcdNumberX->value(),ui->lcdNumberY->value(),ui->lcdNumberZ->value()-ui->comboStep->currentText().toFloat()))
     {
         ui->lcdNumberZ->display(ui->lcdNumberZ->value()-ui->comboStep->currentText().toFloat());
         ui->centralWidget->setStatusTip("");
