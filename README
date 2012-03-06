@@ -1,5 +1,11 @@
 Gcode sender, monitor and homing tool for GRBL for Windows and Linux systems.
 
+V1.0c
+
+Bug fixes
+
+- Corrected a problem when adjusting axis that caused all axis to move at the same time. Caused grbl starting in incremental programming.
+
 V1.0b
 
 Bug fixes
