@@ -1,35 +1,66 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "rs232.h"
 
+//#define DEBUG
+
+QStringList lista;
+//Options opt();
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    portOpen=false;
     ui->setupUi(this);
-    MainWindow::setFixedSize(670,400);
+    readSettings();
+    //ui->btnGoChange->setEnabled(toolChange);
+    //ui->rbutManual->setVisible(false);
+    //ui->groupBoxFav->setVisible(false);
+    ui->comboFav->setVisible(false);
+    //buttons
+    connect(ui->btnOpenPort,SIGNAL(clicked()),this,SLOT(openPort()));
+    connect(ui->btnGRBL,SIGNAL(clicked()),this,SLOT(setGRBL()));
+        //Adjust
     connect(ui->DecXBtn,SIGNAL(clicked()),this,SLOT(decX()));
     connect(ui->DecYBtn,SIGNAL(clicked()),this,SLOT(decY()));
     connect(ui->DecZBtn,SIGNAL(clicked()),this,SLOT(decZ()));
     connect(ui->IncXBtn,SIGNAL(clicked()),this,SLOT(incX()));
     connect(ui->IncYBtn,SIGNAL(clicked()),this,SLOT(incY()));
     connect(ui->IncZBtn,SIGNAL(clicked()),this,SLOT(incZ()));
-    connect(ui->rbutSend,SIGNAL(toggled(bool)),this,SLOT(sendBtn()));
-    connect(ui->rbutAdj,SIGNAL(toggled(bool)),this,SLOT(adjustBtn()));
-    connect(ui->openFile,SIGNAL(clicked()),this,SLOT(open()));
+    connect(ui->ResetButton,SIGNAL(clicked()),this,SLOT(reset()));
+        //Manual
+    connect(ui->btnGoChange,SIGNAL(clicked()),this,SLOT(gotoToolChange()));
+    connect(ui->btnGo,SIGNAL(clicked()),this,SLOT(gotoXYZ()));
+    connect(ui->btnHome,SIGNAL(clicked()),this,SLOT(gotoHome()));
+        //Send Gcode
     connect(ui->Begin,SIGNAL(clicked()),this,SLOT(begin()));
+    connect(ui->openFile,SIGNAL(clicked()),this,SLOT(openFile()));
     connect(ui->Stop,SIGNAL(clicked()),this,SLOT(stop()));
     connect(ui->Stop,SIGNAL(clicked()),&readthread,SLOT(stopsig()));
-    connect(this,SIGNAL(Stop()),&readthread,SLOT(stopsig()));
+    //radio buttons
+    connect(ui->rbutAdj,SIGNAL(toggled(bool)),this,SLOT(adjustRBtn()));
+    connect(ui->rbutManual,SIGNAL(toggled(bool)),this,SLOT(manualRBtn()));
+    connect(ui->rbutSend,SIGNAL(toggled(bool)),this,SLOT(sendRBtn()));
+    //check box
+    connect(ui->SpindleOn,SIGNAL(toggled(bool)),this,SLOT(toggleSpindle()));
+    //communications
+        //options
+    connect(&opt,SIGNAL(sendSettings(int)),this,SLOT(setSettings(int)));
+    connect(&opt,SIGNAL(toolCoord(float[])),this,SLOT(setTCCoord(float[])));
+        //thread
     connect(&readthread,SIGNAL(addList(QString)),this,SLOT(receiveList(QString)));
     connect(&readthread,SIGNAL(sendMsg(QString)),this,SLOT(receiveMsg(QString)));
     connect(&readthread,SIGNAL(sendAxis(QString)),this,SLOT(receiveAxis(QString)));
-    ui->comboStep->addItem("0.0001");
-    ui->comboStep->addItem("0.001");
+    connect(this,SIGNAL(Stop()),&readthread,SLOT(stopsig()));
+    // menu bar
+    connect(ui->actionOptions,SIGNAL(triggered()),this,SLOT(getOptions()));
+    connect(ui->actionAbout,SIGNAL(triggered()),this,SLOT(showAbout()));
+
+    fillFavList();
     ui->comboStep->addItem("0.01");
     ui->comboStep->addItem("0.1");
     ui->comboStep->addItem("1");
+    ui->comboStep->addItem("10");
     ui->Begin->setEnabled(false);
     ui->Stop->setEnabled(false);
 #ifdef Q_WS_X11
@@ -69,52 +100,48 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->cmbPort->setCurrentIndex(11);
 #endif
 #endif
-
+    styleSheet = ui->btnOpenPort->styleSheet();
 }
 
 MainWindow::~MainWindow()
 {
+    if(this->portOpen)
+        port.CloseComport(port_nr);
     delete ui;
 }
 
-void MainWindow::incX()
+void MainWindow::adjustRBtn()
 {
-    if(SendJog(ui->comboStep->currentText().toFloat(),0,0))
+    if(ui->rbutAdj->isChecked())
     {
-        ui->lcdNumberX->display(ui->lcdNumberX->value()+ui->comboStep->currentText().toFloat());
-        ui->centralWidget->setStatusTip("");
+        ui->groupBoxAxis->setEnabled(true);
+        ui->groupBoxSend->setEnabled(false);
+        ui->groupBoxFav->setEnabled(false);
     }
-    else
-        ui->centralWidget->setStatusTip("Connection error.");
 }
 
-void MainWindow::incY()
+void MainWindow::begin()
 {
-    if(SendJog(0,ui->comboStep->currentText().toFloat(),0))
-    {
-        ui->lcdNumberY->display(ui->lcdNumberY->value()+ui->comboStep->currentText().toFloat());
-        ui->centralWidget->setStatusTip("");
-    }
-    else
-        ui->centralWidget->setStatusTip("Connection error.");
-}
-
-void MainWindow::incZ()
-{
-    if(SendJog(0,0,ui->comboStep->currentText().toFloat()))
-    {
-        ui->lcdNumberZ->display(ui->lcdNumberZ->value()+ui->comboStep->currentText().toFloat());
-        ui->centralWidget->setStatusTip("");
-    }
-    else
-        ui->centralWidget->setStatusTip("Connection error.");
+    ui->statusList->clear();
+    readthread.goHome=this->goHome;
+    readthread.path=ui->filePath->text();
+    readthread.port=this->port;
+    readthread.port_nr=port_nr;
+    readthread.toolChange=this->toolChange;
+    for(int i=0;i<3;i++)
+        readthread.toolChangeXYZ[i]=this->toolChangeXYZ[i];
+    readthread.start();
 }
 
 void MainWindow::decX()
 {
-    if(SendJog(-ui->comboStep->currentText().toFloat(),0,0))
+    float coord=-ui->comboStep->currentText().toFloat();
+    if(invX)
+        coord =-coord;
+    if(SendJog(QString("G01 X")
+               .append(QString::number(coord))))
     {
-        ui->lcdNumberX->display(ui->lcdNumberX->value()-ui->comboStep->currentText().toFloat());
+        ui->lcdNumberX->display(ui->lcdNumberX->value()+coord);
         ui->centralWidget->setStatusTip("");
     }
     else
@@ -123,9 +150,13 @@ void MainWindow::decX()
 
 void MainWindow::decY()
 {
-    if(SendJog(0,-ui->comboStep->currentText().toFloat(),0))
+    float coord=-ui->comboStep->currentText().toFloat();
+    if(invY)
+        coord=-coord;
+    if(SendJog(QString("G01 Y")
+               .append(QString::number(coord))))
     {
-        ui->lcdNumberY->display(ui->lcdNumberY->value()-ui->comboStep->currentText().toFloat());
+        ui->lcdNumberY->display(ui->lcdNumberY->value()+coord);
         ui->centralWidget->setStatusTip("");
     }
     else
@@ -134,38 +165,150 @@ void MainWindow::decY()
 
 void MainWindow::decZ()
 {
-    if(SendJog(0,0,-ui->comboStep->currentText().toFloat()))
+    float coord=-ui->comboStep->currentText().toFloat();
+    if(invZ)
+        coord=-coord;
+    if(SendJog(QString("G01 Z")
+               .append(QString::number(coord)).append(" F260")))
     {
-        ui->lcdNumberZ->display(ui->lcdNumberZ->value()-ui->comboStep->currentText().toFloat());
+        ui->lcdNumberZ->display(ui->lcdNumberZ->value()+coord);
         ui->centralWidget->setStatusTip("");
     }
     else
         ui->centralWidget->setStatusTip("Connection error.");
 }
 
-void MainWindow::sendBtn()
+void MainWindow::fillFavList()
 {
-    if(ui->rbutSend->isChecked())
+    QFile file("favs.txt");
+    file.open(QIODevice::ReadWrite|QIODevice::Text);
+    QTextStream in(&file);
+    QString line = in.readLine();
+    while(line!=NULL)
+    {
+        lista.append(line);
+        QString X=line.mid(0,line.indexOf('\t'));
+        line=line.mid(line.indexOf('\t')+1,-1);
+        QString Y=line.mid(0,line.indexOf('\t'));
+        line=line.mid(line.indexOf('\t')+1,-1);
+        QString Z=line.mid(0,line.indexOf('\t'));
+        line=line.mid(line.indexOf('\t')+1,-1).trimmed();
+        line.replace(QRegExp("\\t+")," ");
+        line.append(" (");
+        line.append(X).append(", ");
+        line.append(Y).append(", ");
+        line.append(Z).append(")");
+        ui->comboFav->addItem(line);
+        line=in.readLine();
+    }
+    file.close();
+    connect(ui->comboFav,SIGNAL(currentIndexChanged(int)),this,SLOT(selectFav(int)));
+}
+
+void MainWindow::getOptions()
+{
+    opt.readFile();
+    opt.exec();
+
+}
+
+void MainWindow::gotoToolChange()
+{
+#ifndef DISCONNECTED
+    QString line = "G00 X";
+    line.append(QString::number(toolChangeXYZ[0])).append(" Y");
+    line.append(QString::number(toolChangeXYZ[1])).append(" Z");
+    line.append(QString::number(toolChangeXYZ[2])).append(" F250").append("\r");
+    SendGcode(line);
+#endif
+}
+
+void MainWindow::gotoHome()
+{
+#ifndef DISCONNECTED
+    SendGcode("G28\r");
+    //SendGcode("G00 X0 Y0 Z0 F250\n\r");
+#endif
+}
+
+void MainWindow::gotoXYZ()
+{
+    QString line = ui->Command->text().append("\r");
+#ifndef DISCONNECTED
+    if(SendGcode(line))
+    {
+        ui->statusList->addItem(line.mid(0,line.length()-2));
+        line=line.mid(line.indexOf("X",Qt::CaseInsensitive)+1,-1);
+        ui->lcdNumberX->display((line.mid(0,line.indexOf(" ")).toFloat()));
+    }
+    else
+    {
+        ui->statusList->addItem("Bad command.");
+    }
+#else
+    ui->statusList->addItem(line.mid(0,line.length()-2));
+#endif
+    if(ui->statusList->count()>LINE_COUNT)
+        delete ui->statusList->item(0);
+    ui->Command->setText("");
+}
+
+void MainWindow::incX()
+{
+    float coord=ui->comboStep->currentText().toFloat();
+    if(invX)
+        coord=-coord;
+    if(SendJog(QString("G01 X")
+               .append(QString::number(coord))))
+    {
+        ui->lcdNumberX->display(ui->lcdNumberX->value()+coord);
+        ui->centralWidget->setStatusTip("");
+    }
+    else
+        ui->centralWidget->setStatusTip("Connection error.");
+}
+
+void MainWindow::incY()
+{
+    float coord=ui->comboStep->currentText().toFloat();
+    if(invY)
+        coord=-coord;
+    if(SendJog(QString("G01 Y")
+               .append(QString::number(coord))))
+    {
+        ui->lcdNumberY->display(ui->lcdNumberY->value()+coord);
+        ui->centralWidget->setStatusTip("");
+    }
+    else
+        ui->centralWidget->setStatusTip("Connection error.");
+}
+
+void MainWindow::incZ()
+{
+    float coord=ui->comboStep->currentText().toFloat();
+    if(invZ)
+        coord=-coord;
+    if(SendJog(QString("G01 Z")
+               .append(QString::number(coord).append(" F260"))))
+    {
+        ui->lcdNumberZ->display(ui->lcdNumberZ->value()+coord);
+        ui->centralWidget->setStatusTip("");
+    }
+    else
+        ui->centralWidget->setStatusTip("Connection error.");
+}
+
+void MainWindow::manualRBtn()
+{
+    if(ui->rbutManual->isChecked())
     {
         ui->groupBoxAxis->setEnabled(false);
-        ui->groupBoxSend->setEnabled(true);
-        ui->rbutAdj->setChecked(false);
-        ui->returnHome->setEnabled(true);
-    }
-}
-
-void MainWindow::adjustBtn()
-{
-    if(ui->rbutAdj->isChecked())
-    {
-        ui->groupBoxAxis->setEnabled(true);
         ui->groupBoxSend->setEnabled(false);
-        ui->rbutSend->setChecked(false);
-        ui->returnHome->setEnabled(false);
+        ui->groupBoxFav->setEnabled(true);
     }
 }
 
-void MainWindow::open()
+void MainWindow::openFile()
 {
     ui->filePath->setText(QFileDialog::getOpenFileName(this,"Open file","",".Nc files (*.nc)"));
     if(ui->filePath->text()!="")
@@ -180,101 +323,155 @@ void MainWindow::open()
     }
 }
 
-void MainWindow::begin()
+void MainWindow::openPort()
 {
-    ui->listWidget->clear();
-    readthread.goHome=ui->returnHome->QAbstractButton::isChecked();
-    readthread.path=ui->filePath->text();
-    readthread.cport_nr=ui->cmbPort->currentIndex();
-    readthread.start();
-}
-
-void MainWindow::stop()
-{
-    ui->centralWidget->setStatusTip("Process stopped.");
-    emit Stop();
-}
-
-int MainWindow::SendJog(float X, float Y, float Z)
-{
-    /*QString strline;
-    char line[35];
-    int i;
-    strline="G00 X";
-    strline.append(QString::number(X,'g',6));
-    strline.append(" Y");
-    strline.append(QString::number(Y,'g',6));
-    strline.append(" Z");
-    strline.append(QString::number(Z,'g',6));
-    for(i=0;i<strline.length();i++)
+    port_nr=ui->cmbPort->currentIndex();
+    if(!portOpen)
     {
-        line[i]=strline.at(i).toAscii();
-    }
-    line[i++]='\n';
-    if(SendGcode(line,i))
-        return(1);
-    else
-        return (0);*/
-    QString strline;
-    char line[35];
-    int i;
-    strline="G00 X";
-    strline.append(QString::number(X,'g',6));
-    strline.append(" Y");
-    strline.append(QString::number(Y,'g',6));
-    strline.append(" Z");
-    strline.append(QString::number(Z,'g',6));
-    for(i=0;i<strline.length();i++)
-    {
-        line[i]=strline.at(i).toAscii();
-    }
-    line[i++]='\n';
 #ifndef DISCONNECTED
-    {
-    if(SendGcode(line,i))
-        return(1);
-    else
-        return (0);
-    }
+        port.Reset(port_nr);
+        if(!port.OpenComport(port_nr))
+        {
+            ui->groupBoxOptions->setEnabled(true);
+            ui->btnGRBL->setEnabled(true);
+            ui->statusList->setEnabled(true);
+            portOpen=true;
+            ui->btnOpenPort->setText("Close");
+            ui->btnOpenPort->setStyleSheet("* { background-color: rgb(255,125,100) }");
+            ui->cmbPort->setEnabled(false);
+            ui->groupBoxSend->setEnabled(true);
+        }
+        else
+            QMessageBox(QMessageBox::Critical,"Error","Could not open port.",QMessageBox::Ok).exec();
 #else
-    return(1);
+        ui->groupBoxOptions->setEnabled(true);
+        ui->btnGRBL->setEnabled(true);
+        ui->statusList->setEnabled(true);
+        portOpen=true;
+        ui->btnOpenPort->setText("Close");
+        ui->btnOpenPort->setStyleSheet("* { background-color: rgb(255,125,100) }");
+        ui->cmbPort->setEnabled(false);
+        ui->groupBoxSend->setEnabled(true);
+#endif
+    }
+    else
+    {
+#ifndef DISCONNECTED
+        port.CloseComport(port_nr);
+#endif
+        ui->rbutSend->toggle();
+        ui->cmbPort->setEnabled(true);
+        ui->btnOpenPort->setText("Open");
+        ui->btnOpenPort->setStyleSheet(styleSheet);
+        ui->groupBoxOptions->setEnabled(false);
+        ui->groupBoxSend->setEnabled(false);
+        ui->btnGRBL->setEnabled(false);
+        ui->statusList->setEnabled(false);
+        portOpen=false;
+    }
+}
+
+void MainWindow::readSettings()//carga de archivo
+{
+    QFile file(SETTINGS);
+    if(!file.exists())
+    {
+        file.open(QIODevice::WriteOnly|QIODevice::Text);
+        QTextStream out(&file);
+        out<<"1\n";
+        out<<"0\t0\t0\n";
+        file.close();
+    }
+    file.open(QIODevice::ReadOnly|QIODevice::Text);
+    QTextStream in(&file);
+    int settings = in.readLine().toInt();
+    QStringList coord = in.readLine().split(QRegExp("\\t"),QString::SkipEmptyParts);
+    this->goHome=settings&1;
+    this->toolChange=settings&2;
+    this->invX=settings&4;
+    this->invY=settings&8;
+    this->invZ=settings&16;
+    this->toolChangeXYZ[0]=coord.at(0).toFloat();
+    this->toolChangeXYZ[1]=coord.at(1).toFloat();
+    this->toolChangeXYZ[2]=coord.at(2).toFloat();
+    file.close();
+    ui->btnGoChange->setEnabled(toolChange);
+}
+
+void MainWindow::receiveAxis(QString axis)
+{
+    axis.replace(QRegExp("\\s+")," ");
+    UpdateAxis(axis.trimmed());
+    ui->statusList->addItem(axis.trimmed());
+    if(ui->statusList->count()>LINE_COUNT)
+    {
+        delete ui->statusList->item(0);
+    }
+}
+
+void MainWindow::receiveList(QString msg)
+{
+    ui->statusList->addItem(msg.trimmed());
+    if(ui->statusList->count()>LINE_COUNT)
+    {
+        delete ui->statusList->item(0);
+    }
+    MainWindow::repaint();
+}
+
+void MainWindow::receiveMsg(QString msg)
+{
+    ui->centralWidget->setStatusTip(msg);
+}
+
+void MainWindow::reset()
+{
+    ui->lcdNumberX->display(0);
+    ui->lcdNumberY->display(0);
+    ui->lcdNumberZ->display(0);
+#ifndef DISCONNECTED
+    RS232().Reset(ui->cmbPort->currentIndex());
+    //ui->btnOpenPort->click();
 #endif
 }
 
-int MainWindow::SendGcode(char* line, int length)
+void MainWindow::selectFav(int selected)
 {
-    RS232 port = RS232();
-    int cport_nr = ui->cmbPort->currentIndex();
+    if(selected>0)
+    {
+        disconnect(ui->comboFav,SIGNAL(currentIndexChanged(int)),this,SLOT(selectFav(int)));
+        QString strline = lista.at(selected-1);
+        strline = QString("G00 X").append(strline.left(strline.lastIndexOf('\t')));
+        strline.replace(QRegExp("\\t+")," Y");
+        strline.replace(strline.lastIndexOf('Y'),1,"Z");
+        strline.append('\r');
+#ifndef DISCONNECTED
+        SendGcode(strline);
+#endif
+        ui->comboFav->setCurrentIndex(0);
+        connect(ui->comboFav,SIGNAL(currentIndexChanged(int)),this,SLOT(selectFav(int)));
+    }
+}
+
+int MainWindow::SendGcode(QString line)
+{
+    QString received="";
+    port.flush(port_nr);
     int i, n=0;
+    //line.append('\r');
     char buf[50];
     for(i=0;i<50;i++)
         buf[i]=0;
-    if(port.OpenComport(cport_nr))
-    {
-        return(0);
-    }
+    for(i=0;i<line.length();i++)
+        buf[i]=line.at(i).toAscii();
+
+    if(!port.SendBuf(port_nr,buf,line.length()))
+        return 0;
     else
     {
-#ifdef Q_WS_WIN32
-        buf[0]='\n';
-        port.SendBuf(cport_nr,buf,1);
-        buf[0]=0;
-#endif
-        while(n==0)
-        {
-            //usleep(100000);  // sleep for 100 milliSeconds
-            n = port.PollComport(cport_nr, buf, 50);
-#ifdef Q_WS_X11
-            usleep(100000);  // sleep for 100 milliSeconds
-#else
-            Sleep(100);
-#endif
-        }
-        //usleep(150000);
-        port.SendBuf(cport_nr,line,length);
         //->usleep(50000);
-        n = port.PollComport(cport_nr, buf, 50);
-#ifdef DEBUG
+        //n = port.PollComport(port_nr, buf, 4);
+#ifdef DEBUGER
         if(n > 0)
         {
             buf[n] = 0;   // always put a "null" at the end of a string!
@@ -293,15 +490,117 @@ int MainWindow::SendGcode(char* line, int length)
             printf("received %i bytes.\n", n);
         }
 #endif
-        //->usleep(50000);  // sleep for 100 milliSeconds
+        while((!received.contains("ok",Qt::CaseInsensitive))&&(n>0))
+        //while (port.find_txt(buf)==0)
         //while((n==0)||(port.find_txt(buf)==0))
-        while (n==0)
+        //while (n==0)
         {
-            n = port.PollComport(cport_nr, buf, 50);
+            n = port.PollComport(port_nr, buf, 4);
+            received=QString(buf);
+#ifdef Q_WS_X11
+            usleep(100000);  // sleep for 100 milliSeconds
+#else
+            Sleep(100);
+#endif
         }
-        port.CloseComport(cport_nr);
+        if(n==0)
+            return(0);
     }
     return(1);
+}
+
+int MainWindow::SendJog(QString strline)
+{
+#ifndef DISCONNECTED
+
+    //if(SendGcode(line,i))
+    if(SendGcode("G91\r")&&SendGcode(strline))
+        return(1);
+    else
+        return (0);
+#else
+    return(1);
+#endif
+}
+
+void MainWindow::sendRBtn()
+{
+    if(ui->rbutSend->isChecked())
+    {
+        ui->groupBoxAxis->setEnabled(false);
+        ui->groupBoxSend->setEnabled(true);
+        ui->groupBoxFav->setEnabled(false);
+    }
+}
+
+void MainWindow::setGRBL()
+{
+    GrblDialog dial(this);
+    dial.port_nr = ui->cmbPort->currentIndex();
+    dial.port = this->port;
+    dial.setParent(this);
+    port.flush(port_nr);
+    //if(dial.setSettings())
+    dial.setSettings();
+        dial.exec();
+}
+
+void MainWindow::setSettings(int settings)//recibe cambios
+{
+    this->goHome=settings&1;
+    this->toolChange=settings&2;
+    this->invX=settings&4;
+    this->invY=settings&8;
+    this->invZ=settings&16;
+    ui->btnGoChange->setEnabled(toolChange);
+}
+
+void MainWindow::setTCCoord(float coords[])//recibe cambios
+{
+    this->toolChangeXYZ[0]=coords[0];
+    this->toolChangeXYZ[1]=coords[1];
+    this->toolChangeXYZ[2]=coords[2];
+}
+
+void MainWindow::showAbout()
+{
+    About about(this);
+    about.exec();
+}
+
+void MainWindow::stop()
+{
+    ui->centralWidget->setStatusTip("Process stopped.");
+    emit Stop();
+    RS232().Reset(port_nr);
+}
+
+void MainWindow::toggleSpindle()
+{
+    if(ui->SpindleOn->QAbstractButton::isChecked())
+    {
+#ifndef DISCONNECTED
+        SendGcode("M03\r");
+        //SendGcode(line,4);
+#endif
+        ui->statusList->addItem("Spindle On.");
+        if(ui->statusList->count()>LINE_COUNT)
+        {
+            delete ui->statusList->item(0);
+        }
+    }
+    else
+    {
+#ifndef DISCONNECTED
+        //SendGcode(line,4);
+        SendGcode("M05\r");
+#endif
+        ui->statusList->addItem("Spindle Off.");
+        if(ui->statusList->count()>LINE_COUNT)
+        {
+            delete ui->statusList->item(0);
+        }
+    }
 }
 
 void MainWindow::UpdateAxis(QString code)
@@ -331,31 +630,4 @@ void MainWindow::UpdateAxis(QString code)
             {}
         }
     }
-}
-
-void MainWindow::receiveMsg(QString msg)
-{
-    ui->centralWidget->setStatusTip(msg);
-}
-
-void MainWindow::receiveList(QString msg)
-{
-    ui->listWidget->addItem(msg.trimmed());
-    if(ui->listWidget->count()>12)
-    {
-        delete ui->listWidget->item(0);
-    }
-    MainWindow::repaint();
-}
-
-void MainWindow::receiveAxis(QString axis)
-{
-    axis.replace(QRegExp("\\s+")," ");
-    UpdateAxis(axis.trimmed());
-    ui->listWidget->addItem(axis.trimmed());
-    if(ui->listWidget->count()>12)
-    {
-        delete ui->listWidget->item(0);
-    }
-    MainWindow::repaint();
 }

@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>GrblDialog</class>
+ <widget class="QDialog" name="GrblDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>322</width>
+    <height>343</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <widget class="QPushButton" name="btnOk">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>40</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Apply</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnCancel">
+   <property name="geometry">
+    <rect>
+     <x>220</x>
+     <y>80</y>
+     <width>75</width>
+     <height>23</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Close</string>
+   </property>
+  </widget>
+  <widget class="QTableWidget" name="tableWidget">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>20</y>
+     <width>160</width>
+     <height>301</height>
+    </rect>
+   </property>
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
+   <property name="verticalScrollBarPolicy">
+    <enum>Qt::ScrollBarAlwaysOff</enum>
+   </property>
+   <property name="horizontalScrollBarPolicy">
+    <enum>Qt::ScrollBarAlwaysOff</enum>
+   </property>
+   <property name="autoScroll">
+    <bool>true</bool>
+   </property>
+   <property name="rowCount">
+    <number>10</number>
+   </property>
+   <property name="columnCount">
+    <number>2</number>
+   </property>
+   <attribute name="horizontalHeaderVisible">
+    <bool>false</bool>
+   </attribute>
+   <attribute name="horizontalHeaderDefaultSectionSize">
+    <number>100</number>
+   </attribute>
+   <attribute name="verticalHeaderVisible">
+    <bool>false</bool>
+   </attribute>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <row/>
+   <column/>
+   <column/>
+   <item row="0" column="1">
+    <property name="text">
+     <string>steps/mm X</string>
+    </property>
+   </item>
+   <item row="1" column="1">
+    <property name="text">
+     <string>steps/mm Y</string>
+    </property>
+   </item>
+   <item row="2" column="1">
+    <property name="text">
+     <string>steps/mm Z</string>
+    </property>
+   </item>
+   <item row="3" column="1">
+    <property name="text">
+     <string>microseconds step pulse</string>
+    </property>
+   </item>
+   <item row="4" column="1">
+    <property name="text">
+     <string>mm/min default feed rate</string>
+    </property>
+   </item>
+   <item row="5" column="1">
+    <property name="text">
+     <string>mm/min default seek rate</string>
+    </property>
+   </item>
+   <item row="6" column="1">
+    <property name="text">
+     <string>mm/arc segment</string>
+    </property>
+   </item>
+   <item row="7" column="1">
+    <property name="text">
+     <string>step port invert mask</string>
+    </property>
+   </item>
+   <item row="8" column="1">
+    <property name="text">
+     <string>acceleration in mm/sec^2</string>
+    </property>
+   </item>
+   <item row="9" column="1">
+    <property name="text">
+     <string>cornering junction deviation in mm</string>
+    </property>
+   </item>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

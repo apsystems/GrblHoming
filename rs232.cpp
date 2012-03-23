@@ -1,34 +1,3 @@
-/*
-***************************************************************************
-*
-* Author: Teunis van Beelen
-*
-* Copyright (C) 2005, 2006, 2007, 2008, 2009 Teunis van Beelen
-*
-* teuniz@gmail.com
-*
-***************************************************************************
-*
-* This program is free software; you can redistribute it and/or modify
-* it under the terms of the GNU General Public License as published by
-* the Free Software Foundation version 2 of the License.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU General Public License for more details.
-*
-* You should have received a copy of the GNU General Public License along
-* with this program; if not, write to the Free Software Foundation, Inc.,
-* 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
-*
-***************************************************************************
-*
-* This version of GPL is at http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt
-*
-***************************************************************************
-*/
-
 #include "rs232.h"
 
 RS232::RS232()
@@ -119,6 +88,14 @@ void RS232::CloseComport(int comport_number)
   tcsetattr(Cport[comport_number], TCSANOW, old_port_settings + comport_number);
 }
 
+void RS232::Reset(int comport_number) //still to test
+{
+    //OpenComport(comport_number);
+    int mcr=!TIOCM_DTR;
+    ioctl(Cport[comport_number],TIOCMSET,&mcr);
+    //CloseComport(comport_number);
+}
+
 #else
 
 HANDLE Cport[16];
@@ -176,6 +153,7 @@ int RS232::OpenComport(int comport_number)
   port_settings.ByteSize=8;
   port_settings.StopBits=ONESTOPBIT;
   port_settings.Parity=NOPARITY;
+  port_settings.fDtrControl=DTR_CONTROL_ENABLE;
 
   if(!SetCommState(Cport[comport_number], &port_settings))
   {
@@ -186,17 +164,18 @@ int RS232::OpenComport(int comport_number)
 
   COMMTIMEOUTS Cptimeouts={0};
 
-  Cptimeouts.ReadIntervalTimeout         = 25;
+  Cptimeouts.ReadIntervalTimeout         = 250;
   Cptimeouts.ReadTotalTimeoutMultiplier  = 0;
-  Cptimeouts.ReadTotalTimeoutConstant    = 0;
+  Cptimeouts.ReadTotalTimeoutConstant    = 250;
   Cptimeouts.WriteTotalTimeoutMultiplier = 0;
-  Cptimeouts.WriteTotalTimeoutConstant   = 0;
+  Cptimeouts.WriteTotalTimeoutConstant   = 200;
 
   if(!SetCommTimeouts(Cport[comport_number], &Cptimeouts))
   {
-    printf("unable to set comport time-out settings\n");
-    CloseHandle(Cport[comport_number]);
-    return(1);
+      QMessageBox(QMessageBox::Warning,"Error","Could not read port.",QMessageBox::Ok).exec();
+      printf("unable to set comport time-out settings\n");
+      CloseHandle(Cport[comport_number]);
+      return(1);
   }
 
   return(0);
@@ -235,17 +214,20 @@ void RS232::CloseComport(int comport_number)
   CloseHandle(Cport[comport_number]);
 }
 
+void RS232::Reset(int comport_number) //Tested 24/02/12
+{
+    //OpenComport(comport_number);
+    DWORD dtr=5;
+    EscapeCommFunction(Cport[comport_number],dtr);
+    //CloseComport(comport_number);
+}
+
 #endif
 
-int RS232::find_txt(char *buf)
+void RS232::flush(int comport_number)
 {
-  int j;
-  for(j=0;j<100;j++)
-  {
-    if(buf[j]=='\r')
-       return 0;
-    if((buf[j]=='o')&&(buf[j+1]=='k'))
-       return 1;
-  }
-  return 0;
+    int n=1;
+    char buf[255];
+    while(n>0)
+        n=PollComport(comport_number,buf,255);
 }
