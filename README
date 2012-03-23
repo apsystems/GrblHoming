@@ -1,18 +1,25 @@
 Gcode sender, monitor and homing tool for GRBL for Windows and Linux systems.
 
-V1.0c
+V2.0 Major release
+
+- Improved the port handling reducing opening and closing frecuency.
+- Added the ability to type and send commands directly. 
+- Support for tool change instructions. If enabled it pause execution, raise the spindle, go to a fixed location for toolchange, and continue excecution.
+- Added about window.
+
+V1.0c Minor
 
 Bug fixes
 
 - Corrected a problem when adjusting axis that caused all axis to move at the same time. Caused by grbl starting in incremental programming.
 
-V1.0b
+V1.0b Minor
 
 Bug fixes
 
 - Corrected a bug in the adjusting script.
 
-V1.0a
+V1.0a Minor
 
 Bug fixes
 
