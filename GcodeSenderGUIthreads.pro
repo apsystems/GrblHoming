@@ -10,20 +10,27 @@ TARGET = GcodeSenderGUI
 TEMPLATE = app
 
 
-SOURCES += \
+SOURCES += main.cpp\
+        mainwindow.cpp \
     rs232.cpp \
-    mainwindow.cpp \
-    main.cpp \
-    readthread.cpp
+    readthread.cpp \
+    options.cpp \
+    grbldialog.cpp \
+    about.cpp
 
-HEADERS  += \
+HEADERS  += mainwindow.h \
     rs232.h \
-    mainwindow.h \
-    readthread.h
+    readthread.h \
+    options.h \
+    grbldialog.h \
+    definitions.h \
+    about.h \
+    images.rcc
 
-FORMS    += \
-    mainwindow.ui
+FORMS    += mainwindow.ui \
+    options.ui \
+    grbldialog.ui \
+    about.ui
 
 RESOURCES += \
-    images.qrc \
     images.qrc
