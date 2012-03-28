@@ -1,7 +1,7 @@
 /****************************************************************************
 ** Meta object code from reading C++ file 'mainwindow.h'
 **
-** Created: Thu Feb 16 01:26:49 2012
+** Created: Tue Mar 20 13:24:08 2012
 **      by: The Qt Meta Object Compiler version 63 (Qt 4.8.0)
 **
 ** WARNING! All changes made in this file will be lost!
@@ -23,7 +23,7 @@ static const uint qt_meta_data_MainWindow[] = {
        6,       // revision
        0,       // classname
        0,    0, // classinfo
-      15,   14, // methods
+      28,   14, // methods
        0,    0, // properties
        0,    0, // enums/sets
        0,    0, // constructors
@@ -35,29 +35,47 @@ static const uint qt_meta_data_MainWindow[] = {
 
  // slots: signature, parameters, type, tag, flags
       19,   11,   11,   11, 0x08,
-      26,   11,   11,   11, 0x08,
-      33,   11,   11,   11, 0x08,
+      30,   11,   11,   11, 0x08,
       40,   11,   11,   11, 0x08,
       47,   11,   11,   11, 0x08,
       54,   11,   11,   11, 0x08,
       61,   11,   11,   11, 0x08,
-      73,   11,   11,   11, 0x08,
-      83,   11,   11,   11, 0x08,
+      68,   11,   11,   11, 0x08,
+      75,   11,   11,   11, 0x08,
+      82,   11,   11,   11, 0x08,
       90,   11,   11,   11, 0x08,
-      98,   11,   11,   11, 0x08,
-     109,  105,   11,   11, 0x08,
-     130,  105,   11,   11, 0x08,
-     155,  150,   11,   11, 0x08,
+     101,   11,   11,   11, 0x08,
+     118,   11,   11,   11, 0x08,
+     128,   11,   11,   11, 0x08,
+     136,   11,   11,   11, 0x08,
+     147,   11,   11,   11, 0x08,
+     154,   11,   11,   11, 0x08,
+     167,   11,   11,   11, 0x08,
+     180,   11,   11,   11, 0x08,
+     200,  191,   11,   11, 0x08,
+     215,   11,   11,   11, 0x08,
+     240,  231,   11,   11, 0x08,
+     264,  257,   11,   11, 0x08,
+     288,  284,   11,   11, 0x08,
+     309,  284,   11,   11, 0x08,
+     334,  329,   11,   11, 0x08,
+     355,   11,   11,   11, 0x08,
+     368,   11,   11,   11, 0x08,
 
        0        // eod
 };
 
 static const char qt_meta_stringdata_MainWindow[] = {
-    "MainWindow\0\0Stop()\0incX()\0incY()\0"
-    "incZ()\0decX()\0decY()\0decZ()\0adjustBtn()\0"
-    "sendBtn()\0open()\0begin()\0stop()\0msg\0"
-    "receiveList(QString)\0receiveMsg(QString)\0"
-    "axis\0receiveAxis(QString)\0"
+    "MainWindow\0\0Stop()\0openPort()\0setGRBL()\0"
+    "decX()\0decY()\0decZ()\0incX()\0incY()\0"
+    "incZ()\0reset()\0gotoHome()\0gotoToolChange()\0"
+    "gotoXYZ()\0begin()\0openFile()\0stop()\0"
+    "adjustRBtn()\0manualRBtn()\0sendRBtn()\0"
+    "selected\0selectFav(int)\0toggleSpindle()\0"
+    "settings\0setSettings(int)\0coords\0"
+    "setTCCoord(float[])\0msg\0receiveList(QString)\0"
+    "receiveMsg(QString)\0axis\0receiveAxis(QString)\0"
+    "getOptions()\0showAbout()\0"
 };
 
 void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, void **_a)
@@ -67,20 +85,33 @@ void MainWindow::qt_static_metacall(QObject *_o, QMetaObject::Call _c, int _id, 
         MainWindow *_t = static_cast<MainWindow *>(_o);
         switch (_id) {
         case 0: _t->Stop(); break;
-        case 1: _t->incX(); break;
-        case 2: _t->incY(); break;
-        case 3: _t->incZ(); break;
-        case 4: _t->decX(); break;
-        case 5: _t->decY(); break;
-        case 6: _t->decZ(); break;
-        case 7: _t->adjustBtn(); break;
-        case 8: _t->sendBtn(); break;
-        case 9: _t->open(); break;
-        case 10: _t->begin(); break;
-        case 11: _t->stop(); break;
-        case 12: _t->receiveList((*reinterpret_cast< QString(*)>(_a[1]))); break;
-        case 13: _t->receiveMsg((*reinterpret_cast< QString(*)>(_a[1]))); break;
-        case 14: _t->receiveAxis((*reinterpret_cast< QString(*)>(_a[1]))); break;
+        case 1: _t->openPort(); break;
+        case 2: _t->setGRBL(); break;
+        case 3: _t->decX(); break;
+        case 4: _t->decY(); break;
+        case 5: _t->decZ(); break;
+        case 6: _t->incX(); break;
+        case 7: _t->incY(); break;
+        case 8: _t->incZ(); break;
+        case 9: _t->reset(); break;
+        case 10: _t->gotoHome(); break;
+        case 11: _t->gotoToolChange(); break;
+        case 12: _t->gotoXYZ(); break;
+        case 13: _t->begin(); break;
+        case 14: _t->openFile(); break;
+        case 15: _t->stop(); break;
+        case 16: _t->adjustRBtn(); break;
+        case 17: _t->manualRBtn(); break;
+        case 18: _t->sendRBtn(); break;
+        case 19: _t->selectFav((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 20: _t->toggleSpindle(); break;
+        case 21: _t->setSettings((*reinterpret_cast< int(*)>(_a[1]))); break;
+        case 22: _t->setTCCoord((*reinterpret_cast< float(*)[]>(_a[1]))); break;
+        case 23: _t->receiveList((*reinterpret_cast< QString(*)>(_a[1]))); break;
+        case 24: _t->receiveMsg((*reinterpret_cast< QString(*)>(_a[1]))); break;
+        case 25: _t->receiveAxis((*reinterpret_cast< QString(*)>(_a[1]))); break;
+        case 26: _t->getOptions(); break;
+        case 27: _t->showAbout(); break;
         default: ;
         }
     }
@@ -118,9 +149,9 @@ int MainWindow::qt_metacall(QMetaObject::Call _c, int _id, void **_a)
     if (_id < 0)
         return _id;
     if (_c == QMetaObject::InvokeMetaMethod) {
-        if (_id < 15)
+        if (_id < 28)
             qt_static_metacall(this, _c, _id, _a);
-        _id -= 15;
+        _id -= 28;
     }
     return _id;
 }

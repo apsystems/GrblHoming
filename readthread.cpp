@@ -97,7 +97,7 @@ void ReadThread::run()
                         printf("received %i bytes.\n", n);
                     }
 #endif
-                    //while((!received.contains("ok",Qt::CaseInsensitive))&&(!abort))
+                    n=1;
                     while((!received.contains("ok",Qt::CaseInsensitive))&&(!abort)&&(n>0))
                     {
 #ifndef DISCONNECTED

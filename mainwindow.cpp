@@ -469,8 +469,6 @@ int MainWindow::SendGcode(QString line)
         return 0;
     else
     {
-        //->usleep(50000);
-        //n = port.PollComport(port_nr, buf, 4);
 #ifdef DEBUGER
         if(n > 0)
         {
@@ -490,10 +488,7 @@ int MainWindow::SendGcode(QString line)
             printf("received %i bytes.\n", n);
         }
 #endif
-        while((!received.contains("ok",Qt::CaseInsensitive))&&(n>0))
-        //while (port.find_txt(buf)==0)
-        //while((n==0)||(port.find_txt(buf)==0))
-        //while (n==0)
+        do
         {
             n = port.PollComport(port_nr, buf, 4);
             received=QString(buf);
@@ -502,7 +497,7 @@ int MainWindow::SendGcode(QString line)
 #else
             Sleep(100);
 #endif
-        }
+        }while((!received.contains("ok",Qt::CaseInsensitive))&&(n>0));
         if(n==0)
             return(0);
     }
@@ -513,8 +508,7 @@ int MainWindow::SendJog(QString strline)
 {
 #ifndef DISCONNECTED
 
-    //if(SendGcode(line,i))
-    if(SendGcode("G91\r")&&SendGcode(strline))
+    if((SendGcode("G91\r"))&&(SendGcode(strline.append("\r"))))
         return(1);
     else
         return (0);
