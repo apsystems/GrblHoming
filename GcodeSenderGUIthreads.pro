@@ -32,5 +32,4 @@ FORMS    += mainwindow.ui \
     grbldialog.ui \
     about.ui
 
-RESOURCES += \
-    images.qrc
+RESOURCES += GrblController.qrc

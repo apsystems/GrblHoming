@@ -1,12 +1,36 @@
 #include "readthread.h"
 
-//#define DEBUG
-
 ReadThread::ReadThread(QObject *parent) :
     QThread(parent)
 {
     abort=false;
     path="";
+}
+
+QString ReadThread::removeInvalid(QString line)
+{
+    QStringList components = line.split(" ",QString::SkipEmptyParts);
+    line="";
+    QString s;
+    foreach(s,components)
+    {
+        int value = s.mid(1,-1).toInt();
+        if(value>4&&value<17)
+        {}
+        else if(value>21&&value<28)
+        {}
+        else if(value>28&&value<53)
+        {}
+        else if(value>53&&value<80)
+        {}
+        else if(value>80&&value<90)
+        {}
+        else if(value>94)
+        {}
+        else
+            line.append(s).append(" ");
+    }
+    return line.trimmed();
 }
 
 void ReadThread::run()
@@ -15,7 +39,6 @@ void ReadThread::run()
     abort=false;
     QFile file(this->path);
     QString received="";
-    //int port_nr = this->port_nr;
     int i=0, n=0,sent=0;
     char buf[20];
     if(file.open(QFile::ReadOnly))
@@ -31,7 +54,30 @@ void ReadThread::run()
             {}//ignore comments
             else
             {
-                if((strline.contains("M06",Qt::CaseInsensitive))&&(toolChange))
+                strline = strline.toUpper();
+                int times = strline.count("G");
+                if (times>1)
+                {
+                    strline = removeInvalid(strline);
+                }
+                int num = strline.mid(1,strline.indexOf(" ")).toInt();
+                if(strline.contains("G",Qt::CaseInsensitive)&&num>4&&num<17)
+                {}
+                else if(strline.contains("G",Qt::CaseInsensitive)&&num>21&&num<28)
+                {}
+                else if(strline.contains("G",Qt::CaseInsensitive)&&num>28&&num<53)
+                {}
+                else if(strline.contains("G",Qt::CaseInsensitive)&&num>53&&num<80)
+                {}
+                else if(strline.contains("G",Qt::CaseInsensitive)&&num>80&&num<90)
+                {}
+                else if(strline.contains("G",Qt::CaseInsensitive)&&num>94)
+                {}
+                else if (strline.contains("M",Qt::CaseInsensitive)&&num==1)
+                {}
+                else if (strline.contains("M",Qt::CaseInsensitive)&&num>7)
+                {}
+                else if((strline.contains("M06",Qt::CaseInsensitive))&&(toolChange))
                 {
                     sendAxis(strline);
                     toolChangeRoutine();
@@ -41,10 +87,7 @@ void ReadThread::run()
 #ifndef DISCONNECTED
                     SendGcode(strline);
 #else
-                    //qDebug<<strline;
-                    //qDebug(strline);
-                    //printf((char *)strline);
-                    printf(strline.toLocal8Bit().data());
+                    printf(strline.append("\n").toLocal8Bit().data());
 #endif
                 }
                 else if((strline.contains("M06",Qt::CaseInsensitive))&&(!toolChange))
@@ -55,8 +98,7 @@ void ReadThread::run()
 #ifndef DISCONNECTED
                     SendGcode(strline);
 #else
-                    //printf((char *)strline);
-                    printf(strline.toLocal8Bit().data());
+                    printf(strline.append("\n").toLocal8Bit().data());
 #endif
                 }
                 else
@@ -68,10 +110,8 @@ void ReadThread::run()
 #ifndef DISCONNECTED
                     sent=port.SendBuf(port_nr,line,i);
 #else
-                    //printf(strline);
-                    printf(strline.toLocal8Bit().data());
+                    printf(strline.append("\n").toLocal8Bit().data());
 #endif
-                    //n=port.PollComport(port_nr,buf,4);
 
 #ifdef Q_WS_X11
                     usleep(100000);  // sleep for 100 milliSeconds
@@ -139,11 +179,9 @@ void ReadThread::run()
         if(this->goHome)
         {
 #ifndef DISCONNECTED
-            //char line[] = "G00 X0 Y0 Z0\r";
-            //port.SendBuf(port_nr,line,13);
-            port.SendBuf(port_nr,"G00 X0 Y0 Z0\r",13);
+            port.SendBuf(port_nr,"G00 X0 Y0 Z0 F250\r",18);
 #endif
-            sendAxis("G00 X0 Y0 Z0\r");
+            sendAxis("G00 X0 Y0 Z0 F250\r");
             addList("Gone Home.");
         }
     }

@@ -1,9 +1,9 @@
 #ifndef READTHREAD_H
 #define READTHREAD_H
 
+#include <QFile>
 #include <QThread>
 #include <QTextStream>
-#include <QFile>
 #include "rs232.h"
 #include "definitions.h"
 
@@ -35,6 +35,7 @@ public slots:
 
 private:
     //methods
+    QString removeInvalid(QString line);
     int SendGcode(QString line);
     void toolChangeRoutine();
     //variables

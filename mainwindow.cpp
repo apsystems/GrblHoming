@@ -13,9 +13,6 @@ MainWindow::MainWindow(QWidget *parent) :
     portOpen=false;
     ui->setupUi(this);
     readSettings();
-    //ui->btnGoChange->setEnabled(toolChange);
-    //ui->rbutManual->setVisible(false);
-    //ui->groupBoxFav->setVisible(false);
     ui->comboFav->setVisible(false);
     //buttons
     connect(ui->btnOpenPort,SIGNAL(clicked()),this,SLOT(openPort()));
@@ -29,7 +26,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->IncZBtn,SIGNAL(clicked()),this,SLOT(incZ()));
     connect(ui->ResetButton,SIGNAL(clicked()),this,SLOT(reset()));
         //Manual
-    connect(ui->btnGoChange,SIGNAL(clicked()),this,SLOT(gotoToolChange()));
+    connect(ui->btnChangeTool,SIGNAL(clicked()),this,SLOT(gotoToolChange()));
     connect(ui->btnGo,SIGNAL(clicked()),this,SLOT(gotoXYZ()));
     connect(ui->btnHome,SIGNAL(clicked()),this,SLOT(gotoHome()));
         //Send Gcode
@@ -226,8 +223,9 @@ void MainWindow::gotoToolChange()
 void MainWindow::gotoHome()
 {
 #ifndef DISCONNECTED
-    SendGcode("G28\r");
-    //SendGcode("G00 X0 Y0 Z0 F250\n\r");
+    ui->Command->setText("G00 X0 Y0 Z0 F250");
+    ui->btnGo->click();
+    //SendGcode("G00 X0 Y0 Z0 F250\r");
 #endif
 }
 
@@ -237,16 +235,21 @@ void MainWindow::gotoXYZ()
 #ifndef DISCONNECTED
     if(SendGcode(line))
     {
-        ui->statusList->addItem(line.mid(0,line.length()-2));
-        line=line.mid(line.indexOf("X",Qt::CaseInsensitive)+1,-1);
+        line=line.toUpper();
+        ui->statusList->addItem(line.mid(0,line.length()-1));
+        line=line.mid(line.indexOf("X",Qt::CaseInsensitive)+1,-1).trimmed();
         ui->lcdNumberX->display((line.mid(0,line.indexOf(" ")).toFloat()));
+        line=line.mid(line.indexOf("Y",Qt::CaseInsensitive)+1,-1).trimmed();
+        ui->lcdNumberY->display((line.mid(0,line.indexOf(" ")).toFloat()));
+        line=line.mid(line.indexOf("Z",Qt::CaseInsensitive)+1,-1).trimmed();
+        ui->lcdNumberZ->display((line.mid(0,line.indexOf(" ")).toFloat()));
     }
     else
     {
         ui->statusList->addItem("Bad command.");
     }
 #else
-    ui->statusList->addItem(line.mid(0,line.length()-2));
+    ui->statusList->addItem(line.mid(0,line.length()-1));
 #endif
     if(ui->statusList->count()>LINE_COUNT)
         delete ui->statusList->item(0);
@@ -330,6 +333,11 @@ void MainWindow::openPort()
     {
 #ifndef DISCONNECTED
         port.Reset(port_nr);
+#ifdef Q_WS_X11
+            usleep(100000);  // sleep for 100 milliSeconds
+#else
+            Sleep(100);
+#endif
         if(!port.OpenComport(port_nr))
         {
             ui->groupBoxOptions->setEnabled(true);
@@ -395,7 +403,7 @@ void MainWindow::readSettings()//carga de archivo
     this->toolChangeXYZ[1]=coord.at(1).toFloat();
     this->toolChangeXYZ[2]=coord.at(2).toFloat();
     file.close();
-    ui->btnGoChange->setEnabled(toolChange);
+    ui->btnChangeTool->setEnabled(toolChange);
 }
 
 void MainWindow::receiveAxis(QString axis)
@@ -546,7 +554,7 @@ void MainWindow::setSettings(int settings)//recibe cambios
     this->invX=settings&4;
     this->invY=settings&8;
     this->invZ=settings&16;
-    ui->btnGoChange->setEnabled(toolChange);
+    ui->btnChangeTool->setEnabled(toolChange);
 }
 
 void MainWindow::setTCCoord(float coords[])//recibe cambios

@@ -1,8 +1,0 @@
- <!DOCTYPE RCC><RCC version="1.0">
- <qresource>
-     <file>img/down.gif</file>
-     <file>img/left.gif</file>
-     <file>img/right.gif</file>
-     <file>img/up.gif</file>
- </qresource>
- </RCC>

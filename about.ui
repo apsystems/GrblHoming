@@ -45,7 +45,7 @@
     <enum>Qt::PlainText</enum>
    </property>
    <property name="pixmap">
-    <pixmap resource="images.qrc">:/img/logotiny.gif</pixmap>
+    <pixmap resource="GrblController.qrc">:/img/logotiny.PNG</pixmap>
    </property>
   </widget>
   <widget class="QLabel" name="warrantyLabel">
@@ -81,7 +81,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Grbl Controller 2.0</string>
+    <string>Grbl Controller 2.1</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_2">
@@ -94,12 +94,12 @@
     </rect>
    </property>
    <property name="text">
-    <string>Build 270312</string>
+    <string>Build 290312</string>
    </property>
   </widget>
  </widget>
  <resources>
-  <include location="images.qrc"/>
+  <include location="GrblController.qrc"/>
  </resources>
  <connections>
   <connection>

@@ -1,11 +1,22 @@
 Gcode sender, monitor and homing tool for GRBL for Windows and Linux systems.
 
+V2.1 
+
+New Features
+
+- Gcode that is valid but is not recognized by GRBL gets filtered and it is not sent.
+
+Bug fixes
+
+- Corrected an issue that prevented manually sent Gcode for being displayed correctly.
+- Corrected an issue with the images not displaying.
+
 V2.0 Major release
 
 - Improved the port handling reducing opening and closing frecuency.
 - Added the ability to type and send commands directly. 
-- Support for tool change instructions. If enabled it pause execution, raise the spindle, go to a fixed location for toolchange, and continue excecution.
-- Added about window.
+- Support for tool change instructions. If enabled it pauses execution, raises the spindle, goes to a fixed location for toolchange, waits for tool change, and continues excecution.
+- Added About window.
 
 V1.0c Minor
 
