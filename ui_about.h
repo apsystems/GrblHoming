@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'about.ui'
 **
-** Created: Tue 27. Mar 18:14:43 2012
+** Created: Wed 15. Aug 12:44:49 2012
 **      by: Qt User Interface Compiler version 4.8.0
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -44,7 +44,7 @@ public:
         iconLabel->setObjectName(QString::fromUtf8("iconLabel"));
         iconLabel->setGeometry(QRect(10, 20, 151, 61));
         iconLabel->setTextFormat(Qt::PlainText);
-        iconLabel->setPixmap(QPixmap(QString::fromUtf8(":/img/logotiny.gif")));
+        iconLabel->setPixmap(QPixmap(QString::fromUtf8(":/img/logotiny.PNG")));
         warrantyLabel = new QLabel(About);
         warrantyLabel->setObjectName(QString::fromUtf8("warrantyLabel"));
         warrantyLabel->setGeometry(QRect(180, 70, 201, 91));
@@ -73,8 +73,8 @@ public:
         About->setWindowTitle(QApplication::translate("About", "About...", 0, QApplication::UnicodeUTF8));
         iconLabel->setText(QString());
         warrantyLabel->setText(QApplication::translate("About", "The program is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.", 0, QApplication::UnicodeUTF8));
-        label->setText(QApplication::translate("About", "Grbl Controller 2.0", 0, QApplication::UnicodeUTF8));
-        label_2->setText(QApplication::translate("About", "Build 270312", 0, QApplication::UnicodeUTF8));
+        label->setText(QApplication::translate("About", "Grbl Controller 2.1", 0, QApplication::UnicodeUTF8));
+        label_2->setText(QApplication::translate("About", "Build 290312", 0, QApplication::UnicodeUTF8));
     } // retranslateUi
 
 };

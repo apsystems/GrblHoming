@@ -1,7 +1,7 @@
 /********************************************************************************
 ** Form generated from reading UI file 'mainwindow.ui'
 **
-** Created: Tue 27. Mar 18:14:43 2012
+** Created: Wed 15. Aug 12:44:49 2012
 **      by: Qt User Interface Compiler version 4.8.0
 **
 ** WARNING! All changes made in this file will be lost when recompiling UI file!
@@ -86,7 +86,7 @@ public:
     QSpacerItem *horizontalSpacer;
     QPushButton *btnGRBL;
     QGroupBox *groupBoxFav;
-    QPushButton *btnGoChange;
+    QPushButton *btnChangeTool;
     QPushButton *btnGo;
     QWidget *layoutWidget7;
     QHBoxLayout *horizontalLayout;
@@ -249,7 +249,7 @@ public:
         IncYBtn = new QPushButton(layoutWidget3);
         IncYBtn->setObjectName(QString::fromUtf8("IncYBtn"));
         QIcon icon;
-        icon.addFile(QString::fromUtf8(":/img/up.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        icon.addFile(QString::fromUtf8(":/img/up.PNG"), QSize(), QIcon::Normal, QIcon::Off);
         IncYBtn->setIcon(icon);
         IncYBtn->setIconSize(QSize(24, 24));
 
@@ -262,7 +262,7 @@ public:
         DecXBtn = new QPushButton(layoutWidget3);
         DecXBtn->setObjectName(QString::fromUtf8("DecXBtn"));
         QIcon icon1;
-        icon1.addFile(QString::fromUtf8(":/img/left.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        icon1.addFile(QString::fromUtf8(":/img/left.PNG"), QSize(), QIcon::Normal, QIcon::Off);
         DecXBtn->setIcon(icon1);
         DecXBtn->setIconSize(QSize(24, 24));
 
@@ -271,7 +271,7 @@ public:
         DecYBtn = new QPushButton(layoutWidget3);
         DecYBtn->setObjectName(QString::fromUtf8("DecYBtn"));
         QIcon icon2;
-        icon2.addFile(QString::fromUtf8(":/img/down.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        icon2.addFile(QString::fromUtf8(":/img/down.PNG"), QSize(), QIcon::Normal, QIcon::Off);
         DecYBtn->setIcon(icon2);
         DecYBtn->setIconSize(QSize(24, 24));
 
@@ -280,7 +280,7 @@ public:
         IncXBtn = new QPushButton(layoutWidget3);
         IncXBtn->setObjectName(QString::fromUtf8("IncXBtn"));
         QIcon icon3;
-        icon3.addFile(QString::fromUtf8(":/img/right.gif"), QSize(), QIcon::Normal, QIcon::Off);
+        icon3.addFile(QString::fromUtf8(":/img/right.PNG"), QSize(), QIcon::Normal, QIcon::Off);
         IncXBtn->setIcon(icon3);
         IncXBtn->setIconSize(QSize(24, 24));
 
@@ -392,9 +392,9 @@ public:
         groupBoxFav->setObjectName(QString::fromUtf8("groupBoxFav"));
         groupBoxFav->setEnabled(false);
         groupBoxFav->setGeometry(QRect(20, 340, 341, 80));
-        btnGoChange = new QPushButton(groupBoxFav);
-        btnGoChange->setObjectName(QString::fromUtf8("btnGoChange"));
-        btnGoChange->setGeometry(QRect(190, 50, 81, 23));
+        btnChangeTool = new QPushButton(groupBoxFav);
+        btnChangeTool->setObjectName(QString::fromUtf8("btnChangeTool"));
+        btnChangeTool->setGeometry(QRect(190, 50, 81, 23));
         btnGo = new QPushButton(groupBoxFav);
         btnGo->setObjectName(QString::fromUtf8("btnGo"));
         btnGo->setGeometry(QRect(280, 20, 51, 21));
@@ -457,7 +457,7 @@ public:
         MainWindow->setCentralWidget(centralWidget);
         menuBar = new QMenuBar(MainWindow);
         menuBar->setObjectName(QString::fromUtf8("menuBar"));
-        menuBar->setGeometry(QRect(0, 0, 620, 23));
+        menuBar->setGeometry(QRect(0, 0, 620, 20));
         menuHelp = new QMenu(menuBar);
         menuHelp->setObjectName(QString::fromUtf8("menuHelp"));
         menuTools = new QMenu(menuBar);
@@ -506,7 +506,7 @@ public:
         Stop->setText(QApplication::translate("MainWindow", "Stop", 0, QApplication::UnicodeUTF8));
         btnGRBL->setText(QApplication::translate("MainWindow", "GRBL settings", 0, QApplication::UnicodeUTF8));
         groupBoxFav->setTitle(QApplication::translate("MainWindow", "Manual", 0, QApplication::UnicodeUTF8));
-        btnGoChange->setText(QApplication::translate("MainWindow", "Change tool", 0, QApplication::UnicodeUTF8));
+        btnChangeTool->setText(QApplication::translate("MainWindow", "Change tool", 0, QApplication::UnicodeUTF8));
         btnGo->setText(QApplication::translate("MainWindow", "Go", 0, QApplication::UnicodeUTF8));
         label->setText(QApplication::translate("MainWindow", "Command", 0, QApplication::UnicodeUTF8));
         Command->setText(QString());

@@ -35,31 +35,34 @@ QString ReadThread::removeInvalid(QString line)
 
 void ReadThread::run()
 {
+    port.Reset(port_nr);
     port.flush(port_nr);
     abort=false;
     QFile file(this->path);
     QString received="";
-    int i=0, n=0,sent=0;
-    char buf[20];
+    int i=0, n=0;
+    char buf[40];
     if(file.open(QFile::ReadOnly))
     {
         QTextStream code(&file);
         QString strline = code.readLine();
-        while((strline!=NULL)&&(!abort))
+        for(i=0;i<40;i++)
+            buf[i]=0;
+        while((code.atEnd()==false)&&(!abort))
         {
-            for(i=0;i<20;i++)
-                buf[i]=0;
             strline = strline.trimmed();
             if((strline.at(0)=='(')||(strline.at(0)=='%'))
             {}//ignore comments
             else
             {
                 strline = strline.toUpper();
+                strline = strline.replace("M6","M06");
                 int times = strline.count("G");
                 if (times>1)
                 {
                     strline = removeInvalid(strline);
                 }
+                strline =strline.replace(QRegExp("\\s+")," ");
                 int num = strline.mid(1,strline.indexOf(" ")).toInt();
                 if(strline.contains("G",Qt::CaseInsensitive)&&num>4&&num<17)
                 {}
@@ -82,7 +85,11 @@ void ReadThread::run()
                     sendAxis(strline);
                     toolChangeRoutine();
                     while(!strline.contains("M03",Qt::CaseInsensitive))
+                    {
                         strline=code.readLine();
+                        strline = strline.replace("M3","M03");
+                    }
+                    strline =strline.replace(QRegExp("\\s+")," ");
                     strline=strline.trimmed().append("\r");
 #ifndef DISCONNECTED
                     SendGcode(strline);
@@ -93,7 +100,11 @@ void ReadThread::run()
                 else if((strline.contains("M06",Qt::CaseInsensitive))&&(!toolChange))
                 {
                     while(!strline.contains("M03",Qt::CaseInsensitive))
+                    {
                         strline=code.readLine();
+                        strline = strline.replace("M3","M03");
+                    }
+                    strline =strline.replace(QRegExp("\\s+")," ");
                     strline=strline.trimmed().append("\r");
 #ifndef DISCONNECTED
                     SendGcode(strline);
@@ -104,45 +115,43 @@ void ReadThread::run()
                 else
                 {
                     strline.append("\r");
-                    char line[70];
+                    char line[80];
                     for(i=0;i<strline.length();i++)
                         line[i]=strline.at(i).toAscii();
 #ifndef DISCONNECTED
-                    sent=port.SendBuf(port_nr,line,i);
+                    port.SendBuf(port_nr,line,i);
 #else
                     printf(strline.append("\n").toLocal8Bit().data());
 #endif
-
 #ifdef Q_WS_X11
                     usleep(100000);  // sleep for 100 milliSeconds
 #else
                     Sleep(100);
 #endif
-#ifdef DEBUGER
-                    if(n > 0)
-                    {
-                        buf[n] = 0;   // always put a "null" at the end of a string!
-                        for(i=0; i < n; i++)
-                        {
-                            if(buf[i] < 32)  // replace unreadable control-codes by dots
-                            {
-                                buf[i] = '.';
-                            }
-                        }
-                        printf("received %i bytes: %s\n", n, (char *)buf);
-                        printf("%s\n",(char *)buf);
-                    }
-                    else
-                    {
-                        printf("received %i bytes.\n", n);
-                    }
-#endif
                     n=1;
-                    while((!received.contains("ok",Qt::CaseInsensitive))&&(!abort)&&(n>0))
+                    int cuenta=0;
+                    received="";
+                    //while((!received.contains("ok",Qt::CaseInsensitive))&&(!abort)&&(n>0))
+                    while(1)
                     {
 #ifndef DISCONNECTED
                         n = port.PollComport(port_nr, buf, 4);
-                        received=QString(buf);
+                        if(n==0)
+                        {
+                            port.flush(port_nr);
+                            received="";
+                            port.SendBuf(port_nr,line,i);
+                            cuenta++;
+#ifdef Q_WS_X11
+                        usleep(500000);  // sleep for 100 milliSeconds
+#else
+                        Sleep(500);
+#endif
+                        }
+                        else
+                        {
+                            received=QString(buf);
+                        }
 #else
                         received="\r\nok";
 #endif
@@ -151,6 +160,8 @@ void ReadThread::run()
 #else
                         Sleep(100);
 #endif
+                        if((received.contains("ok"))||(abort)||(cuenta>10))
+                            break;
                     }
                     if(n==0)
                     {
@@ -160,11 +171,11 @@ void ReadThread::run()
                     }
                 }
             }
-#ifdef Q_WS_X11
+/*#ifdef Q_WS_X11
                         usleep(100000);  // sleep for 100 milliSeconds
 #else
                         Sleep(100);
-#endif
+#endif*/
             sendAxis(strline);
             strline=code.readLine();
         }
@@ -219,7 +230,7 @@ int ReadThread::SendGcode(QString line)
     return(1);
 }
 
-void ReadThread::stopsig()
+void ReadThread::stopSig()
 {
     if(isRunning())
     {

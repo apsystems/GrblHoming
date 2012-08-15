@@ -1,5 +1,11 @@
 Gcode sender, monitor and homing tool for GRBL for Windows and Linux systems.
 
+v2.1a
+
+Bug fixes
+
+- Corrected an issue that caused the program to crash if the g-code had blank lines.
+
 V2.1 
 
 New Features
