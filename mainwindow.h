@@ -91,7 +91,8 @@ private:
     QString styleSheet;
     //methods
     int SendJog(QString strline);
-    int SendGcode(QString line);
+    bool SendGcode(QString line);
+    bool waitForOk();
     void UpdateAxis(QString code);
     void fillFavList();
     void readSettings();

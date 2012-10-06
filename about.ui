@@ -52,7 +52,7 @@
    <property name="geometry">
     <rect>
      <x>180</x>
-     <y>70</y>
+     <y>60</y>
      <width>201</width>
      <height>91</height>
     </rect>
@@ -68,7 +68,7 @@
    <property name="geometry">
     <rect>
      <x>180</x>
-     <y>40</y>
+     <y>30</y>
      <width>211</width>
      <height>31</height>
     </rect>
@@ -81,7 +81,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Grbl Controller 2.1</string>
+    <string>Grbl Controller 2.1x1</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_2">
@@ -94,7 +94,23 @@
     </rect>
    </property>
    <property name="text">
-    <string>Build 290312</string>
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_iconZ">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>110</y>
+     <width>130</width>
+     <height>33</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="GrblController.qrc">:/img/zapmaker-logo-130.png</pixmap>
    </property>
   </widget>
  </widget>

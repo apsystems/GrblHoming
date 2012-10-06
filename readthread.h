@@ -36,12 +36,16 @@ public slots:
 private:
     //methods
     QString removeInvalid(QString line);
-    int SendGcode(QString line);
-    void toolChangeRoutine();
+    bool SendGcode(QString line);
+    bool toolChangeRoutine();
+    bool waitForPrompt(const char *expectStr);
     //variables
     bool abort;
 
 
 };
+
+
+#define OK_PROMPT "ok\r\n"
 
 #endif // READTHREAD_H

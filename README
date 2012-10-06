@@ -1,5 +1,41 @@
 Gcode sender, monitor and homing tool for GRBL for Windows and Linux systems.
 
+Enhanced by Zapmaker. Kosme did a great deal of excellent foundation work on this 
+project - my hat is off to him. Now we take this code to the next level.
+
+The current code was tested with real milling projects using the Shapeoko and works
+pretty well, it gets the job done. There are a number of enhancements I would like 
+to add. See file TODO for this list.
+
+Before you can do anything: 
+1. Download Qt Creator (http://qt-project.org/downloads)
+2. Open the project file ending with .pro
+3. Build the executable (Windows and Linux)
+
+V2.1x1
+
+NOTE: Changes were only focused on Arduino GRBL capabilities with the Shapeoko, so 
+things like Tool Change were not tested.
+
+Enhancements
+- Improved handling of response code - this is the most significant change as it 
+ensures reliable send/response handling when sending a file to the Grbl processor.
+- Manual command now allows hitting return and command is sent. No need to press Go.
+- Default job step size changed from 0.01 to 1 mm
+- Compiles and runs under Linux now (tested with Debian and latest Qt)
+- Works with old 168 Arduino processor (except that old code is buggy and not recommended)
+- Disabled "go to home at end of job". The arduino code doesn't handle it correctly 
+and mills straight back into and through your work. Checkbox in settings has no effect.
+
+Bug fixes
+- Fixed crash when options file is not present the first time run
+- Fixed crash when trying to get GRBL settings from device
+- Settings work with 168 (8 settings) and 328 processors (10 settings)
+- Fixed Stop to call proper routine stopsig - now Stop button works correctly
+
+-------------------------------------------------------------
+Fork by Zapmaker at this rev
+-------------------------------------------------------------
 v2.1a
 
 Bug fixes

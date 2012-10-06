@@ -76,8 +76,19 @@ int RS232::PollComport(int comport_number, char *buf, int size)
 }
 
 
-int RS232::SendBuf(int comport_number, char *buf, int size)
+int RS232::SendBuf(int comport_number, const char *buf, int size)
 {
+    char b[300] = {0};
+    memcpy(b, buf, size);
+    printf("Sending to port %d [%s]:", comport_number, b);
+    for (int x= 0; x < size; x++)
+    {
+        printf("%02X ", buf[x]);
+    }
+    printf("\n");
+    fflush(stdout);
+
+
   return(write(Cport[comport_number], buf, size));
 }
 
@@ -114,7 +125,7 @@ int RS232::OpenComport(int comport_number)
     printf("illegal comport number\n");
     return(1);
   }
-  strcpy_s(baudr, "baud=9600 data=8 parity=N stop=1");
+  strcpy(baudr, "baud=9600 data=8 parity=N stop=1");
 
   Cport[comport_number] = CreateFileA(comports[comport_number],
                       GENERIC_READ|GENERIC_WRITE,
@@ -197,7 +208,7 @@ int RS232::PollComport(int comport_number, char *buf, int size)
   return(b);
 }
 
-int RS232::SendBuf(int comport_number, char *buf, int size)
+int RS232::SendBuf(int comport_number, const char *buf, int size)
 {
   int n;
 

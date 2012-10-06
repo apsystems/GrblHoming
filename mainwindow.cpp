@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
         //Manual
     connect(ui->btnChangeTool,SIGNAL(clicked()),this,SLOT(gotoToolChange()));
     connect(ui->btnGo,SIGNAL(clicked()),this,SLOT(gotoXYZ()));
+    connect(ui->Command,SIGNAL(editingFinished()),this,SLOT(gotoXYZ()));
     connect(ui->btnHome,SIGNAL(clicked()),this,SLOT(gotoHome()));
         //Send Gcode
     connect(ui->Begin,SIGNAL(clicked()),this,SLOT(begin()));
@@ -58,6 +59,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboStep->addItem("0.1");
     ui->comboStep->addItem("1");
     ui->comboStep->addItem("10");
+    ui->comboStep->setCurrentIndex(2);
     ui->Begin->setEnabled(false);
     ui->Stop->setEnabled(false);
 #ifdef Q_WS_X11
@@ -231,6 +233,9 @@ void MainWindow::gotoHome()
 
 void MainWindow::gotoXYZ()
 {
+    if (ui->Command->text().length() == 0)
+        return;
+
     QString line = ui->Command->text().append("\r");
 #ifndef DISCONNECTED
     if(SendGcode(line))
@@ -461,55 +466,92 @@ void MainWindow::selectFav(int selected)
     }
 }
 
-int MainWindow::SendGcode(QString line)
+
+bool MainWindow::SendGcode(QString line)
 {
     QString received="";
-    port.flush(port_nr);
-    int i, n=0;
-    //line.append('\r');
-    char buf[50];
-    for(i=0;i<50;i++)
-        buf[i]=0;
-    for(i=0;i<line.length();i++)
-        buf[i]=line.at(i).toAscii();
+#define BUF_SIZE 300
+    line.append('\r');
+    char buf[BUF_SIZE + 1] = {0};
+    if (line.length() >= BUF_SIZE)
+    {
+        //printf("ERROR: buf size too small\n"); fflush(stdout);
 
-    if(!port.SendBuf(port_nr,buf,line.length()))
-        return 0;
+        return false;
+    }
+    for (int i = 0; i < line.length(); i++)
+        buf[i] = line.at(i).toAscii();
+
+    if (!port.SendBuf(port_nr, buf, line.length()))
+    {
+        //printf("SENDBUF FAILED\n"); fflush(stdout);
+
+        return false;
+    }
     else
     {
-#ifdef DEBUGER
-        if(n > 0)
+        if (!waitForOk())
         {
-            buf[n] = 0;   // always put a "null" at the end of a string!
-            for(i=0; i < n; i++)
-            {
-                if(buf[i] < 32)  // replace unreadable control-codes by dots
-                {
-                    buf[i] = '.';
-                }
-            }
-            printf("received %i bytes: %s\n", n, (char *)buf);
-            printf("%s\n",(char *)buf);
+            //printf("WAITFOROK FAILED\n"); fflush(stdout);
+
+            return false;
         }
-        else
+    }
+    return true;
+}
+
+bool MainWindow::waitForOk()
+{
+#define RESPONSE_EXPECT "ok\r\n"
+    char tmp[BUF_SIZE + 1] = {0};
+    int count = 0;
+    bool status = true;
+    QString result;
+    while (!result.contains(RESPONSE_EXPECT))
+    {
+#ifndef DISCONNECTED
+        int n = port.PollComport(port_nr, tmp, BUF_SIZE);
+        if (n == 0)
         {
-            printf("received %i bytes.\n", n);
-        }
-#endif
-        do
-        {
-            n = port.PollComport(port_nr, buf, 4);
-            received=QString(buf);
+            count++;
 #ifdef Q_WS_X11
             usleep(100000);  // sleep for 100 milliSeconds
 #else
             Sleep(100);
 #endif
-        }while((!received.contains("ok",Qt::CaseInsensitive))&&(n>0));
-        if(n==0)
-            return(0);
+        }
+        else
+        {
+            tmp[n] = 0;
+            result.append(tmp);
+            //printf("GOT:%s\n", tmp); fflush(stdout);
+            count = 0;
+        }
+#else
+        result = RESPONSE_EXPECT;
+#endif
+#ifdef Q_WS_X11
+        usleep(100000);  // sleep for 100 milliSeconds
+#else
+        Sleep(100);
+#endif
+        if (count > 10)
+        {\
+            status = false;
+            break;
+        }
     }
-    return(1);
+
+    if (status)
+    {
+#ifdef Q_WS_X11
+        usleep(200000);  // sleep for 200 millseconds
+#else
+        Sleep(200);
+#endif
+    }
+
+    return status;
 }
 
 int MainWindow::SendJog(QString strline)

@@ -35,6 +35,8 @@ public slots:
     void changeValues(int row, int col);
     
 private:
+    bool waitForOk();
+
     Ui::GrblDialog *ui;
 
 };

@@ -27,7 +27,7 @@ public:
     //methods
     int OpenComport(int comport_number);
     int PollComport(int comport_number, char *buf, int size);
-    int SendBuf(int comport_number, char *buf, int size);
+    int SendBuf(int comport_number, const char *buf, int size);
     void CloseComport(int comport_number);
     void Reset(int comport_number);
     void flush(int comport_number);

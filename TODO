@@ -1,0 +1,22 @@
+This file contains enhancements the developer would like to implement:
+
+- Ensure that output window shows all text
+- Fix default go to home on completion issue (right now that is commented out to prevent destroying work/bit)
+- Strange bug when using Z jog after completing file run - the command spins up the z motor speed quite a lot
+- Consolidate duplicated waitForPrompt code
+- Provide means to handle max timeout (i.e. timed out waiting popup - ok to quit or continue waiting?)
+- Setting for default wait timeout
+- Handle "error" response and display error message
+- Handle 0.5 168 processor bug: binary response garbage causes failure (ignore and resend?)
+- Store last good port used and display at startup so you don't have to pick it
+- Show only available com ports
+- Add option to auto connect to last port
+- Verify that entering x/y/z move commands are absolute and not relative
+- Find way to remote reset grbl controller with button added so don't have to physically reset arduino
+- Fix enabling Begin button when already started
+- Provide diagnostic response view
+- Provide counter showing time waiting for a response if time > 5s
+- Remove radio buttons - allow user to do any of the three operations without special mode state requirement
+- Popup dialog when successful send is complete
+- Print current GRBL settings
+- Compile for Mac

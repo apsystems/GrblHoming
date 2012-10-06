@@ -80,6 +80,14 @@ void Options::accept()
 void Options::readFile()
 {
     QFile file(SETTINGS);
+    if(!file.exists())
+    {
+        file.open(QIODevice::WriteOnly|QIODevice::Text);
+        QTextStream out(&file);
+        out<<"1\n";
+        out<<"0\t0\t0\n";
+        file.close();
+    }
     file.open(QIODevice::ReadOnly|QIODevice::Text);
     QTextStream in(&file);
     this->settings =in.readLine().toInt();
