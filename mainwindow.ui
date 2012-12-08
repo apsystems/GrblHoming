@@ -9,13 +9,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>620</width>
-    <height>470</height>
+    <width>720</width>
+    <height>543</height>
    </rect>
   </property>
   <property name="sizePolicy">
-   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-    <horstretch>0</horstretch>
+   <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+    <horstretch>7</horstretch>
     <verstretch>0</verstretch>
    </sizepolicy>
   </property>
@@ -35,29 +35,7 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>10</y>
-      <width>91</width>
-      <height>48</height>
-     </rect>
-    </property>
-    <layout class="QVBoxLayout" name="verticalLayout">
-     <item>
-      <widget class="QLabel" name="lblPort">
-       <property name="text">
-        <string>Port name</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QComboBox" name="cmbPort"/>
-     </item>
-    </layout>
-   </widget>
-   <widget class="QWidget" name="layoutWidget">
-    <property name="geometry">
-     <rect>
-      <x>420</x>
+      <x>478</x>
       <y>20</y>
       <width>170</width>
       <height>131</height>
@@ -243,7 +221,7 @@
    <widget class="QWidget" name="layoutWidget">
     <property name="geometry">
      <rect>
-      <x>392</x>
+      <x>450</x>
       <y>18</y>
       <width>20</width>
       <height>131</height>
@@ -304,9 +282,9 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>190</y>
+      <y>320</y>
       <width>341</width>
-      <height>141</height>
+      <height>171</height>
      </rect>
     </property>
    </widget>
@@ -318,8 +296,8 @@
      <rect>
       <x>380</x>
       <y>170</y>
-      <width>231</width>
-      <height>201</height>
+      <width>321</width>
+      <height>221</height>
      </rect>
     </property>
     <property name="title">
@@ -330,8 +308,8 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>130</width>
-       <height>91</height>
+       <width>214</width>
+       <height>120</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0">
@@ -421,10 +399,10 @@
     <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
-       <x>160</x>
+       <x>240</x>
        <y>20</y>
-       <width>41</width>
-       <height>97</height>
+       <width>70</width>
+       <height>132</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="RadioButtons">
@@ -484,10 +462,10 @@
     <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
-       <x>120</x>
-       <y>130</y>
-       <width>102</width>
-       <height>61</height>
+       <x>200</x>
+       <y>160</y>
+       <width>111</width>
+       <height>51</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -503,32 +481,11 @@
       </item>
      </layout>
     </widget>
-    <widget class="QPushButton" name="ResetButton">
-     <property name="geometry">
-      <rect>
-       <x>20</x>
-       <y>160</y>
-       <width>77</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <pointsize>9</pointsize>
-      </font>
-     </property>
-     <property name="autoFillBackground">
-      <bool>false</bool>
-     </property>
-     <property name="text">
-      <string>Set Home</string>
-     </property>
-    </widget>
     <widget class="QCheckBox" name="SpindleOn">
      <property name="geometry">
       <rect>
        <x>20</x>
-       <y>130</y>
+       <y>190</y>
        <width>100</width>
        <height>17</height>
       </rect>
@@ -548,9 +505,9 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>90</y>
+      <y>80</y>
       <width>341</width>
-      <height>91</height>
+      <height>161</height>
      </rect>
     </property>
     <property name="title">
@@ -560,20 +517,13 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>13</y>
+       <y>20</y>
        <width>321</width>
-       <height>71</height>
+       <height>61</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout_2">
-      <item row="0" column="0">
-       <widget class="QPushButton" name="openFile">
-        <property name="text">
-         <string>Open file</string>
-        </property>
-       </widget>
-      </item>
-      <item row="0" column="1" colspan="3">
+      <item row="0" column="0" colspan="4">
        <widget class="QLineEdit" name="filePath"/>
       </item>
       <item row="1" column="2">
@@ -603,7 +553,59 @@
         </property>
        </spacer>
       </item>
+      <item row="1" column="0">
+       <widget class="QPushButton" name="openFile">
+        <property name="text">
+         <string>Choose file</string>
+        </property>
+       </widget>
+      </item>
      </layout>
+    </widget>
+    <widget class="QProgressBar" name="progressFileSend">
+     <property name="geometry">
+      <rect>
+       <x>10</x>
+       <y>90</y>
+       <width>321</width>
+       <height>23</height>
+      </rect>
+     </property>
+     <property name="value">
+      <number>0</number>
+     </property>
+    </widget>
+    <widget class="QLabel" name="labelRuntime">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>20</x>
+       <y>130</y>
+       <width>61</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>Runtime:</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="outputRuntime">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="geometry">
+      <rect>
+       <x>90</x>
+       <y>130</y>
+       <width>61</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
     </widget>
    </widget>
    <widget class="QPushButton" name="btnGRBL">
@@ -612,8 +614,8 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>400</x>
-      <y>390</y>
+      <x>570</x>
+      <y>440</y>
       <width>121</width>
       <height>23</height>
      </rect>
@@ -629,47 +631,21 @@
     <property name="geometry">
      <rect>
       <x>20</x>
-      <y>340</y>
+      <y>250</y>
       <width>341</width>
-      <height>80</height>
+      <height>61</height>
      </rect>
     </property>
     <property name="title">
      <string>Manual</string>
     </property>
-    <widget class="QPushButton" name="btnChangeTool">
-     <property name="geometry">
-      <rect>
-       <x>190</x>
-       <y>50</y>
-       <width>81</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Change tool</string>
-     </property>
-    </widget>
-    <widget class="QPushButton" name="btnGo">
-     <property name="geometry">
-      <rect>
-       <x>280</x>
-       <y>20</y>
-       <width>51</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Go</string>
-     </property>
-    </widget>
     <widget class="QWidget" name="layoutWidget">
      <property name="geometry">
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>261</width>
-       <height>27</height>
+       <width>321</width>
+       <height>31</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout">
@@ -692,99 +668,90 @@
       </item>
      </layout>
     </widget>
-    <widget class="QComboBox" name="comboFav">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>50</y>
-       <width>171</width>
-       <height>22</height>
-      </rect>
-     </property>
-     <item>
-      <property name="text">
-       <string>Select...</string>
-      </property>
-     </item>
-    </widget>
-    <widget class="QPushButton" name="btnHome">
-     <property name="geometry">
-      <rect>
-       <x>280</x>
-       <y>50</y>
-       <width>51</width>
-       <height>23</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Home</string>
-     </property>
-    </widget>
    </widget>
    <widget class="QPushButton" name="btnOpenPort">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>65</y>
-      <width>75</width>
-      <height>23</height>
+      <x>20</x>
+      <y>50</y>
+      <width>81</width>
+      <height>21</height>
      </rect>
     </property>
     <property name="text">
      <string>Open</string>
     </property>
    </widget>
-   <widget class="QGroupBox" name="groupBoxOptions">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
+   <widget class="QWidget" name="horizontalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>130</x>
+      <x>20</x>
       <y>10</y>
-      <width>221</width>
-      <height>81</height>
+      <width>341</width>
+      <height>31</height>
      </rect>
     </property>
-    <property name="title">
-     <string/>
-    </property>
-    <widget class="QWidget" name="layoutWidget">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>0</y>
-       <width>201</width>
-       <height>77</height>
-      </rect>
+    <layout class="QHBoxLayout" name="horizontalLayout_3">
+     <property name="leftMargin">
+      <number>0</number>
      </property>
-     <layout class="QVBoxLayout" name="verticalLayout_4">
-      <item>
-       <widget class="QRadioButton" name="rbutSend">
-        <property name="text">
-         <string>Send Gcode</string>
-        </property>
-        <property name="checked">
-         <bool>true</bool>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="rbutAdj">
-        <property name="text">
-         <string>Adjust machine</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QRadioButton" name="rbutManual">
-        <property name="text">
-         <string>Manual coordinates</string>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
+     <item>
+      <widget class="QLabel" name="lblPort">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>80</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="text">
+        <string>Port name</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="cmbPort">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="minimumSize">
+        <size>
+         <width>220</width>
+         <height>0</height>
+        </size>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QPushButton" name="btnSetHome">
+    <property name="geometry">
+     <rect>
+      <x>250</x>
+      <y>50</y>
+      <width>101</width>
+      <height>21</height>
+     </rect>
+    </property>
+    <property name="font">
+     <font>
+      <pointsize>9</pointsize>
+     </font>
+    </property>
+    <property name="autoFillBackground">
+     <bool>false</bool>
+    </property>
+    <property name="text">
+     <string>Reset</string>
+    </property>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -792,8 +759,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>620</width>
-     <height>20</height>
+     <width>720</width>
+     <height>21</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">

@@ -7,17 +7,17 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>300</height>
+    <height>175</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Options</string>
   </property>
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>30</x>
-     <y>260</y>
+     <x>40</x>
+     <y>130</y>
      <width>341</width>
      <height>32</height>
     </rect>
@@ -28,91 +28,6 @@
    <property name="standardButtons">
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
    </property>
-  </widget>
-  <widget class="QGroupBox" name="groupBoxStream">
-   <property name="geometry">
-    <rect>
-     <x>40</x>
-     <y>130</y>
-     <width>301</width>
-     <height>121</height>
-    </rect>
-   </property>
-   <property name="title">
-    <string>Send Gcode</string>
-   </property>
-   <widget class="QCheckBox" name="chkGoHome">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>20</y>
-      <width>211</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Return home at completion</string>
-    </property>
-   </widget>
-   <widget class="QCheckBox" name="chkToolChange">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>50</y>
-      <width>211</width>
-      <height>17</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Enable Tool Change</string>
-    </property>
-   </widget>
-   <widget class="QFrame" name="XYZframe">
-    <property name="geometry">
-     <rect>
-      <x>40</x>
-      <y>70</y>
-      <width>161</width>
-      <height>41</height>
-     </rect>
-    </property>
-    <property name="frameShape">
-     <enum>QFrame::StyledPanel</enum>
-    </property>
-    <property name="frameShadow">
-     <enum>QFrame::Raised</enum>
-    </property>
-    <widget class="QLineEdit" name="lineEditTCX">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>10</y>
-       <width>41</width>
-       <height>20</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="lineEditTCY">
-     <property name="geometry">
-      <rect>
-       <x>60</x>
-       <y>10</y>
-       <width>41</width>
-       <height>20</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QLineEdit" name="lineEditTCZ">
-     <property name="geometry">
-      <rect>
-       <x>110</x>
-       <y>10</y>
-       <width>41</width>
-       <height>20</height>
-      </rect>
-     </property>
-    </widget>
-   </widget>
   </widget>
   <widget class="QGroupBox" name="groupBoxAxis">
    <property name="geometry">
@@ -165,6 +80,70 @@
      <string>Z Axis</string>
     </property>
    </widget>
+  </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>20</y>
+     <width>161</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Seconds to Wait for Response</string>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="spinResponseWaitSec">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>40</y>
+     <width>71</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="minimum">
+    <number>1</number>
+   </property>
+   <property name="maximum">
+    <number>1000</number>
+   </property>
+   <property name="value">
+    <number>60</number>
+   </property>
+  </widget>
+  <widget class="QSpinBox" name="spinZJogRate">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>90</y>
+     <width>71</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="minimum">
+    <number>10</number>
+   </property>
+   <property name="maximum">
+    <number>500</number>
+   </property>
+   <property name="value">
+    <number>260</number>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_2">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>70</y>
+     <width>141</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Z-Jog Rate</string>
+   </property>
   </widget>
  </widget>
  <resources/>

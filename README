@@ -1,16 +1,52 @@
-Gcode sender, monitor and homing tool for GRBL for Windows and Linux systems.
+                        ---- GrblController ----
+
+GrblController is a gcode sender, monitor and homing tool for GRBL for 
+Mac, Windows and Linux systems written using the Qt Desktop Framework in C++.
 
 Enhanced by Zapmaker. Kosme did a great deal of excellent foundation work on this 
-project - my hat is off to him. Now we take this code to the next level.
+project.
 
-The current code was tested with real milling projects using the Shapeoko and works
-pretty well, it gets the job done. There are a number of enhancements I would like 
-to add. See file TODO for this list.
+Version 3.0 is a near-complete rewrite of the C++ code fixing all known bugs.
+The other major enhancement is native Mac OSX support (including older 32 bit Intel 10.5).
 
-Before you can do anything: 
-1. Download Qt Creator (http://qt-project.org/downloads)
-2. Open the project file ending with .pro
-3. Build the executable (Windows and Linux)
+The code was tested with real milling projects using the Shapeoko and works
+pretty well. For a list of possible future enhancements, see file TODO.
+
+Prebuilt binaries/installers can be found on github's download section for this
+project (GrblHoming). Alternately, if you download the (a) Qt SDK from Nokia or 
+(b) the Qt source from Qt Project along with the standalone Qt Creator, you can
+build from source.
+
+Details on how to do this can be found here:
+http://zapmaker.org/
+
+V3.0
+Enhancements
+- Nearly a full code rewrite to ensure ease-of-use and robustness
+- Percentage complete progress bar for files; also shows time elapsed sending file.
+- Reset button now cycles COM port which causes Arduino to stop steppers and
+  reinitialize position to 0,0,0 (No more manual Auduino resets!)
+- Settings configurations are now stored using QSettings class for platform independence.
+- Only available COM ports are now shown. Uses third-party QextSerialPort library.
+- App remembers last COM port used, last folder, last file extension used after restart
+- Ability to configure wait-for-response time
+- Status list window now shows both sent and received data
+- Error responses are ignored during file send (nearly 100% of the time they are not important)
+- Z-jog speed using buttons is configurable
+- Radio buttons to select mode have been removed in favor of enabling/disabling widgets based
+  on current context. This simplifies usage.
+- Popups have been removed in favor of writing errors to status list window
+
+Bug fixes
+- Overall code hardening
+- Properly implementing Qt signals and slots across the board
+
+Build verification
+- Windows 7 64 bit using MinGW
+- Inno Setup for Windows, installs successfully on Windows 7
+- Mac OSX Mountain Lion, target 64 bit and 32 bit executables
+- Qt Mac installer successfully installs and runs on Mountain Lion and 10.5 32 bit Intel
+- Linux: Builds successfully on Debian 6, Ubuntu 12.10
 
 V2.1x1
 

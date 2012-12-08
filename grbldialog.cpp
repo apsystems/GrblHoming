@@ -1,106 +1,97 @@
+/****************************************************************
+ * grbldialog.cpp
+ * GrblHoming - zapmaker fork on github
+ *
+ * 15 Nov 2012
+ * GPL License (see LICENSE file)
+ * Software is provided AS-IS
+ ****************************************************************/
+
 #include "grbldialog.h"
 #include "ui_grbldialog.h"
 
-float values[]={0,0,0,0,0,0,0,0,0,0};
-bool change[10];
-
-GrblDialog::GrblDialog(QWidget *parent) :
+GrblDialog::GrblDialog(QWidget *parent, GCode *gc) :
     QDialog(parent),
+    gcode(gc),
     ui(new Ui::GrblDialog)
 {
     ui->setupUi(this);
     connect(ui->btnCancel,SIGNAL(clicked()),this,SLOT(Cancel()));
     connect(ui->btnOk,SIGNAL(clicked()),this,SLOT(Ok()));
+    connect(this, SIGNAL(sendGcodeAndGetResult(int, QString)), gcode, SLOT(sendGcodeAndGetResult(int, QString)));
+    connect(gcode, SIGNAL(gcodeResult(int, QString)), this, SLOT(gcodeResult(int, QString)));
+
+    ui->btnCancel->setEnabled(false);
+    ui->btnOk->setEnabled(false);
+
+    values = new float[GRBL_SETTINGS_ITEMS_COUNT];
+    change = new bool[GRBL_SETTINGS_ITEMS_COUNT];
+
 }
 
 GrblDialog::~GrblDialog()
 {
+    delete values;
+    delete change;
     delete ui;
 }
 
-//methods
-void GrblDialog::setSettings()
+void GrblDialog::getSettings()
 {
     int i;
-    for(i=0;i<10;i++)
+    for (i = 0; i < GRBL_SETTINGS_ITEMS_COUNT; i++)
     {
         ui->tableWidget->item(i,1)->setFlags(0);
-        change[i]=false;
+        change[i] = false;
     }
     //ui->tableWidget->item(0,1)->setFlags(Qt::NoItemFlags);
-    QTableWidgetItem * params[10];
-    for (i = 0; i < 10; i++)
+    QTableWidgetItem * params[GRBL_SETTINGS_ITEMS_COUNT];
+    for (i = 0; i < GRBL_SETTINGS_ITEMS_COUNT; i++)
     {
         params[i] = new QTableWidgetItem;
-        ui->tableWidget->setItem(i,0,params[i]);
+        ui->tableWidget->setItem(i, 0, params[i]);
     }
 
-    char buf[]="$\r";
-    port.SendBuf(port_nr,buf,2);
-#define BUF_SIZE 300
-#define RESPONSE_EXPECT "ok\r\n"
-    char tmp[BUF_SIZE + 1] = {0};
-    int count = 0;
-    bool status = true;
-    QString result;
-    while (!result.contains(RESPONSE_EXPECT))
-    {
-        int n = port.PollComport(port_nr, tmp, BUF_SIZE);
-        if (n == 0)
-        {
-            count++;
-#ifdef Q_WS_X11
-            usleep(100000);  // sleep for 100 milliSeconds
-#else
-            Sleep(100);
-#endif
-        }
-        else
-        {
-            tmp[n] = 0;
-            result.append(tmp);
-            //printf("GOT:%s\n", tmp); fflush(stdout);
-            count = 0;
-        }
-#ifdef Q_WS_X11
-        usleep(100000);  // sleep for 100 milliSeconds
-#else
-        Sleep(100);
-#endif
-        if (count > 50)
-        {\
-            status = false;
-            break;
-        }
-    }
-
-    if (status)
-    {
-        for (i = 0; i < 10; i++)
-        {
-            if (!result.contains(QRegExp("\\$\\d = ")))
-            {
-                // only collect as many as provided up to 10
-                break;
-            }
-
-            ui->tableWidget->item(i,0)->setFont(QFont("Tahoma",10,87,false));
-            result = result.mid(result.indexOf(QRegExp("\\$\\d = "))+5,-1);
-            values[i]=result.mid(0,result.indexOf(" ")).toFloat();
-        }
-
-        for (int j = 0; j < i; j++)
-        {
-            params[j]->setText(QString::number(values[j]));
-        }
-
-        ui->tableWidget->setColumnWidth(0,60);
-    }
-
-    connect(ui->tableWidget,SIGNAL(cellChanged(int,int)),this,SLOT(changeValues(int,int)));
+    emit sendGcodeAndGetResult(GDLG_CMD_ID_GET, "$\r");
 }
 
-//slots
+void GrblDialog::gcodeResult(int id, QString result)
+{
+    switch (id)
+    {
+    case GDLG_CMD_ID_GET:
+        if (result.size() > 0)
+        {
+            int i;
+            for (i = 0; i < GRBL_SETTINGS_ITEMS_COUNT; i++)
+            {
+                if (!result.contains(QRegExp("\\$\\d = ")))
+                {
+                    // only collect as many as provided up to 10 (older controllers only have 8 items)
+                    break;
+                }
+
+                ui->tableWidget->item(i,0)->setFont(QFont("Tahoma",10,87,false));
+                result = result.mid(result.indexOf(QRegExp("\\$\\d = "))+5,-1);
+                values[i]=result.mid(0,result.indexOf(" ")).toFloat();
+            }
+
+            for (int j = 0; j < i; j++)
+            {
+                ui->tableWidget->item(j, 0)->setText(QString::number(values[j]));
+            }
+
+            ui->tableWidget->setColumnWidth(0,60);
+
+            connect(ui->tableWidget,SIGNAL(cellChanged(int,int)),this,SLOT(changeValues(int,int)));
+        }
+        ui->btnCancel->setEnabled(true);
+        ui->btnOk->setEnabled(true);
+        break;
+    case GDLG_CMD_ID_SET:
+        break;
+    }
+}
 
 void GrblDialog::Cancel()
 {
@@ -118,80 +109,19 @@ void GrblDialog::changeValues(int row, int col)
 
 void GrblDialog::Ok()
 {
-    int i=0;
-    char line[20];
-    int j;
-    QString strline;
-    for(i=0;i<10;i++)
+    for(int i = 0; i < GRBL_SETTINGS_ITEMS_COUNT; i++)
     {
-        if(change[i])
+        if (change[i])
         {
-            strline="$";
+            QString strline = "$";
             strline.append(QString::number(i)).append("=").append(ui->tableWidget->item(i,0)->text()).append('\r');
-            for(j=0;j<strline.length();j++)
-                line[j]=strline.at(j).toAscii();
-#ifndef DISCONNECTED
-            port.SendBuf(this->port_nr,line,j);
-            if (!waitForOk())
-            {
-                break;
-            }
-#endif
+            char line[20];
+            for (int j = 0 ; j < strline.length() ;j++)
+                line[j] = strline.at(j).toAscii();
+
+            emit sendGcodeAndGetResult(GDLG_CMD_ID_SET, strline);
         }
     }
     this->close();
 }
 
-bool GrblDialog::waitForOk()
-{
-#define RESPONSE_EXPECT "ok\r\n"
-    char tmp[BUF_SIZE + 1] = {0};
-    int count = 0;
-    bool status = true;
-    QString result;
-    while (!result.contains(RESPONSE_EXPECT))
-    {
-#ifndef DISCONNECTED
-        int n = port.PollComport(port_nr, tmp, BUF_SIZE);
-        if (n == 0)
-        {
-            count++;
-#ifdef Q_WS_X11
-            usleep(500000);  // sleep for 100 milliSeconds
-#else
-            Sleep(500);
-#endif
-        }
-        else
-        {
-            tmp[n] = 0;
-            result.append(tmp);
-            //printf("GOT:%s\n", tmp); fflush(stdout);
-            count = 0;
-        }
-#else
-        result = RESPONSE_EXPECT;
-#endif
-#ifdef Q_WS_X11
-        usleep(100000);  // sleep for 100 milliSeconds
-#else
-        Sleep(100);
-#endif
-        if (count > 50)
-        {\
-            status = false;
-            break;
-        }
-    }
-
-    if (status)
-    {
-#ifdef Q_WS_X11
-        usleep(200000);  // sleep for 200 millseconds
-#else
-        Sleep(200);
-#endif
-    }
-
-    return status;
-}

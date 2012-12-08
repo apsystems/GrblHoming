@@ -6,26 +6,29 @@
 
 QT       += core gui
 
-TARGET = GcodeSenderGUI
+TARGET = GrblController
 TEMPLATE = app
 
+include(QextSerialPort/qextserialport.pri)
 
 SOURCES += main.cpp\
         mainwindow.cpp \
     rs232.cpp \
-    readthread.cpp \
     options.cpp \
     grbldialog.cpp \
-    about.cpp
+    about.cpp \
+    gcode.cpp \
+    timer.cpp
 
 HEADERS  += mainwindow.h \
     rs232.h \
-    readthread.h \
     options.h \
     grbldialog.h \
     definitions.h \
     about.h \
-    images.rcc
+    images.rcc \
+    gcode.h \
+    timer.h
 
 FORMS    += mainwindow.ui \
     options.ui \
@@ -33,3 +36,6 @@ FORMS    += mainwindow.ui \
     about.ui
 
 RESOURCES += GrblController.qrc
+
+RC_FILE = grbl.rc
+

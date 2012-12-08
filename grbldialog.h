@@ -1,3 +1,12 @@
+/****************************************************************
+ * grbldialog.h
+ * GrblHoming - zapmaker fork on github
+ *
+ * 15 Nov 2012
+ * GPL License (see LICENSE file)
+ * Software is provided AS-IS
+ ****************************************************************/
+
 #ifndef GRBLDIALOG_H
 #define GRBLDIALOG_H
 
@@ -7,25 +16,33 @@
 #include <QMessageBox>
 #include "definitions.h"
 #include "mainwindow.h"
-#include "rs232.h"
+#include "gcode.h"
 
 namespace Ui {
 class GrblDialog;
 }
+
+#define GDLG_CMD_ID_GET 1
+#define GDLG_CMD_ID_SET 2
+
+#define GRBL_SETTINGS_ITEMS_COUNT 10
 
 class GrblDialog : public QDialog
 {
     Q_OBJECT
     
 public:
-    explicit GrblDialog(QWidget *parent = 0);
+    explicit GrblDialog(QWidget *parent, GCode *gcode);
     ~GrblDialog();
-    //objects
-    RS232 port;
-    //vatiables
-    int port_nr;
+
+    //variables
+    GCode *gcode;
+
     //methods
-    void setSettings();
+    void getSettings();
+
+signals:
+    void sendGcodeAndGetResult(int id, QString cmd);
 
 public slots:
     //buttons
@@ -33,11 +50,13 @@ public slots:
     void Cancel();
     //Column Widget
     void changeValues(int row, int col);
+    void gcodeResult(int id, QString result);
     
 private:
-    bool waitForOk();
-
     Ui::GrblDialog *ui;
+    float *values;
+    bool *change;
+
 
 };
 

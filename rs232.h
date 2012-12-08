@@ -1,3 +1,12 @@
+/****************************************************************
+ * rs232.h
+ * GrblHoming - zapmaker fork on github
+ *
+ * 15 Nov 2012
+ * GPL License (see LICENSE file)
+ * Software is provided AS-IS
+ ****************************************************************/
+
 #ifndef RS232_H
 #define RS232_H
 
@@ -6,7 +15,7 @@
 
 #include <stdio.h>
 #include <string.h>
-#ifdef Q_WS_X11
+#if defined(Q_WS_X11) || defined(Q_WS_MACX)
 #include <termios.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
@@ -18,19 +27,36 @@
 #include <Windows.h>
 #endif
 
+#include <qextserialport.h>
+#include <qextserialenumerator.h>
+
 #include "definitions.h"
+
+
+#if defined(Q_WS_X11) || defined(Q_WS_MACX)
+#define SLEEP(x) usleep(1000 * x);
+#else
+#define SLEEP(x) Sleep(x);
+#endif
+
 
 class RS232
 {
 public:
     RS232();
     //methods
-    int OpenComport(int comport_number);
-    int PollComport(int comport_number, char *buf, int size);
-    int SendBuf(int comport_number, const char *buf, int size);
-    void CloseComport(int comport_number);
-    void Reset(int comport_number);
-    void flush(int comport_number);
+    bool OpenComport(QString commPortStr);
+    int PollComport(char *buf, int size);
+    int SendBuf(const char *buf, int size);
+    void CloseComport();
+    void Reset();
+    void flush();
+    bool isPortOpen();
+
+private:
+    QextSerialPort *port;
 };
+
+void diag(const char *str, ...);
 
 #endif // RS232_H

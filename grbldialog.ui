@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Grbl Settings</string>
   </property>
   <widget class="QPushButton" name="btnOk">
    <property name="geometry">
@@ -80,18 +80,6 @@
    </attribute>
    <attribute name="verticalHeaderVisible">
     <bool>false</bool>
-   </attribute>
-   <attribute name="verticalHeaderVisible">
-    <bool>false</bool>
-   </attribute>
-   <attribute name="horizontalHeaderStretchLastSection">
-    <bool>true</bool>
-   </attribute>
-   <attribute name="horizontalHeaderVisible">
-    <bool>false</bool>
-   </attribute>
-   <attribute name="horizontalHeaderDefaultSectionSize">
-    <number>200</number>
    </attribute>
    <row/>
    <row/>

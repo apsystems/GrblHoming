@@ -1,234 +1,431 @@
+/****************************************************************
+ * mainwindow.cpp
+ * GrblHoming - zapmaker fork on github
+ *
+ * 15 Nov 2012
+ * GPL License (see LICENSE file)
+ * Software is provided AS-IS
+ ****************************************************************/
+
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
 //#define DEBUG
 
-QStringList lista;
-//Options opt();
-
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    portOpen=false;
+    // Setup our application information to be used by QSettings
+    QCoreApplication::setOrganizationName(COMPANY_NAME);
+    QCoreApplication::setOrganizationDomain(DOMAIN_NAME);
+    QCoreApplication::setApplicationName(APPLICATION_NAME);
+
     ui->setupUi(this);
+
     readSettings();
-    ui->comboFav->setVisible(false);
+
+    // see http://blog.qt.digia.com/2010/06/17/youre-doing-it-wrong/
+    // The thread points out that the documentation for QThread is wrong :) and
+    // you should NOT subclass from QThread and override run(), rather,
+    // attach your QOBJECT to a thread and use events (signals/slots) to communicate.
+    gcode.moveToThread(&gcodeThread);
+    timer.moveToThread(&timerThread);
+
     //buttons
     connect(ui->btnOpenPort,SIGNAL(clicked()),this,SLOT(openPort()));
     connect(ui->btnGRBL,SIGNAL(clicked()),this,SLOT(setGRBL()));
-        //Adjust
     connect(ui->DecXBtn,SIGNAL(clicked()),this,SLOT(decX()));
     connect(ui->DecYBtn,SIGNAL(clicked()),this,SLOT(decY()));
     connect(ui->DecZBtn,SIGNAL(clicked()),this,SLOT(decZ()));
     connect(ui->IncXBtn,SIGNAL(clicked()),this,SLOT(incX()));
     connect(ui->IncYBtn,SIGNAL(clicked()),this,SLOT(incY()));
     connect(ui->IncZBtn,SIGNAL(clicked()),this,SLOT(incZ()));
-    connect(ui->ResetButton,SIGNAL(clicked()),this,SLOT(reset()));
-        //Manual
-    connect(ui->btnChangeTool,SIGNAL(clicked()),this,SLOT(gotoToolChange()));
-    connect(ui->btnGo,SIGNAL(clicked()),this,SLOT(gotoXYZ()));
+    connect(ui->btnSetHome,SIGNAL(clicked()),this,SLOT(setHome()));
     connect(ui->Command,SIGNAL(editingFinished()),this,SLOT(gotoXYZ()));
-    connect(ui->btnHome,SIGNAL(clicked()),this,SLOT(gotoHome()));
-        //Send Gcode
     connect(ui->Begin,SIGNAL(clicked()),this,SLOT(begin()));
     connect(ui->openFile,SIGNAL(clicked()),this,SLOT(openFile()));
     connect(ui->Stop,SIGNAL(clicked()),this,SLOT(stop()));
-    connect(ui->Stop,SIGNAL(clicked()),&readthread,SLOT(stopsig()));
-    //radio buttons
-    connect(ui->rbutAdj,SIGNAL(toggled(bool)),this,SLOT(adjustRBtn()));
-    connect(ui->rbutManual,SIGNAL(toggled(bool)),this,SLOT(manualRBtn()));
-    connect(ui->rbutSend,SIGNAL(toggled(bool)),this,SLOT(sendRBtn()));
-    //check box
     connect(ui->SpindleOn,SIGNAL(toggled(bool)),this,SLOT(toggleSpindle()));
-    //communications
-        //options
-    connect(&opt,SIGNAL(sendSettings(int)),this,SLOT(setSettings(int)));
-    connect(&opt,SIGNAL(toolCoord(float[])),this,SLOT(setTCCoord(float[])));
-        //thread
-    connect(&readthread,SIGNAL(addList(QString)),this,SLOT(receiveList(QString)));
-    connect(&readthread,SIGNAL(sendMsg(QString)),this,SLOT(receiveMsg(QString)));
-    connect(&readthread,SIGNAL(sendAxis(QString)),this,SLOT(receiveAxis(QString)));
-    connect(this,SIGNAL(Stop()),&readthread,SLOT(stopsig()));
-    // menu bar
     connect(ui->actionOptions,SIGNAL(triggered()),this,SLOT(getOptions()));
     connect(ui->actionAbout,SIGNAL(triggered()),this,SLOT(showAbout()));
 
-    fillFavList();
+    connect(this, SIGNAL(sendFile(QString)), &gcode, SLOT(sendFile(QString)));
+    connect(this, SIGNAL(openPort(QString)), &gcode, SLOT(openPort(QString)));
+    connect(this, SIGNAL(closePort(bool)), &gcode, SLOT(closePort(bool)));
+    connect(this, SIGNAL(sendGcode(QString)), &gcode, SLOT(sendGcode(QString)));
+    connect(this, SIGNAL(gotoXYZ(QString)), &gcode, SLOT(gotoXYZ(QString)));
+    connect(this, SIGNAL(axisAdj(char, float, bool, float)), &gcode, SLOT(axisAdj(char, float, bool, float)));
+    connect(this, SIGNAL(setResponseWait(int, int)), &gcode, SLOT(setResponseWait(int, int)));
+    connect(this, SIGNAL(shutdown()), &gcodeThread, SLOT(quit()));
+    connect(this, SIGNAL(shutdown()), &timerThread, SLOT(quit()));
+    connect(this, SIGNAL(setProgress(int)), ui->progressFileSend, SLOT(setValue(int)));
+    connect(this, SIGNAL(setRuntime(QString)), ui->outputRuntime, SLOT(setText(QString)));
+
+    connect(&gcode, SIGNAL(sendMsg(QString)),this,SLOT(receiveMsg(QString)));
+    connect(&gcode, SIGNAL(sendAxis(QString)),this,SLOT(receiveAxis(QString)));
+    connect(&gcode, SIGNAL(portIsClosed(bool)), this, SLOT(portIsClosed(bool)));
+    connect(&gcode, SIGNAL(portIsOpen(bool)), this, SLOT(portIsOpen(bool)));
+    connect(&gcode, SIGNAL(addList(QString)),this,SLOT(receiveList(QString)));
+    connect(&gcode, SIGNAL(addListOut(QString)),this,SLOT(receiveListOut(QString)));
+    connect(&gcode, SIGNAL(stopSending(bool)), this, SLOT(stopSending(bool)));
+    connect(&gcode, SIGNAL(lcdDisplay(char, float)), this, SLOT(lcdDisplay(char, float)));
+    connect(&gcode, SIGNAL(setCommandText(QString)), ui->Command, SLOT(setText(QString)));
+    connect(&gcode, SIGNAL(setProgress(int)), ui->progressFileSend, SLOT(setValue(int)));
+    connect(&gcode, SIGNAL(adjustedAxis()), this, SLOT(adjustedAxis()));
+    connect(&gcode, SIGNAL(resetTimer(bool)), &timer, SLOT(resetTimer(bool)));
+    connect(&gcode, SIGNAL(resetLcds()), this, SLOT(resetLcds()));
+
+    connect(&timer, SIGNAL(setRuntime(QString)), ui->outputRuntime, SLOT(setText(QString)));
+
+    timerThread.start();
+    gcodeThread.start();
+
     ui->comboStep->addItem("0.01");
     ui->comboStep->addItem("0.1");
     ui->comboStep->addItem("1");
     ui->comboStep->addItem("10");
     ui->comboStep->setCurrentIndex(2);
+
+    // Cool utility class off Google code that enumerates COM ports in platform-independent manner
+    QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
+
+    int portIndex = 0;
+    for (int i = 0; i < ports.size(); i++)
+    {
+        ui->cmbPort->addItem(ports.at(i).portName.toLocal8Bit().constData());
+
+        if (ports.at(i).portName == lastOpenPort)
+            portIndex = i;
+
+        //diag("port name: %s\n", ports.at(i).portName.toLocal8Bit().constData());
+        //diag("friendly name: %s\n", ports.at(i).friendName.toLocal8Bit().constData());
+        //diag("physical name: %s\n", ports.at(i).physName.toLocal8Bit().constData());
+        //diag("enumerator name: %s\n", ports.at(i).enumName.toLocal8Bit().constData());
+        //diag("===================================\n\n");
+    }
+
+    if (ports.size() > 0)
+        ui->cmbPort->setCurrentIndex(portIndex);
+
+    ui->groupBoxAxis->setEnabled(false);
+    ui->groupBoxSend->setEnabled(false);
+    ui->groupBoxFav->setEnabled(false);
     ui->Begin->setEnabled(false);
     ui->Stop->setEnabled(false);
-#ifdef Q_WS_X11
-    ui->cmbPort->addItem("USB0");
-    ui->cmbPort->addItem("USB1");
-    ui->cmbPort->addItem("USB2");
-    ui->cmbPort->addItem("USB3");
-    ui->cmbPort->addItem("USB4");
-    ui->cmbPort->addItem("USB5");
-    ui->cmbPort->addItem("ACM0");
-    ui->cmbPort->addItem("ACM1");
-    ui->cmbPort->addItem("ACM2");
-    ui->cmbPort->addItem("ACM3");
-    ui->cmbPort->addItem("ACM4");
-    ui->cmbPort->addItem("ACM5");
-#ifdef DEBUG
-    ui->cmbPort->setCurrentIndex(6);
-#endif
-#else
-    ui->cmbPort->addItem("COM1");
-    ui->cmbPort->addItem("COM2");
-    ui->cmbPort->addItem("COM3");
-    ui->cmbPort->addItem("COM4");
-    ui->cmbPort->addItem("COM5");
-    ui->cmbPort->addItem("COM6");
-    ui->cmbPort->addItem("COM7");
-    ui->cmbPort->addItem("COM8");
-    ui->cmbPort->addItem("COM9");
-    ui->cmbPort->addItem("COM10");
-    ui->cmbPort->addItem("COM11");
-    ui->cmbPort->addItem("COM12");
-    ui->cmbPort->addItem("COM13");
-    ui->cmbPort->addItem("COM14");
-    ui->cmbPort->addItem("COM15");
-    ui->cmbPort->addItem("COM16");
-#ifdef DEBUG
-    ui->cmbPort->setCurrentIndex(11);
-#endif
-#endif
+    ui->progressFileSend->setEnabled(false);
+    ui->outputRuntime->setEnabled(false);
+    ui->labelRuntime->setEnabled(false);
+    ui->btnGRBL->setEnabled(false);
+    ui->btnSetHome->setEnabled(false);
     styleSheet = ui->btnOpenPort->styleSheet();
+    ui->statusList->setEnabled(true);
+
+    emit setResponseWait(waitTime, zJogRate);
 }
 
 MainWindow::~MainWindow()
 {
-    if(this->portOpen)
-        port.CloseComport(port_nr);
     delete ui;
 }
 
-void MainWindow::adjustRBtn()
+// called when user has clicked the close application button
+void MainWindow::closeEvent(QCloseEvent *event)
 {
-    if(ui->rbutAdj->isChecked())
-    {
-        ui->groupBoxAxis->setEnabled(true);
-        ui->groupBoxSend->setEnabled(false);
-        ui->groupBoxFav->setEnabled(false);
-    }
+    gcode.setShutdown();
+    gcode.setAbort();
+    gcode.setReset();
+
+    writeSettings();
+
+    SLEEP(300);
+
+    emit shutdown();
+
+    event->accept();
 }
 
 void MainWindow::begin()
 {
-    ui->statusList->clear();
-    readthread.goHome=this->goHome;
-    readthread.path=ui->filePath->text();
-    readthread.port=this->port;
-    readthread.port_nr=port_nr;
-    readthread.toolChange=this->toolChange;
-    for(int i=0;i<3;i++)
-        readthread.toolChangeXYZ[i]=this->toolChangeXYZ[i];
-    readthread.start();
+    //receiveList("Starting File Send.");
+    resetProgress();
+
+    ui->groupBoxAxis->setEnabled(false);
+    ui->groupBoxFav->setEnabled(false);
+
+    ui->Begin->setEnabled(false);
+    ui->Stop->setEnabled(true);
+    ui->progressFileSend->setEnabled(true);
+    ui->outputRuntime->setEnabled(true);
+    ui->labelRuntime->setEnabled(true);
+    ui->openFile->setEnabled(false);
+    ui->btnGRBL->setEnabled(false);
+    emit sendFile(ui->filePath->text());
+}
+
+void MainWindow::stop()
+{
+    // Calling openPortCtl will reset the COM port which resets the controller back to 0
+    openPortCtl(true);
+    /*
+    gcode.setAbort();
+
+    ui->groupBoxAxis->setEnabled(false);
+    ui->groupBoxFav->setEnabled(false);
+    ui->Begin->setEnabled(false);
+    ui->Stop->setEnabled(false);
+    ui->progressFileSend->setEnabled(false);
+    ui->outputRuntime->setEnabled(false);
+    ui->labelRuntime->setEnabled(false);
+    ui->openFile->setEnabled(false);
+    */
+}
+
+// slot called from GCode class to update our state
+void MainWindow::stopSending(bool resetPort)
+{
+    ui->groupBoxAxis->setEnabled(true);
+    ui->groupBoxFav->setEnabled(true);
+    ui->Begin->setEnabled(true);
+    ui->Stop->setEnabled(false);
+    ui->progressFileSend->setEnabled(false);
+    ui->outputRuntime->setEnabled(false);
+    ui->labelRuntime->setEnabled(false);
+    ui->btnOpenPort->setEnabled(true);
+    ui->btnGRBL->setEnabled(true);
+    ui->openFile->setEnabled(true);
+
+    if (resetPort)
+    {
+        openPortCtl(true);
+    }
+}
+
+// User has asked to open the port
+void MainWindow::openPort()
+{
+    openPortCtl(false);
+}
+
+// User has asked to set current position as 'home' = 0,0,0
+// We reset the COM port which resets the controller to ensure it is zeroed out
+void MainWindow::setHome()
+{
+    resetProgress();
+    openPortCtl(true);
+}
+
+// Just resets the LCDs to 0
+void MainWindow::resetLcds()
+{
+    ui->lcdNumberX->display(0);
+    ui->lcdNumberY->display(0);
+    ui->lcdNumberZ->display(0);
+}
+
+void MainWindow::resetProgress()
+{
+    setProgress(0);
+    setRuntime("");
+}
+
+// If the port isn't open, we ask to open it
+// If the port is open, we close it, but if 'reopen' is
+// true, we call back to this thread to reopen it which
+// is done mainly to toggle the COM port state to reset
+// the controller.
+void MainWindow::openPortCtl(bool reopen)
+{
+    if (ui->btnOpenPort->text() == "Open")
+    {
+        // Port is closed if the button says 'Open'
+        QString portStr = ui->cmbPort->currentText();
+        ui->btnOpenPort->setEnabled(false);
+        emit openPort(portStr);
+    }
+    else
+    {
+        if (!reopen)
+            resetProgress();
+
+        // presume button says 'Close' currently, meaning port is open
+
+        // Tell gcode port thread to stop what it is doing immediately (within 0.1 sec)
+        gcode.setAbort();
+        gcode.setReset();
+
+        // Disable a bunch of UI
+        ui->Begin->setEnabled(false);
+        ui->Stop->setEnabled(false);
+        ui->progressFileSend->setEnabled(false);
+        ui->outputRuntime->setEnabled(false);
+        ui->labelRuntime->setEnabled(false);
+        ui->btnOpenPort->setEnabled(false);
+        ui->openFile->setEnabled(false);
+
+        ui->groupBoxAxis->setEnabled(false);
+        ui->groupBoxSend->setEnabled(false);
+        ui->groupBoxFav->setEnabled(false);
+        ui->cmbPort->setEnabled(false);
+        ui->btnOpenPort->setEnabled(false);
+        ui->btnGRBL->setEnabled(false);
+
+        // Send event to close the port
+        emit closePort(reopen);
+    }
+}
+
+// slot telling us that port was closed successfully
+// if 'reopen' is true, reopen our port to toggle
+// so we reset the controller
+void MainWindow::portIsClosed(bool reopen)
+{
+    SLEEP(100);
+
+    ui->groupBoxAxis->setEnabled(false);
+    ui->groupBoxSend->setEnabled(false);
+    ui->groupBoxFav->setEnabled(false);
+    ui->cmbPort->setEnabled(true);
+    ui->btnOpenPort->setEnabled(true);
+    ui->btnOpenPort->setText("Open");
+    ui->btnOpenPort->setStyleSheet(styleSheet);
+    ui->btnGRBL->setEnabled(false);
+    ui->btnSetHome->setEnabled(false);
+
+    if (reopen)
+    {
+        receiveList("Resetting port to restart controller");
+        openPortCtl(false);
+    }
+}
+
+// slot that tells us the gcode thread successfully opened the port
+void MainWindow::portIsOpen(bool sendCode)
+{
+    // Comm port successfully opened
+
+    ui->btnGRBL->setEnabled(true);
+    ui->btnOpenPort->setEnabled(true);
+    ui->btnOpenPort->setText("Close");
+    ui->btnOpenPort->setStyleSheet("* { background-color: rgb(255,125,100) }");
+    ui->cmbPort->setEnabled(false);
+    ui->groupBoxAxis->setEnabled(true);
+    ui->groupBoxSend->setEnabled(true);
+    ui->groupBoxFav->setEnabled(true);
+    ui->openFile->setEnabled(true);
+    ui->btnSetHome->setEnabled(true);
+
+    if (ui->filePath->text().length() > 0)
+    {
+        ui->Begin->setEnabled(true);
+        ui->Stop->setEnabled(false);
+        ui->progressFileSend->setEnabled(false);
+        ui->outputRuntime->setEnabled(false);
+        ui->labelRuntime->setEnabled(false);
+    }
+    else
+    {
+        ui->Begin->setEnabled(false);
+        ui->Stop->setEnabled(false);
+        ui->progressFileSend->setEnabled(false);
+        ui->outputRuntime->setEnabled(false);
+        ui->labelRuntime->setEnabled(false);
+    }
+
+    resetLcds();
+
+    if (sendCode)
+        sendGcode("");
+}
+
+void MainWindow::adjustedAxis()
+{
+    ui->groupBoxAxis->setEnabled(true);
+    ui->groupBoxFav->setEnabled(true);
+
+    if (ui->filePath->text().length() > 0)
+        ui->Begin->setEnabled(true);
+
+    ui->Stop->setEnabled(false);
+    ui->progressFileSend->setEnabled(false);
+    ui->outputRuntime->setEnabled(false);
+    ui->labelRuntime->setEnabled(false);
+
+    ui->btnOpenPort->setEnabled(true);
+    ui->openFile->setEnabled(true);
+}
+
+void MainWindow::disableAllButtons()
+{
+    ui->groupBoxAxis->setEnabled(false);
+    ui->groupBoxFav->setEnabled(false);
+    ui->Begin->setEnabled(false);
+    ui->Stop->setEnabled(false);
+    ui->progressFileSend->setEnabled(false);
+    ui->outputRuntime->setEnabled(false);
+    ui->labelRuntime->setEnabled(false);
+    ui->openFile->setEnabled(false);
+    ui->btnGRBL->setEnabled(false);
+}
+
+void MainWindow::incX()
+{
+    float coord = ui->comboStep->currentText().toFloat();
+
+    disableAllButtons();
+
+    emit axisAdj('X', coord, invX, ui->lcdNumberX->value());
+}
+
+void MainWindow::incY()
+{
+    float coord = ui->comboStep->currentText().toFloat();
+
+    disableAllButtons();
+
+    emit axisAdj('Y', coord, invY, ui->lcdNumberY->value());
+}
+
+void MainWindow::incZ()
+{
+    float coord = ui->comboStep->currentText().toFloat();
+
+    disableAllButtons();
+
+    emit axisAdj('Z', coord, invZ, ui->lcdNumberZ->value());
 }
 
 void MainWindow::decX()
 {
-    float coord=-ui->comboStep->currentText().toFloat();
-    if(invX)
-        coord =-coord;
-    if(SendJog(QString("G01 X")
-               .append(QString::number(coord))))
-    {
-        ui->lcdNumberX->display(ui->lcdNumberX->value()+coord);
-        ui->centralWidget->setStatusTip("");
-    }
-    else
-        ui->centralWidget->setStatusTip("Connection error.");
+    float coord = -ui->comboStep->currentText().toFloat();
+
+    disableAllButtons();
+
+    emit axisAdj('X', coord, invX, ui->lcdNumberX->value());
 }
 
 void MainWindow::decY()
 {
-    float coord=-ui->comboStep->currentText().toFloat();
-    if(invY)
-        coord=-coord;
-    if(SendJog(QString("G01 Y")
-               .append(QString::number(coord))))
-    {
-        ui->lcdNumberY->display(ui->lcdNumberY->value()+coord);
-        ui->centralWidget->setStatusTip("");
-    }
-    else
-        ui->centralWidget->setStatusTip("Connection error.");
+    float coord = -ui->comboStep->currentText().toFloat();
+
+    disableAllButtons();
+
+    emit axisAdj('Y', coord, invY, ui->lcdNumberY->value());
 }
 
 void MainWindow::decZ()
 {
-    float coord=-ui->comboStep->currentText().toFloat();
-    if(invZ)
-        coord=-coord;
-    if(SendJog(QString("G01 Z")
-               .append(QString::number(coord)).append(" F260")))
-    {
-        ui->lcdNumberZ->display(ui->lcdNumberZ->value()+coord);
-        ui->centralWidget->setStatusTip("");
-    }
-    else
-        ui->centralWidget->setStatusTip("Connection error.");
-}
+    float coord = -ui->comboStep->currentText().toFloat();
 
-void MainWindow::fillFavList()
-{
-    QFile file("favs.txt");
-    file.open(QIODevice::ReadWrite|QIODevice::Text);
-    QTextStream in(&file);
-    QString line = in.readLine();
-    while(line!=NULL)
-    {
-        lista.append(line);
-        QString X=line.mid(0,line.indexOf('\t'));
-        line=line.mid(line.indexOf('\t')+1,-1);
-        QString Y=line.mid(0,line.indexOf('\t'));
-        line=line.mid(line.indexOf('\t')+1,-1);
-        QString Z=line.mid(0,line.indexOf('\t'));
-        line=line.mid(line.indexOf('\t')+1,-1).trimmed();
-        line.replace(QRegExp("\\t+")," ");
-        line.append(" (");
-        line.append(X).append(", ");
-        line.append(Y).append(", ");
-        line.append(Z).append(")");
-        ui->comboFav->addItem(line);
-        line=in.readLine();
-    }
-    file.close();
-    connect(ui->comboFav,SIGNAL(currentIndexChanged(int)),this,SLOT(selectFav(int)));
+    disableAllButtons();
+
+    emit axisAdj('Z', coord, invZ, ui->lcdNumberZ->value());
 }
 
 void MainWindow::getOptions()
 {
-    opt.readFile();
+    Options opt(this);
     opt.exec();
-
-}
-
-void MainWindow::gotoToolChange()
-{
-#ifndef DISCONNECTED
-    QString line = "G00 X";
-    line.append(QString::number(toolChangeXYZ[0])).append(" Y");
-    line.append(QString::number(toolChangeXYZ[1])).append(" Z");
-    line.append(QString::number(toolChangeXYZ[2])).append(" F250").append("\r");
-    SendGcode(line);
-#endif
-}
-
-void MainWindow::gotoHome()
-{
-#ifndef DISCONNECTED
-    ui->Command->setText("G00 X0 Y0 Z0 F250");
-    ui->btnGo->click();
-    //SendGcode("G00 X0 Y0 Z0 F250\r");
-#endif
 }
 
 void MainWindow::gotoXYZ()
@@ -237,198 +434,153 @@ void MainWindow::gotoXYZ()
         return;
 
     QString line = ui->Command->text().append("\r");
-#ifndef DISCONNECTED
-    if(SendGcode(line))
-    {
-        line=line.toUpper();
-        ui->statusList->addItem(line.mid(0,line.length()-1));
-        line=line.mid(line.indexOf("X",Qt::CaseInsensitive)+1,-1).trimmed();
-        ui->lcdNumberX->display((line.mid(0,line.indexOf(" ")).toFloat()));
-        line=line.mid(line.indexOf("Y",Qt::CaseInsensitive)+1,-1).trimmed();
-        ui->lcdNumberY->display((line.mid(0,line.indexOf(" ")).toFloat()));
-        line=line.mid(line.indexOf("Z",Qt::CaseInsensitive)+1,-1).trimmed();
-        ui->lcdNumberZ->display((line.mid(0,line.indexOf(" ")).toFloat()));
-    }
-    else
-    {
-        ui->statusList->addItem("Bad command.");
-    }
-#else
-    ui->statusList->addItem(line.mid(0,line.length()-1));
-#endif
-    if(ui->statusList->count()>LINE_COUNT)
-        delete ui->statusList->item(0);
-    ui->Command->setText("");
-}
 
-void MainWindow::incX()
-{
-    float coord=ui->comboStep->currentText().toFloat();
-    if(invX)
-        coord=-coord;
-    if(SendJog(QString("G01 X")
-               .append(QString::number(coord))))
-    {
-        ui->lcdNumberX->display(ui->lcdNumberX->value()+coord);
-        ui->centralWidget->setStatusTip("");
-    }
-    else
-        ui->centralWidget->setStatusTip("Connection error.");
-}
-
-void MainWindow::incY()
-{
-    float coord=ui->comboStep->currentText().toFloat();
-    if(invY)
-        coord=-coord;
-    if(SendJog(QString("G01 Y")
-               .append(QString::number(coord))))
-    {
-        ui->lcdNumberY->display(ui->lcdNumberY->value()+coord);
-        ui->centralWidget->setStatusTip("");
-    }
-    else
-        ui->centralWidget->setStatusTip("Connection error.");
-}
-
-void MainWindow::incZ()
-{
-    float coord=ui->comboStep->currentText().toFloat();
-    if(invZ)
-        coord=-coord;
-    if(SendJog(QString("G01 Z")
-               .append(QString::number(coord).append(" F260"))))
-    {
-        ui->lcdNumberZ->display(ui->lcdNumberZ->value()+coord);
-        ui->centralWidget->setStatusTip("");
-    }
-    else
-        ui->centralWidget->setStatusTip("Connection error.");
-}
-
-void MainWindow::manualRBtn()
-{
-    if(ui->rbutManual->isChecked())
-    {
-        ui->groupBoxAxis->setEnabled(false);
-        ui->groupBoxSend->setEnabled(false);
-        ui->groupBoxFav->setEnabled(true);
-    }
+    emit gotoXYZ(line);
 }
 
 void MainWindow::openFile()
 {
-    ui->filePath->setText(QFileDialog::getOpenFileName(this,"Open file","",".Nc files (*.nc)"));
+    QFileDialog dialog(this, tr("Open File"),
+                       directory,
+                       tr("NC (*.nc);;All Files (*.*)"));
+
+    dialog.setFileMode(QFileDialog::ExistingFile);
+
+    if (nameFilter.size() > 0)
+        dialog.selectNameFilter(nameFilter);
+
+    if (fileOpenDialogState.size() > 0)
+        dialog.restoreState(fileOpenDialogState);
+
+    QString fileName;
+    QStringList fileNames;
+    if (dialog.exec())
+    {
+        fileOpenDialogState = dialog.saveState();
+
+        fileNames = dialog.selectedFiles();
+        if (fileNames.length() > 0)
+            fileName = fileNames.at(0);
+
+        nameFilter = dialog.selectedNameFilter();
+
+        resetProgress();
+    }
+
+    int slash = fileName.lastIndexOf('/');
+    if (slash == -1)
+    {
+        slash = fileName.lastIndexOf('\\');
+    }
+
+    directory = "";
+    if (slash != -1)
+    {
+        directory = fileName.left(slash);
+    }
+
+    ui->filePath->setText(fileName);
     if(ui->filePath->text()!="")
     {
         ui->Begin->setEnabled(true);
-        ui->Stop->setEnabled(true);
+        ui->Stop->setEnabled(false);
+        ui->progressFileSend->setEnabled(false);
+        ui->outputRuntime->setEnabled(false);
+        ui->labelRuntime->setEnabled(false);
     }
     else
     {
         ui->Begin->setEnabled(false);
         ui->Stop->setEnabled(false);
-    }
-}
-
-void MainWindow::openPort()
-{
-    port_nr=ui->cmbPort->currentIndex();
-    if(!portOpen)
-    {
-#ifndef DISCONNECTED
-        port.Reset(port_nr);
-#ifdef Q_WS_X11
-            usleep(100000);  // sleep for 100 milliSeconds
-#else
-            Sleep(100);
-#endif
-        if(!port.OpenComport(port_nr))
-        {
-            ui->groupBoxOptions->setEnabled(true);
-            ui->btnGRBL->setEnabled(true);
-            ui->statusList->setEnabled(true);
-            portOpen=true;
-            ui->btnOpenPort->setText("Close");
-            ui->btnOpenPort->setStyleSheet("* { background-color: rgb(255,125,100) }");
-            ui->cmbPort->setEnabled(false);
-            ui->groupBoxSend->setEnabled(true);
-        }
-        else
-            QMessageBox(QMessageBox::Critical,"Error","Could not open port.",QMessageBox::Ok).exec();
-#else
-        ui->groupBoxOptions->setEnabled(true);
-        ui->btnGRBL->setEnabled(true);
-        ui->statusList->setEnabled(true);
-        portOpen=true;
-        ui->btnOpenPort->setText("Close");
-        ui->btnOpenPort->setStyleSheet("* { background-color: rgb(255,125,100) }");
-        ui->cmbPort->setEnabled(false);
-        ui->groupBoxSend->setEnabled(true);
-#endif
-    }
-    else
-    {
-#ifndef DISCONNECTED
-        port.CloseComport(port_nr);
-#endif
-        ui->rbutSend->toggle();
-        ui->cmbPort->setEnabled(true);
-        ui->btnOpenPort->setText("Open");
-        ui->btnOpenPort->setStyleSheet(styleSheet);
-        ui->groupBoxOptions->setEnabled(false);
-        ui->groupBoxSend->setEnabled(false);
-        ui->btnGRBL->setEnabled(false);
-        ui->statusList->setEnabled(false);
-        portOpen=false;
+        ui->progressFileSend->setEnabled(false);
+        ui->outputRuntime->setEnabled(false);
+        ui->labelRuntime->setEnabled(false);
     }
 }
 
 void MainWindow::readSettings()//carga de archivo
 {
-    QFile file(SETTINGS);
-    if(!file.exists())
-    {
-        file.open(QIODevice::WriteOnly|QIODevice::Text);
-        QTextStream out(&file);
-        out<<"1\n";
-        out<<"0\t0\t0\n";
-        file.close();
-    }
-    file.open(QIODevice::ReadOnly|QIODevice::Text);
-    QTextStream in(&file);
-    int settings = in.readLine().toInt();
-    QStringList coord = in.readLine().split(QRegExp("\\t"),QString::SkipEmptyParts);
-    this->goHome=settings&1;
-    this->toolChange=settings&2;
-    this->invX=settings&4;
-    this->invY=settings&8;
-    this->invZ=settings&16;
-    this->toolChangeXYZ[0]=coord.at(0).toFloat();
-    this->toolChangeXYZ[1]=coord.at(1).toFloat();
-    this->toolChangeXYZ[2]=coord.at(2).toFloat();
-    file.close();
-    ui->btnChangeTool->setEnabled(toolChange);
+    // use platform-independent settings storage, i.e. registry under Windows
+    QSettings settings;
+
+    fileOpenDialogState = settings.value(SETTINGS_FILE_OPEN_DIALOG_STATE).value<QByteArray>();
+    directory = settings.value(SETTINGS_DIRECTORY).value<QString>();
+    nameFilter = settings.value(SETTINGS_NAME_FILTER).value<QString>();
+    lastOpenPort = settings.value(SETTINGS_PORT).value<QString>();
+
+    QString sinvX = settings.value(SETTINGS_INVERSE_X, "false").value<QString>();
+    QString sinvY = settings.value(SETTINGS_INVERSE_Y, "false").value<QString>();
+    QString sinvZ = settings.value(SETTINGS_INVERSE_Z, "false").value<QString>();
+
+    invX = sinvX == "true";
+    invY = sinvY == "true";
+    invZ = sinvZ == "true";
+
+    waitTime = settings.value(SETTINGS_RESPONSE_WAIT_TIME, 100).value<int>();
+    zJogRate = settings.value(SETTINGS_Z_JOG_RATE, DEFAULT_Z_JOG_RATE).value<int>();
+}
+
+// Slot called from settings dialog after user made a change. Reload settings from registry.
+void MainWindow::setSettings()
+{
+    QSettings settings;
+
+    QString sinvX = settings.value(SETTINGS_INVERSE_X, "false").value<QString>();
+    QString sinvY = settings.value(SETTINGS_INVERSE_Y, "false").value<QString>();
+    QString sinvZ = settings.value(SETTINGS_INVERSE_Z, "false").value<QString>();
+
+    invX = sinvX == "true";
+    invY = sinvY == "true";
+    invZ = sinvZ == "true";
+
+    waitTime = settings.value(SETTINGS_RESPONSE_WAIT_TIME, 100).value<int>();
+    zJogRate = settings.value(SETTINGS_Z_JOG_RATE, DEFAULT_Z_JOG_RATE).value<int>();
+
+    // update gcode thread with latest values
+    emit setResponseWait(waitTime, zJogRate);
+}
+
+// save last state of settings
+void MainWindow::writeSettings()
+{
+    QSettings settings;
+
+    settings.setValue(SETTINGS_FILE_OPEN_DIALOG_STATE, fileOpenDialogState);
+    settings.setValue(SETTINGS_NAME_FILTER, nameFilter);
+    settings.setValue(SETTINGS_DIRECTORY, directory);
+    settings.setValue(SETTINGS_PORT, ui->cmbPort->currentText());
 }
 
 void MainWindow::receiveAxis(QString axis)
 {
     axis.replace(QRegExp("\\s+")," ");
     UpdateAxis(axis.trimmed());
-    ui->statusList->addItem(axis.trimmed());
-    if(ui->statusList->count()>LINE_COUNT)
-    {
-        delete ui->statusList->item(0);
-    }
 }
 
 void MainWindow::receiveList(QString msg)
 {
-    ui->statusList->addItem(msg.trimmed());
-    if(ui->statusList->count()>LINE_COUNT)
-    {
-        delete ui->statusList->item(0);
-    }
+    addToStatusList(true, msg);
+}
+
+void MainWindow::receiveListOut(QString msg)
+{
+    addToStatusList(false, msg);
+}
+
+void MainWindow::addToStatusList(bool in, QString msg)
+{
+    msg.trimmed();
+    msg.remove('\r');
+    msg.remove('\n');
+
+    if (msg.length() == 0)
+        return;
+
+    if (in)
+        ui->statusList->addItem(msg);
+    else
+        ui->statusList->addItem("> " + msg);
+    ui->statusList->scrollToBottom();
     MainWindow::repaint();
 }
 
@@ -437,173 +589,12 @@ void MainWindow::receiveMsg(QString msg)
     ui->centralWidget->setStatusTip(msg);
 }
 
-void MainWindow::reset()
-{
-    ui->lcdNumberX->display(0);
-    ui->lcdNumberY->display(0);
-    ui->lcdNumberZ->display(0);
-#ifndef DISCONNECTED
-    RS232().Reset(ui->cmbPort->currentIndex());
-    //ui->btnOpenPort->click();
-#endif
-}
-
-void MainWindow::selectFav(int selected)
-{
-    if(selected>0)
-    {
-        disconnect(ui->comboFav,SIGNAL(currentIndexChanged(int)),this,SLOT(selectFav(int)));
-        QString strline = lista.at(selected-1);
-        strline = QString("G00 X").append(strline.left(strline.lastIndexOf('\t')));
-        strline.replace(QRegExp("\\t+")," Y");
-        strline.replace(strline.lastIndexOf('Y'),1,"Z");
-        strline.append('\r');
-#ifndef DISCONNECTED
-        SendGcode(strline);
-#endif
-        ui->comboFav->setCurrentIndex(0);
-        connect(ui->comboFav,SIGNAL(currentIndexChanged(int)),this,SLOT(selectFav(int)));
-    }
-}
-
-
-bool MainWindow::SendGcode(QString line)
-{
-    QString received="";
-#define BUF_SIZE 300
-    line.append('\r');
-    char buf[BUF_SIZE + 1] = {0};
-    if (line.length() >= BUF_SIZE)
-    {
-        //printf("ERROR: buf size too small\n"); fflush(stdout);
-
-        return false;
-    }
-    for (int i = 0; i < line.length(); i++)
-        buf[i] = line.at(i).toAscii();
-
-    if (!port.SendBuf(port_nr, buf, line.length()))
-    {
-        //printf("SENDBUF FAILED\n"); fflush(stdout);
-
-        return false;
-    }
-    else
-    {
-        if (!waitForOk())
-        {
-            //printf("WAITFOROK FAILED\n"); fflush(stdout);
-
-            return false;
-        }
-    }
-    return true;
-}
-
-bool MainWindow::waitForOk()
-{
-#define RESPONSE_EXPECT "ok\r\n"
-    char tmp[BUF_SIZE + 1] = {0};
-    int count = 0;
-    bool status = true;
-    QString result;
-    while (!result.contains(RESPONSE_EXPECT))
-    {
-#ifndef DISCONNECTED
-        int n = port.PollComport(port_nr, tmp, BUF_SIZE);
-        if (n == 0)
-        {
-            count++;
-#ifdef Q_WS_X11
-            usleep(100000);  // sleep for 100 milliSeconds
-#else
-            Sleep(100);
-#endif
-        }
-        else
-        {
-            tmp[n] = 0;
-            result.append(tmp);
-            //printf("GOT:%s\n", tmp); fflush(stdout);
-            count = 0;
-        }
-#else
-        result = RESPONSE_EXPECT;
-#endif
-#ifdef Q_WS_X11
-        usleep(100000);  // sleep for 100 milliSeconds
-#else
-        Sleep(100);
-#endif
-        if (count > 10)
-        {\
-            status = false;
-            break;
-        }
-    }
-
-    if (status)
-    {
-#ifdef Q_WS_X11
-        usleep(200000);  // sleep for 200 millseconds
-#else
-        Sleep(200);
-#endif
-    }
-
-    return status;
-}
-
-int MainWindow::SendJog(QString strline)
-{
-#ifndef DISCONNECTED
-
-    if((SendGcode("G91\r"))&&(SendGcode(strline.append("\r"))))
-        return(1);
-    else
-        return (0);
-#else
-    return(1);
-#endif
-}
-
-void MainWindow::sendRBtn()
-{
-    if(ui->rbutSend->isChecked())
-    {
-        ui->groupBoxAxis->setEnabled(false);
-        ui->groupBoxSend->setEnabled(true);
-        ui->groupBoxFav->setEnabled(false);
-    }
-}
-
 void MainWindow::setGRBL()
 {
-    GrblDialog dial(this);
-    dial.port_nr = ui->cmbPort->currentIndex();
-    dial.port = this->port;
-    dial.setParent(this);
-    port.flush(port_nr);
-    //if(dial.setSettings())
-    dial.setSettings();
-        dial.exec();
-}
-
-void MainWindow::setSettings(int settings)//recibe cambios
-{
-    this->goHome=settings&1;
-    this->toolChange=settings&2;
-    this->invX=settings&4;
-    this->invY=settings&8;
-    this->invZ=settings&16;
-    ui->btnChangeTool->setEnabled(toolChange);
-}
-
-void MainWindow::setTCCoord(float coords[])//recibe cambios
-{
-    this->toolChangeXYZ[0]=coords[0];
-    this->toolChangeXYZ[1]=coords[1];
-    this->toolChangeXYZ[2]=coords[2];
+    GrblDialog dlg(this, &gcode);
+    dlg.setParent(this);
+    dlg.getSettings();
+    dlg.exec();
 }
 
 void MainWindow::showAbout()
@@ -612,38 +603,17 @@ void MainWindow::showAbout()
     about.exec();
 }
 
-void MainWindow::stop()
-{
-    ui->centralWidget->setStatusTip("Process stopped.");
-    emit Stop();
-    RS232().Reset(port_nr);
-}
-
 void MainWindow::toggleSpindle()
 {
     if(ui->SpindleOn->QAbstractButton::isChecked())
     {
-#ifndef DISCONNECTED
-        SendGcode("M03\r");
-        //SendGcode(line,4);
-#endif
-        ui->statusList->addItem("Spindle On.");
-        if(ui->statusList->count()>LINE_COUNT)
-        {
-            delete ui->statusList->item(0);
-        }
+        sendGcode("M03\r");
+        receiveList("Spindle On.");
     }
     else
     {
-#ifndef DISCONNECTED
-        //SendGcode(line,4);
-        SendGcode("M05\r");
-#endif
-        ui->statusList->addItem("Spindle Off.");
-        if(ui->statusList->count()>LINE_COUNT)
-        {
-            delete ui->statusList->item(0);
-        }
+        sendGcode("M05\r");
+        receiveList("Spindle Off.");
     }
 }
 
@@ -673,5 +643,21 @@ void MainWindow::UpdateAxis(QString code)
             else
             {}
         }
+    }
+}
+
+void MainWindow::lcdDisplay(char axis, float value)
+{
+    switch (axis)
+    {
+    case 'X':
+        ui->lcdNumberX->display(value);
+        break;
+    case 'Y':
+        ui->lcdNumberY->display(value);
+        break;
+    case 'Z':
+        ui->lcdNumberZ->display(value);
+        break;
     }
 }
