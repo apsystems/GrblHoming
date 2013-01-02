@@ -64,7 +64,7 @@
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QLabel" name="label">
+  <widget class="QLabel" name="labelProductAndVersion">
    <property name="geometry">
     <rect>
      <x>180</x>
@@ -81,7 +81,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Grbl Controller 3.0</string>
+    <string>Grbl Controller</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_2">

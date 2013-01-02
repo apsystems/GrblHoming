@@ -16,6 +16,7 @@
 #include <QTextStream>
 #include "definitions.h"
 #include "rs232.h"
+#include "coord3d.h"
 
 #define SHORT_WAIT_SEC 1
 #define LONG_WAIT_SEC  100
@@ -26,6 +27,7 @@
 #define RESPONSE_OK_CRLF "ok\r\n"
 #define RESPONSE_ERROR "error"
 
+#define CTRL_X '\x18'
 
 class GCode : public QObject
 {
@@ -36,22 +38,25 @@ public:
     void setAbort();
     void setReset();
     void setShutdown();
+    int getSettingsItemCount();
 
 signals:
     void addList(QString line);
     void addListOut(QString line);
     void sendMsg(QString msg);
-    void sendAxis(QString axis);
-    void stopSending(bool resetPort);
+    void stopSending();
     void portIsClosed(bool reopen);
     void portIsOpen(bool sendCode);
-    void lcdDisplay(char axis, float value);
     void setCommandText(QString value);
     void adjustedAxis();
     void gcodeResult(int id, QString result);
     void setProgress(int);
     void resetTimer(bool timeIt);
-    void resetLcds();
+    void enableGrblDialogButton();
+    void updateCoordinates(Coord3D machineCoord, Coord3D workCoord);
+    void setLastState(QString state);
+    void setUnitsWork(QString value);
+    void setUnitsMachine(QString value);
 
 public slots:
     void openPort(QString commPortStr);
@@ -60,32 +65,54 @@ public slots:
     void sendGcodeAndGetResult(int id, QString line);
     void sendFile(QString path);
     void gotoXYZ(QString line);
-    void axisAdj(char axis, float coord, bool inv, float prevValue);
-    void setResponseWait(int waitTime, int zJogRate);
+    void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj);
+    void setResponseWait(int waitTime, double zJogRate, bool useMm, bool zRateLimit, double zRateLimitAmount);
+    void grblSetHome();
+    void sendGrblReset();
+    void sendGrblUnlock();
+    void goToHome();
 
 protected:
     void timerEvent(QTimerEvent *event);
 
 private:
-    bool resetPort();
     bool sendGcodeLocal(QString line, bool recordResponseOnFail = false, int waitSec = -1);
-    bool waitForOk(QString& result, int waitCount);
+    bool waitForOk(QString& result, int waitCount, bool sentReqForLocation, bool sentReqForParserState);
     bool sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec);
     QString removeInvalidMultipleGCommands(QString line);
     bool isGCommandValid(int value);
     bool isPortOpen();
     QString getMoveAmountFromString(QString prefix, QString item);
-    bool SendJog(QString strline, bool relative);
+    bool SendJog(QString strline, bool absoluteAfterAxisAdj);
+    bool parseCoordinates(const QString received, QString& state, Coord3D& machineCoord, Coord3D& workCoord);
+    void pollPosWaitForIdle(bool checkMeasurementUnits);
+    void checkAndSetCorrectMeasurementUnits();
+    void setOldFormatMeasurementUnitControl();
+    void setUnitsTypeDisplay(bool millimeters);
+    void setConfigureMmMode(bool setGrblUnits);
+    void setConfigureInchesMode(bool setGrblUnits);
+    QString doZRateLimit(QString strline, QString& msg);
 
 private:
     RS232 port;
-    bool abortState;
-    bool resetState;
-    bool shutdownState;
+    AtomicIntBool abortState;
+    AtomicIntBool resetState;
+    AtomicIntBool shutdownState;
     int waitTime;
-    int zJogRate;
+    double zJogRate;
     int errorCount;
     QString currComPort;
+    bool doubleDollarFormat;
+    AtomicIntBool settingsItemCount;
+    QString lastState;
+    bool incorrectMeasurementUnits;
+    bool incorrectLcdDisplayUnits;
+    bool userSetMmMode;
+    Coord3D machineCoord, workCoord;
+    Coord3D machineCoordLastIdlePos, workCoordLastIdlePos;
+    bool zRateLimit;
+    double zRateLimitAmount;
+    double maxZ;
 
 };
 

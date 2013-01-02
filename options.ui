@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>400</width>
-    <height>175</height>
+    <height>338</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>40</x>
-     <y>130</y>
+     <y>290</y>
      <width>341</width>
      <height>32</height>
     </rect>
@@ -81,7 +81,7 @@
     </property>
    </widget>
   </widget>
-  <widget class="QLabel" name="label">
+  <widget class="QLabel" name="labelWaitForResp">
    <property name="geometry">
     <rect>
      <x>210</x>
@@ -113,38 +113,155 @@
     <number>60</number>
    </property>
   </widget>
-  <widget class="QSpinBox" name="spinZJogRate">
-   <property name="geometry">
-    <rect>
-     <x>210</x>
-     <y>90</y>
-     <width>71</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <property name="minimum">
-    <number>10</number>
-   </property>
-   <property name="maximum">
-    <number>500</number>
-   </property>
-   <property name="value">
-    <number>260</number>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_2">
+  <widget class="QLabel" name="labelZJogRate">
    <property name="geometry">
     <rect>
      <x>210</x>
      <y>70</y>
-     <width>141</width>
+     <width>161</width>
      <height>16</height>
     </rect>
    </property>
    <property name="text">
-    <string>Z-Jog Rate</string>
+    <string>Z-Jog Rate (inches or mm/min)</string>
    </property>
   </widget>
+  <widget class="QCheckBox" name="checkBoxEnableDebugLog">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>250</y>
+     <width>271</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Write debugging log to home folder</string>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBoxUseMmManualCmds">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>130</y>
+     <width>331</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Use millimeters when sending manual commands (v0.8c+ only)</string>
+   </property>
+  </widget>
+  <widget class="QGroupBox" name="groupZRateLimit">
+   <property name="geometry">
+    <rect>
+     <x>30</x>
+     <y>170</y>
+     <width>351</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Z Rate Limiting</string>
+   </property>
+   <widget class="QCheckBox" name="chkLimitZRate">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>30</y>
+      <width>91</width>
+      <height>17</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Limit Z Rate</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="labelZRateLimit">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>30</y>
+      <width>121</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Rate (inches or mm/min)</string>
+    </property>
+   </widget>
+   <widget class="QDoubleSpinBox" name="doubleSpinZRateLimit">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>30</y>
+      <width>81</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="accelerated">
+     <bool>true</bool>
+    </property>
+    <property name="correctionMode">
+     <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+    </property>
+    <property name="decimals">
+     <number>3</number>
+    </property>
+    <property name="minimum">
+     <double>0.100000000000000</double>
+    </property>
+    <property name="maximum">
+     <double>9999.989999999999782</double>
+    </property>
+    <property name="singleStep">
+     <double>1.000000000000000</double>
+    </property>
+    <property name="value">
+     <double>100.000000000000000</double>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QDoubleSpinBox" name="doubleSpinZJogRate">
+   <property name="geometry">
+    <rect>
+     <x>210</x>
+     <y>90</y>
+     <width>81</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="accelerated">
+    <bool>true</bool>
+   </property>
+   <property name="correctionMode">
+    <enum>QAbstractSpinBox::CorrectToNearestValue</enum>
+   </property>
+   <property name="decimals">
+    <number>3</number>
+   </property>
+   <property name="minimum">
+    <double>0.100000000000000</double>
+   </property>
+   <property name="maximum">
+    <double>9999.989999999999782</double>
+   </property>
+   <property name="singleStep">
+    <double>1.000000000000000</double>
+   </property>
+   <property name="value">
+    <double>260.000000000000000</double>
+   </property>
+  </widget>
+  <zorder>groupZRateLimit</zorder>
+  <zorder>buttonBox</zorder>
+  <zorder>groupBoxAxis</zorder>
+  <zorder>labelWaitForResp</zorder>
+  <zorder>spinResponseWaitSec</zorder>
+  <zorder>labelZJogRate</zorder>
+  <zorder>checkBoxEnableDebugLog</zorder>
+  <zorder>checkBoxUseMmManualCmds</zorder>
+  <zorder>doubleSpinZJogRate</zorder>
  </widget>
  <resources/>
  <connections>

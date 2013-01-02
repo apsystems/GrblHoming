@@ -1,14 +1,18 @@
-This file contains enhancements the developer would like to implement:
+This file contains enhancements the developer and user community would like to see:
 
-- Restore "Go to home on completion" feature, right now that is commented out to prevent destroying work/bit
+Primary:
+- Add visualizer
+- Restore "Tool change" feature, including popup dialog
+- Implement support for Grbl 0.8c "homing" feature
+- Improve logging to timestamp each line and add all diag output
+- Save/Load current GRBL settings from disk
+- Suppress some bookkeeping output from the status window
+
+Secondary:
+- Clear log button
 - Restore "Favorites" feature
-- Restore "Tool change" feature
-- Handle 0.5 168 processor bug: binary response garbage causes failure (ignore and resend?)
+- Print current GRBL settings
 - Add option to auto connect to last port
 - Provide diagnostic response view
 - Provide counter showing time waiting for a response if time > 5s
-- Popup dialog when successful send is complete
-- Print current GRBL settings
-- Save log button
-- Clear log button
 - Write user manual

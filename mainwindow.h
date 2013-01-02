@@ -25,7 +25,7 @@
 #include "gcode.h"
 
 #define COMPANY_NAME "zapmaker"
-#define APPLICATION_NAME "GCodeSender"
+#define APPLICATION_NAME "GrblController"
 #define DOMAIN_NAME "org.zapmaker"
 
 
@@ -53,10 +53,14 @@ signals:
     void sendGcode(QString line, bool recordResponseOnFail = false, int waitCount = SHORT_WAIT_SEC);
     void sendFile(QString path);
     void gotoXYZ(QString line);
-    void axisAdj(char axis, float coord, bool inv, float prevValue);
-    void setResponseWait(int waitTime, int zJogRate);
+    void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj);
+    void setResponseWait(int waitTime, double zJogRate, bool useMm, bool zRateLimit, double zRateLimitAmount);
     void setProgress(int percent);
     void setRuntime(QString runtime);
+    void sendSetHome();
+    void sendGrblReset();
+    void sendGrblUnlock();
+    void goToHome();
 
 private slots:
     //buttons
@@ -76,15 +80,16 @@ private slots:
     void begin();
     void openFile();
     void stop();
-    void stopSending(bool resetPort);
+    void stopSending();
     //
     void portIsOpen(bool sendCode);
     void portIsClosed(bool reopen);
-    void lcdDisplay(char axis, float value);
     void adjustedAxis();
 
     //check boxes
     void toggleSpindle();
+    void toggleRestoreAbsolute();
+
     //communications
         //options
     void setSettings();
@@ -92,11 +97,14 @@ private slots:
     void receiveList(QString msg);
     void receiveListOut(QString msg);
     void receiveMsg(QString msg);
-    void receiveAxis(QString axis);
     //menu bar
     void getOptions();
     void showAbout();
-    void resetLcds();
+    void enableGrblDialogButton();
+    void grblReset();
+    void grblUnlock();
+    void updateCoordinates(Coord3D machineCoord, Coord3D workCoord);
+    void goHomeSafe();
 
 private:
     //objects
@@ -118,16 +126,25 @@ private:
     QString lastOpenPort;
     QByteArray fileOpenDialogState;
     int waitTime;
-    int zJogRate;
+    double zJogRate;
+    Coord3D machineCoordinates;
+    Coord3D workCoordinates;
+    bool absoluteAfterAxisAdj;
+    bool useMm;
+    bool zRateLimiting;
+    double zRateLimitAmount;
+
     //methods
     int SendJog(QString strline);
-    void UpdateAxis(QString code);
     void readSettings();
     void writeSettings();
     void addToStatusList(bool in, QString msg);
     void disableAllButtons();
     void openPortCtl(bool reopen);
     void resetProgress();
+    void refreshLcd();
+    void lcdDisplay(char axis, bool workCoord, float value);
+    void updateSettingsFromOptionDlg(QSettings& settings);
 };
 
 

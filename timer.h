@@ -12,7 +12,7 @@
 
 #include <QTime>
 
-class Timer: public QObject
+class Timer : public QObject
 {
     Q_OBJECT
 

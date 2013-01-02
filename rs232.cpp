@@ -96,16 +96,3 @@ bool RS232::isPortOpen()
     return port->isOpen();
 }
 
-//------------------------------
-
-void diag(const char *str, ...)
-{
-#ifdef DEBUG
-    va_list args;
-
-    va_start(args, str );
-    vfprintf(stdout, str, args);
-    va_end(args);
-    fflush(stdout);
-#endif
-}

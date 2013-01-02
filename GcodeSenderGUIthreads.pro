@@ -18,7 +18,9 @@ SOURCES += main.cpp\
     grbldialog.cpp \
     about.cpp \
     gcode.cpp \
-    timer.cpp
+    timer.cpp \
+    atomicintbool.cpp \
+    coord3d.cpp
 
 HEADERS  += mainwindow.h \
     rs232.h \
@@ -28,7 +30,9 @@ HEADERS  += mainwindow.h \
     about.h \
     images.rcc \
     gcode.h \
-    timer.h
+    timer.h \
+    atomicintbool.h \
+    coord3d.h
 
 FORMS    += mainwindow.ui \
     options.ui \

@@ -14,6 +14,7 @@
 #include <QFont>
 #include <QTableWidgetItem>
 #include <QMessageBox>
+#include <QBoxLayout>
 #include "definitions.h"
 #include "mainwindow.h"
 #include "gcode.h"
@@ -25,7 +26,6 @@ class GrblDialog;
 #define GDLG_CMD_ID_GET 1
 #define GDLG_CMD_ID_SET 2
 
-#define GRBL_SETTINGS_ITEMS_COUNT 10
 
 class GrblDialog : public QDialog
 {
@@ -54,9 +54,9 @@ public slots:
     
 private:
     Ui::GrblDialog *ui;
-    float *values;
-    bool *change;
-
+    QStringList originalValues;
+    QList<bool> changeFlags;
+    int tableRowCount;
 
 };
 

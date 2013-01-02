@@ -20,6 +20,44 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.1
+Enhancements
+- Supports Grbl 0.8c. Still supports 0.8a. 0.51 is supported but without LCDs.
+- Grbl settings dialog is now a table of dynamic length depending on # of params.
+- LCD position data is now obtained from Grbl and is *not* computed
+- Added LCD displays for both machine and work coordinates
+- Cycling of Grbl via COM port toggling has been completely removed, except
+  that Close button has now been renamed Close / Reset.
+- Position data on Grbl is persisted as long as possible to allow for repositioning, etc.
+- Zero work coordinates has been added (G92)
+- Go-to-home feature added (lifts tool 5 mm and traverses to x=0, y=0)
+- Option to put manual command (back) into absolute mode after jog button command
+- Grbl Soft reset (Ctrl-X) button added
+- Z-axis rate limiting capability added. Only affects file, not jog or manual commands.
+- User is required to specify which measurement mode they are using, mm or inches:
+  * Default is millimeters
+  * Grbl is configured to operate in either mm or inches
+  * If a file is sent in inches and user is in mm, it will auto-restore to mm
+    after the file has been sent (and vice-versa, mm->inches)
+- 0.8c enhancements:
+  * Displays current Grbl state (i.e. Run, Idle, etc.)
+  * LCDs display whether values are in inches or millimeters
+  * Unlock Grbl button added ($X)
+  * Determines and sets parser state for current mm/inch command mode ($G)
+  * Determines and sets coordinate units via $13
+- Removed annoying "No movement expected for command" message
+- Flags that cross threads have been changed to use QAtomicInt
+- Version is now shown in title bar
+- A basic log file feature has been added
+- Runs on the Raspberry Pi!
+
+Known Issues
+- The registry key product name has been changed from GCodeSender to GrblController
+  *** WARNING: Old settings are not migrated ****
+- Switching between millimeters and inches works, but has not been fully tested
+- Go to home has not been fully tested with inches mode
+- Manually issuing $13 or G20/G21 can confuse the program
+
 V3.0
 Enhancements
 - Nearly a full code rewrite to ensure ease-of-use and robustness

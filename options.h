@@ -23,11 +23,17 @@
 #define SETTINGS_INVERSE_Z                  "inverse.z"
 #define SETTINGS_RESPONSE_WAIT_TIME         "responseWaitTime"
 #define SETTINGS_Z_JOG_RATE                 "zJogRate"
+#define SETTINGS_ENABLE_DEBUG_LOG           "debugLog"
+#define SETTINGS_USE_MM_FOR_MANUAL_CMDS     "useMMForManualCommands"
+#define SETTINGS_ABSOLUTE_AFTER_AXIS_ADJ    "absCoordForManualAfterAxisAdj"
+#define SETTINGS_Z_RATE_LIMIT               "zRateLimit"
+#define SETTINGS_Z_RATE_LIMIT_AMOUNT        "zRateLimitAmount"
 
 #define SETTINGS_FILE_OPEN_DIALOG_STATE     "fileopendialogstate"
 #define SETTINGS_NAME_FILTER                "namefilter"
 #define SETTINGS_DIRECTORY                  "directory"
 #define SETTINGS_PORT                       "port"
+
 
 
 namespace Ui {
@@ -47,6 +53,8 @@ signals:
     void setSettings();
 
 private slots:
+    void toggleUseMm(bool useMm);
+    void toggleLimitZRate(bool limitZ);
 
 private:
     Ui::Options *ui;
