@@ -1014,8 +1014,8 @@ void GCode::setUnitsTypeDisplay(bool millimeters)
     }
     else
     {
-        emit setUnitsWork("(inches)");
-        emit setUnitsMachine("(inches)");
+        emit setUnitsWork("(in)");
+        emit setUnitsMachine("(in)");
     }
 }
 

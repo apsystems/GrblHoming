@@ -35,7 +35,7 @@
 
 #define CLOSE_BUTTON_TEXT               "Close / Reset"
 
-#define GRBL_CONTROLLER_NAME_AND_VERSION    "Grbl Controller 3.1"
+#define GRBL_CONTROLLER_NAME_AND_VERSION    "Grbl Controller 3.1.1"
 
 
 extern AtomicIntBool g_enableDebugLog;
