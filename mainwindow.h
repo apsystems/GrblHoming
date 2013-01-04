@@ -95,6 +95,7 @@ private slots:
     void setSettings();
         //thread
     void receiveList(QString msg);
+    void receiveListFull(QStringList list);
     void receiveListOut(QString msg);
     void receiveMsg(QString msg);
     //menu bar
@@ -139,6 +140,7 @@ private:
     void readSettings();
     void writeSettings();
     void addToStatusList(bool in, QString msg);
+    void addToStatusList(QStringList& list);
     void disableAllButtons();
     void openPortCtl(bool reopen);
     void resetProgress();

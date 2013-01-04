@@ -76,6 +76,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&gcode, SIGNAL(portIsClosed(bool)), this, SLOT(portIsClosed(bool)));
     connect(&gcode, SIGNAL(portIsOpen(bool)), this, SLOT(portIsOpen(bool)));
     connect(&gcode, SIGNAL(addList(QString)),this,SLOT(receiveList(QString)));
+    connect(&gcode, SIGNAL(addListFull(QStringList)),this,SLOT(receiveListFull(QStringList)));
     connect(&gcode, SIGNAL(addListOut(QString)),this,SLOT(receiveListOut(QString)));
     connect(&gcode, SIGNAL(stopSending()), this, SLOT(stopSending()));
     connect(&gcode, SIGNAL(setCommandText(QString)), ui->Command, SLOT(setText(QString)));
@@ -596,6 +597,11 @@ void MainWindow::receiveList(QString msg)
     addToStatusList(true, msg);
 }
 
+void MainWindow::receiveListFull(QStringList list)
+{
+    addToStatusList(list);
+}
+
 void MainWindow::receiveListOut(QString msg)
 {
     addToStatusList(false, msg);
@@ -615,7 +621,29 @@ void MainWindow::addToStatusList(bool in, QString msg)
     else
         ui->statusList->addItem("> " + msg);
     ui->statusList->scrollToBottom();
-    MainWindow::repaint();
+}
+
+void MainWindow::addToStatusList(QStringList& list)
+{
+    QStringList cleanList;
+    foreach (QString msg, list)
+    {
+        msg.trimmed();
+        msg.remove('\r');
+        msg.remove('\n');
+
+        if (msg.length() == 0)
+            continue;
+
+        cleanList.append(msg);
+    }
+
+    if (cleanList.size() == 0)
+        return;
+
+    ui->statusList->addItems(cleanList);
+
+    ui->statusList->scrollToBottom();
 }
 
 void MainWindow::receiveMsg(QString msg)

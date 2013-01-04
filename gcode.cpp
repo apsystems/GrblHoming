@@ -501,11 +501,14 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
     }
 
     QStringList list = QString(result).split("\r\n");
+    QStringList listToSend;
     for (int i = 0; i < list.size(); i++)
     {
         if (list.at(i).length() > 0 && list.at(i) != RESPONSE_OK && !sentReqForLocation)
-            emit addList(list.at(i));
+            listToSend.append(list.at(i));
     }
+
+    sendStatusList(listToSend);
 
     if (resetState.get())
     {
@@ -566,6 +569,17 @@ bool GCode::parseCoordinates(const QString received, QString& state, Coord3D& ma
     return false;
 }
 
+void GCode::sendStatusList(QStringList& listToSend)
+{
+    if (listToSend.size() > 1)
+    {
+        emit addListFull(listToSend);
+    }
+    else if (listToSend.size() == 1)
+    {
+        emit addList(listToSend.at(0));
+    }
+}
 
 // called once a second to capture any random strings that come from the controller
 #pragma GCC diagnostic ignored "-Wunused-parameter" push
@@ -593,11 +607,14 @@ void GCode::timerEvent(QTimerEvent *event)
         }
 
         QStringList list = QString(result).split("\r\n");
+        QStringList listToSend;
         for (int i = 0; i < list.size(); i++)
         {
             if (list.at(i).length() > 0 && (list.at(i) != "ok" || (list.at(i) == "ok" && abortState.get())))
-                emit addList(list.at(i));
+                listToSend.append(list.at(i));
         }
+
+        sendStatusList(listToSend);
     }
 }
 #pragma GCC diagnostic ignored "-Wunused-parameter" pop

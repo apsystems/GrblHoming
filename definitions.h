@@ -15,7 +15,7 @@
 #include <QDateTime>
 #include "atomicintbool.h"
 
-#define DEBUG
+//#define DEBUG
 
 #define DEFAULT_WAIT_TIME_SEC   100
 
@@ -35,7 +35,7 @@
 
 #define CLOSE_BUTTON_TEXT               "Close / Reset"
 
-#define GRBL_CONTROLLER_NAME_AND_VERSION    "Grbl Controller 3.1.1"
+#define GRBL_CONTROLLER_NAME_AND_VERSION    "Grbl Controller 3.1.2"
 
 
 extern AtomicIntBool g_enableDebugLog;

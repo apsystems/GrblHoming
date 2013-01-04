@@ -42,6 +42,7 @@ public:
 
 signals:
     void addList(QString line);
+    void addListFull(QStringList list);
     void addListOut(QString line);
     void sendMsg(QString msg);
     void stopSending();
@@ -92,6 +93,7 @@ private:
     void setConfigureMmMode(bool setGrblUnits);
     void setConfigureInchesMode(bool setGrblUnits);
     QString doZRateLimit(QString strline, QString& msg);
+    void sendStatusList(QStringList& listToSend);
 
 private:
     RS232 port;
