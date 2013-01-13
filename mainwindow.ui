@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>802</width>
+    <width>838</width>
     <height>592</height>
    </rect>
   </property>
@@ -296,7 +296,7 @@
      <rect>
       <x>380</x>
       <y>220</y>
-      <width>401</width>
+      <width>431</width>
       <height>221</height>
      </rect>
     </property>
@@ -399,7 +399,7 @@
     <widget class="QWidget" name="layoutWidget4">
      <property name="geometry">
       <rect>
-       <x>300</x>
+       <x>330</x>
        <y>20</y>
        <width>70</width>
        <height>132</height>
@@ -462,9 +462,9 @@
     <widget class="QWidget" name="layoutWidget5">
      <property name="geometry">
       <rect>
-       <x>300</x>
+       <x>320</x>
        <y>160</y>
-       <width>79</width>
+       <width>91</width>
        <height>51</height>
       </rect>
      </property>
@@ -627,10 +627,10 @@
     </property>
     <property name="geometry">
      <rect>
-      <x>660</x>
-      <y>500</y>
-      <width>101</width>
-      <height>23</height>
+      <x>700</x>
+      <y>510</y>
+      <width>121</width>
+      <height>31</height>
      </rect>
     </property>
     <property name="text">
@@ -748,7 +748,7 @@
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>600</x>
+      <x>620</x>
       <y>30</y>
       <width>181</width>
       <height>131</height>
@@ -933,7 +933,7 @@
      <rect>
       <x>380</x>
       <y>450</y>
-      <width>131</width>
+      <width>161</width>
       <height>91</height>
      </rect>
     </property>
@@ -945,8 +945,8 @@
       <rect>
        <x>10</x>
        <y>20</y>
-       <width>111</width>
-       <height>61</height>
+       <width>141</width>
+       <height>66</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -972,7 +972,7 @@
      <rect>
       <x>420</x>
       <y>0</y>
-      <width>171</width>
+      <width>191</width>
       <height>31</height>
      </rect>
     </property>
@@ -996,9 +996,9 @@
    <widget class="QWidget" name="horizontalLayoutWidget_3">
     <property name="geometry">
      <rect>
-      <x>600</x>
+      <x>620</x>
       <y>0</y>
-      <width>191</width>
+      <width>211</width>
       <height>31</height>
      </rect>
     </property>
@@ -1024,7 +1024,7 @@
      <rect>
       <x>420</x>
       <y>170</y>
-      <width>131</width>
+      <width>161</width>
       <height>31</height>
      </rect>
     </property>
@@ -1048,9 +1048,9 @@
    <widget class="QWidget" name="verticalLayoutWidget_4">
     <property name="geometry">
      <rect>
-      <x>520</x>
-      <y>450</y>
-      <width>111</width>
+      <x>550</x>
+      <y>460</y>
+      <width>125</width>
       <height>91</height>
      </rect>
     </property>
@@ -1059,7 +1059,7 @@
       <widget class="QPushButton" name="btnSetHome">
        <property name="font">
         <font>
-         <pointsize>9</pointsize>
+         <pointsize>11</pointsize>
         </font>
        </property>
        <property name="autoFillBackground">
@@ -1085,7 +1085,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>802</width>
+     <width>838</width>
      <height>21</height>
     </rect>
    </property>
