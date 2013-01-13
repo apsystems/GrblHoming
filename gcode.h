@@ -10,6 +10,8 @@
 #ifndef GCODE_H
 #define GCODE_H
 
+#include "log4qtdef.h"
+
 #include <QString>
 #include <QFile>
 #include <QThread>
@@ -24,8 +26,10 @@
 #define BUF_SIZE 300
 
 #define RESPONSE_OK "ok"
-#define RESPONSE_OK_CRLF "ok\r\n"
 #define RESPONSE_ERROR "error"
+
+// as defined in the grbl project on github...
+#define GRBL_RX_BUFFER_SIZE     128
 
 #define CTRL_X '\x18'
 
@@ -67,7 +71,7 @@ public slots:
     void sendFile(QString path);
     void gotoXYZ(QString line);
     void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj);
-    void setResponseWait(int waitTime, double zJogRate, bool useMm, bool zRateLimit, double zRateLimitAmount);
+    void setResponseWait(int waitTime, double zJogRate, bool useMm, bool zRateLimit, double zRateLimitAmount, double xyRateLimitAmount, bool useAggressivePreload);
     void grblSetHome();
     void sendGrblReset();
     void sendGrblUnlock();
@@ -77,22 +81,22 @@ protected:
     void timerEvent(QTimerEvent *event);
 
 private:
-    bool sendGcodeLocal(QString line, bool recordResponseOnFail = false, int waitSec = -1);
-    bool waitForOk(QString& result, int waitCount, bool sentReqForLocation, bool sentReqForParserState);
-    bool sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec);
+    bool sendGcodeLocal(QString line, bool recordResponseOnFail = false, int waitSec = -1, bool aggressive = false);
+    bool waitForOk(QString& result, int waitCount, bool sentReqForLocation, bool sentReqForParserState, bool aggressive);
+    bool sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec, bool aggressive);
     QString removeInvalidMultipleGCommands(QString line);
     bool isGCommandValid(int value);
     bool isPortOpen();
     QString getMoveAmountFromString(QString prefix, QString item);
     bool SendJog(QString strline, bool absoluteAfterAxisAdj);
-    bool parseCoordinates(const QString received, QString& state, Coord3D& machineCoord, Coord3D& workCoord);
+    void parseCoordinates(const QString& received, bool aggressive);
     void pollPosWaitForIdle(bool checkMeasurementUnits);
     void checkAndSetCorrectMeasurementUnits();
     void setOldFormatMeasurementUnitControl();
     void setUnitsTypeDisplay(bool millimeters);
     void setConfigureMmMode(bool setGrblUnits);
     void setConfigureInchesMode(bool setGrblUnits);
-    QString doZRateLimit(QString strline, QString& msg);
+    QStringList doZRateLimit(QString strline, QString& msg, bool& xyRateSet);
     void sendStatusList(QStringList& listToSend);
 
 private:
@@ -114,8 +118,14 @@ private:
     Coord3D machineCoordLastIdlePos, workCoordLastIdlePos;
     bool zRateLimit;
     double zRateLimitAmount;
+    double xyRateAmount;
     double maxZ;
+    QList<int> sendCount;
+    QTime parseCoordTimer;
+    bool useAggressivePreload;
 
+    int sentI;
+    int rcvdI;
 };
 
 #endif // GCODE_H

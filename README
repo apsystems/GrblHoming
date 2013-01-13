@@ -20,6 +20,78 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.2
+Enhancements
+- Support for "Aggressive Preload" of commands when sending file to Grbl
+  * File's lines are sent to Grbl as fast as Grbl can take it, allowing
+    Grbl to optimize acceleration. Some files have been observed to take
+	1/3 the time to complete!
+  * Modeled after Grbl's own python script (computes/predicts how much
+    space is available in Grbl's input buffer)
+  * Due to the additional processing, CPU usage is greater than normal mode
+    and it has been optimized to run fine on a Raspberry Pi
+  * Normal (non-preload) mode is the default
+  * Response processing code now waits until a line has been received rather
+    than collect a long stream to behave like the python script
+  * LCD updates have been set to be roughly once every second independent
+    of rate of line sends/preloads
+- Z-rate limit feature now includes default xy rate setting
+  * Z rate limiting only occurs during file sends. If z is included with x&y
+    then they are split into two commands automatically and the xy rate setting
+	is used for the xy portion
+  * Since feed rate is modal, code will fix any subsequent xy items that are 
+    missing feed rate specifiers (cambam correctly adds them, but others may not)
+- Replaced basic logging with Log4Qt logging capabilities.
+  * Support for error, warning, info, debug message types. All messages are timestamped.
+  * More diagnostic messages added, mainly around sending and receiving from com ports
+  * Only error and warning are displayed in release build, all are displayed in debug.
+  * If the user enables file logging, all messages are stored regardless of build type
+  * File is output to user's home folder
+  * If you enable or disable logging to file, you must restart Grbl Controller
+  * You can split out diagnostic from status messages by grepping for (DIAG) or (STATUS)
+- Changed menus so that the first menu is File > Exit. Menus now use accelerators
+
+Bug Fixes
+- Fixed problems with z-rate limit feature, previous version was not implemented correctly.
+- Fixed subtle issues with sending bytes to COM port
+  * On really fast Windows PCs, the default timeout values would occasionally result in
+    a line not being sent. This was fixed by changing the write timeout from 10 to
+	500 ms by hardcoding it into the QextSerialPort library. This was only observed in
+	aggressive preload mode, never in normal mode.
+
+Known issues
+- New reponse line detect mode requires more processing because mainly of the faster
+  stream of status messages. To get around this, certain features have been disabled
+  in the status view so that CPU usage is manageable on the Raspberry Pi, specifically
+  the horizontal scroll bar is not available. Turn on file logging if you wish to see
+  the entire line.
+- When using aggressive preload, any error messages returned by Grbl are not synced
+  to sent messages (they come back randomly). This can be confusing.
+- If running preload, it can take longer for steppers to stop after a Stop command
+  due to the number of items in Grbl's queue. The only way to stop sooner is to 
+  press Close / Reset button
+- Under exteme CPU loads (unlikely to occur with recent optimizations), the "runtime"
+  display does not display accurate times, oddly, it displays the same time that would
+  occur if not under load
+  
+Tested on cardboard using file provided by user:
+- Windows 7 64bit, 0.8c, aggressive mode (~4 minute run)
+- Windows 7 64bit, 0.8c, normal mode (~10 minute run)
+- Windows 7 64bit, 0.8a, aggressive mode(~4 minute run)
+- Raspberry Pi, 0.8c, aggressive mode (~4 minute run)
+- Raspberry Pi, 0.8c, aggressive mode and z-limit (~6 minute run)
+
+V3.1.2  (unofficial release, optimizations for Raspberry Pi)
+Enhancements
+- Optimized multiline write to status window to use faster list-based approach
+- Removed unnecessary main window repaint after every line added to status window
+- Fixed options window text positioning so that it appears proper on the pi
+
+V3.1.1 (unofficial release, adjustments for Raspberry Pi)
+Enhancements
+- Changed measurement units in LCD from "inches" to "in" (cosmetic)
+- Shortened text and adjusted main window layout for the text size on the pi
+
 V3.1
 Enhancements
 - Supports Grbl 0.8c. Still supports 0.8a. 0.51 is supported but without LCDs.

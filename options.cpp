@@ -30,9 +30,11 @@ Options::Options(QWidget *parent) :
     ui->chkInvZ->setChecked(invZ == "true");
 
     QString enDebugLog = settings.value(SETTINGS_ENABLE_DEBUG_LOG, "false").value<QString>();
+    QString enAggressivePreload = settings.value(SETTINGS_USE_AGGRESSIVE_PRELOAD, "false").value<QString>();
     QString useMmManualCmds = settings.value(SETTINGS_USE_MM_FOR_MANUAL_CMDS, "true").value<QString>();
 
     ui->checkBoxEnableDebugLog->setChecked(enDebugLog == "true");
+    ui->chkAggressivePreload->setChecked(enAggressivePreload == "true");
     ui->checkBoxUseMmManualCmds->setChecked(useMmManualCmds == "true");
 
     int waitTime = settings.value(SETTINGS_RESPONSE_WAIT_TIME, DEFAULT_WAIT_TIME_SEC).value<int>();
@@ -44,12 +46,15 @@ Options::Options(QWidget *parent) :
     QString zRateLimit = settings.value(SETTINGS_Z_RATE_LIMIT, "false").value<QString>();
     ui->chkLimitZRate->setChecked(zRateLimit == "true");
 
-    double zRateLimitAmount = settings.value(SETTINGS_Z_RATE_LIMIT_AMOUNT, DEFAULT_Z_LIMT_RATE).value<double>();
+    double zRateLimitAmount = settings.value(SETTINGS_Z_RATE_LIMIT_AMOUNT, DEFAULT_Z_LIMIT_RATE).value<double>();
     ui->doubleSpinZRateLimit->setValue(zRateLimitAmount);
+    double xyRateAmount = settings.value(SETTINGS_XY_RATE_AMOUNT, DEFAULT_XY_RATE).value<double>();
+    ui->doubleSpinXYRate->setValue(xyRateAmount);
 
     if (!ui->chkLimitZRate->isChecked())
     {
         ui->doubleSpinZRateLimit->setEnabled(false);
+        ui->doubleSpinXYRate->setEnabled(false);
     }
 }
 
@@ -67,6 +72,7 @@ void Options::accept()
     settings.setValue(SETTINGS_INVERSE_Z, ui->chkInvZ->isChecked());
 
     settings.setValue(SETTINGS_ENABLE_DEBUG_LOG, ui->checkBoxEnableDebugLog->isChecked());
+    settings.setValue(SETTINGS_USE_AGGRESSIVE_PRELOAD, ui->chkAggressivePreload->isChecked());
     settings.setValue(SETTINGS_USE_MM_FOR_MANUAL_CMDS, ui->checkBoxUseMmManualCmds->isChecked());
 
     settings.setValue(SETTINGS_RESPONSE_WAIT_TIME, ui->spinResponseWaitSec->value());
@@ -74,6 +80,7 @@ void Options::accept()
 
     settings.setValue(SETTINGS_Z_RATE_LIMIT, ui->chkLimitZRate->isChecked());
     settings.setValue(SETTINGS_Z_RATE_LIMIT_AMOUNT, ui->doubleSpinZRateLimit->value());
+    settings.setValue(SETTINGS_XY_RATE_AMOUNT, ui->doubleSpinXYRate->value());
 
     connect(this, SIGNAL(setSettings()), parentWidget(), SLOT(setSettings()));
 
@@ -85,20 +92,24 @@ void Options::toggleUseMm(bool useMm)
 {
     double zJogRate = ui->doubleSpinZJogRate->value();
     double zRateLimit = ui->doubleSpinZRateLimit->value();
+    double xyRate = ui->doubleSpinXYRate->value();
 
     if (useMm)
     {
         ui->doubleSpinZJogRate->setValue(zJogRate * MM_IN_AN_INCH);
         ui->doubleSpinZRateLimit->setValue(zRateLimit * MM_IN_AN_INCH);
+        ui->doubleSpinXYRate->setValue(xyRate * MM_IN_AN_INCH);
     }
     else
     {
         ui->doubleSpinZJogRate->setValue(zJogRate / MM_IN_AN_INCH);
         ui->doubleSpinZRateLimit->setValue(zRateLimit / MM_IN_AN_INCH);
+        ui->doubleSpinXYRate->setValue(xyRate / MM_IN_AN_INCH);
     }
 }
 
 void Options::toggleLimitZRate(bool limitZ)
 {
     ui->doubleSpinZRateLimit->setEnabled(limitZ);
+    ui->doubleSpinXYRate->setEnabled(limitZ);
 }

@@ -15,12 +15,11 @@
 #include <QDateTime>
 #include "atomicintbool.h"
 
-//#define DEBUG
-
 #define DEFAULT_WAIT_TIME_SEC   100
 
 #define DEFAULT_Z_JOG_RATE      260.0
-#define DEFAULT_Z_LIMT_RATE     100.0
+#define DEFAULT_Z_LIMIT_RATE    100.0
+#define DEFAULT_XY_RATE         2000.0
 
 #define MM_IN_AN_INCH           25.4
 #define PRE_HOME_Z_ADJ_MM       5.0
@@ -35,9 +34,17 @@
 
 #define CLOSE_BUTTON_TEXT               "Close / Reset"
 
-#define GRBL_CONTROLLER_NAME_AND_VERSION    "Grbl Controller 3.1.2"
+#define GRBL_CONTROLLER_NAME_AND_VERSION    "Grbl Controller 3.2"
 
+#define LOG_MSG_TYPE_DIAG       "DIAG"
+#define LOG_MSG_TYPE_STATUS     "STATUS"
 
 extern AtomicIntBool g_enableDebugLog;
+
+void status(const char *str, ...);
+void diag(const char *str, ...);
+void err(const char *str, ...);
+void warn(const char *str, ...);
+void info(const char *str, ...);
 
 #endif // DEFINITIONS_H

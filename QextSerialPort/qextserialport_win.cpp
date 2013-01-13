@@ -231,7 +231,7 @@ qint64 QextSerialPortPrivate::readData_sys(char *data, qint64 maxSize)
     \warning before calling this function ensure that serial port associated with this class
     is currently open (use isOpen() function to check if port is open).
 */
-qint64 QextSerialPortPrivate::writeData_sys(const char *data, qint64 maxSize)
+qint64 QextSerialPortPrivate:: writeData_sys(const char *data, qint64 maxSize)
 {
     DWORD bytesWritten = 0;
     bool failed = false;
@@ -406,7 +406,9 @@ void QextSerialPortPrivate::updatePortSettings()
                 Win_CommTimeouts.ReadTotalTimeoutConstant = millisec;
             }
             Win_CommTimeouts.ReadTotalTimeoutMultiplier = 0;
-            Win_CommTimeouts.WriteTotalTimeoutMultiplier = millisec;
+            // zapmaker fix for dropped sent packets on fast Windows computers
+            //Win_CommTimeouts.WriteTotalTimeoutMultiplier = millisec;
+            Win_CommTimeouts.WriteTotalTimeoutMultiplier = 500;
             Win_CommTimeouts.WriteTotalTimeoutConstant = 0;
         }
         else {

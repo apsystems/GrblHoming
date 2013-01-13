@@ -13,8 +13,9 @@ GCode::GCode()
     : waitTime(LONG_WAIT_SEC), zJogRate(DEFAULT_Z_JOG_RATE),
       errorCount(0), doubleDollarFormat(false),
       incorrectMeasurementUnits(false), incorrectLcdDisplayUnits(false),
-      userSetMmMode(true), zRateLimit(false), zRateLimitAmount(DEFAULT_Z_LIMT_RATE),
-      maxZ(0)
+      userSetMmMode(true), zRateLimit(false), zRateLimitAmount(DEFAULT_Z_LIMIT_RATE),
+      xyRateAmount(DEFAULT_XY_RATE),
+      maxZ(0), useAggressivePreload(false)
 {
     // use base class's timer - use it to capture random text from the controller
     startTimer(1000);
@@ -36,6 +37,8 @@ void GCode::openPort(QString commPortStr)
         QString msg = "Can't open COM port " + commPortStr;
         sendMsg(msg);
         addList(msg);
+        warn("%s", msg.toLocal8Bit().constData());
+
         addList("-Is hardware connected to USB?");
         addList("-Is correct port chosen?");
         addList("-Does current user have sufficient permissions?");
@@ -199,7 +202,7 @@ void GCode::sendGcodeAndGetResult(int id, QString line)
 
     emit sendMsg("");
     resetState.set(false);
-    if (!sendGcodeInternal(line, result, false, SHORT_WAIT_SEC))
+    if (!sendGcodeInternal(line, result, false, SHORT_WAIT_SEC, false))
         result.clear();
 
     emit gcodeResult(id, result);
@@ -207,13 +210,13 @@ void GCode::sendGcodeAndGetResult(int id, QString line)
 
 // To be called only from this class, not from other threads. Use above two methods for that.
 // Wraps sendGcodeInternal() to allow proper handling of failure cases, etc.
-bool GCode::sendGcodeLocal(QString line, bool recordResponseOnFail /* = false */, int waitSec /* = -1 */)
+bool GCode::sendGcodeLocal(QString line, bool recordResponseOnFail /* = false */, int waitSec /* = -1 */, bool aggressive /* = false */)
 {
     QString result;
     sendMsg("");
     resetState.set(false);
 
-    bool ret = sendGcodeInternal(line, result, recordResponseOnFail, waitSec);
+    bool ret = sendGcodeInternal(line, result, recordResponseOnFail, waitSec, aggressive);
     if (shutdownState.get())
         return false;
 
@@ -269,11 +272,12 @@ bool GCode::sendGcodeLocal(QString line, bool recordResponseOnFail /* = false */
 }
 
 // Wrapped method. Should only be called from above method.
-bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec)
+bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec, bool aggressive)
 {
     if (!port.isPortOpen())
     {
         QString msg = "Port not available yet";
+        err("%s", msg.toLocal8Bit().constData());
         emit addList(msg);
         emit sendMsg(msg);
         return false;
@@ -318,6 +322,7 @@ bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponse
     if (line.length() >= BUF_SIZE)
     {
         QString msg = "Buffer size too small";
+        err("%s", msg.toLocal8Bit().constData());
         emit addList(msg);
         emit sendMsg(msg);
         return false;
@@ -330,19 +335,30 @@ bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponse
     else
         diag("SENDING: %s\n", buf);
 
+    int waitSecActual = waitSec == -1 ? waitTime : waitSec;
+
+    if (aggressive)
+    {
+        sendCount.append(line.length());
+
+        waitForOk(result, waitSecActual, false, false, aggressive);
+
+        if (shutdownState.get())
+            return false;
+    }
+
     if (!port.SendBuf(buf, line.length()))
     {
-        diag("SENDBUF FAILED\n");
         QString msg = "Sending to port failed";
+        err("%s", msg.toLocal8Bit().constData());
         emit addList(msg);
         emit sendMsg(msg);
         return false;
     }
     else
     {
-        int waitSecActual = waitSec == -1 ? waitTime : waitSec;
-
-        if (!waitForOk(result, waitSecActual, sentReqForLocation, sentReqForParserState))
+        sentI++;
+        if (!waitForOk(result, waitSecActual, sentReqForLocation, sentReqForParserState, aggressive))
         {
             diag("WAITFOROK FAILED\n");
             if (shutdownState.get())
@@ -394,77 +410,134 @@ bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponse
     return true;
 }
 
-bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, bool sentReqForParserState)
+bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, bool sentReqForParserState, bool aggressive)
 {
+    if (aggressive)
+    {
+        if (!port.bytesAvailable())
+        {
+            int total = 0;
+            foreach (int count, sendCount)
+            {
+                total += count;
+            }
+
+            //printf("Total out (a): %d (%d)\n", total, sendCount.size());
+
+            if (total < (GRBL_RX_BUFFER_SIZE - 1))
+            {
+                return true;
+            }
+        }
+    }
+
     char tmp[BUF_SIZE + 1] = {0};
     int count = 0;
     int waitCount = waitSec * 10;// multiplier depends on sleep values below
     bool status = true;
     result.clear();
-    while (!result.contains(RESPONSE_OK_CRLF) && !result.contains(RESPONSE_ERROR) && !resetState.get())
+    while (!result.contains(RESPONSE_OK) && !result.contains(RESPONSE_ERROR) && !resetState.get())
     {
-        int n = port.PollComport(tmp, BUF_SIZE);
+        int n = port.PollComportLine(tmp, BUF_SIZE);
         if (n == 0)
         {
             count++;
             SLEEP(100);
         }
+        else if (n < 0)
+        {
+            err("Error reading data from COM port\n");
+        }
         else
         {
             tmp[n] = 0;
             result.append(tmp);
-            diag("GOT:%s\n", tmp);
+
+            QString tmpTrim(tmp);
+            int pos = tmpTrim.indexOf(port.getDetectedLineFeed());
+            if (pos != -1)
+                tmpTrim.remove(pos, port.getDetectedLineFeed().size());
+            diag("GOT:%s\n", tmpTrim.toLocal8Bit().constData());
             QString received(tmp);
 
-            if (sentReqForParserState)
+            if (aggressive)
             {
-                const QRegExp rx("\\[([\\s\\w\\.\\d]+)\\]");
-
-                if (rx.indexIn(received, 0) != -1 && rx.captureCount() == 1)
+                if (received.contains(RESPONSE_OK))
                 {
-                    QStringList list = rx.capturedTexts();
-                    if (list.size() == 2)
+                    sendCount.removeFirst();
+                    rcvdI++;
+                }
+                else if (received.contains(RESPONSE_ERROR))
+                {
+                    sendCount.removeFirst();
+                    errorCount++;
+                    emit addList(received);
+                    rcvdI++;
+                }
+                else
+                {
+                    parseCoordinates(received, aggressive);
+                }
+
+                int total = 0;
+                foreach (int count, sendCount)
+                {
+                    total += count;
+                }
+
+                //printf("Total out (b): %d (%d)\n", total, sendCount.size());
+                //printf("SENT:%d RCVD:%d\n", sentI, rcvdI);
+
+                if (port.bytesAvailable() || total >= (GRBL_RX_BUFFER_SIZE - 1))
+                {
+                    result.clear();
+                    continue;
+                }
+                else
+                {
+                    return true;
+                }
+            }
+
+            if (!received.contains(RESPONSE_OK) && !received.contains(RESPONSE_ERROR))
+            {
+                if (sentReqForParserState)
+                {
+                    const QRegExp rx("\\[([\\s\\w\\.\\d]+)\\]");
+
+                    if (rx.indexIn(received, 0) != -1 && rx.captureCount() == 1)
                     {
-                        QStringList items = list.at(1).split(" ");
-                        if (items.contains("G20"))// inches
+                        QStringList list = rx.capturedTexts();
+                        if (list.size() == 2)
                         {
-                            if (userSetMmMode)
-                                incorrectMeasurementUnits = true;
+                            QStringList items = list.at(1).split(" ");
+                            if (items.contains("G20"))// inches
+                            {
+                                if (userSetMmMode)
+                                    incorrectMeasurementUnits = true;
+                                else
+                                    incorrectMeasurementUnits = false;
+                            }
+                            else if (items.contains("G21"))// millimeters
+                            {
+                                if (userSetMmMode)
+                                    incorrectMeasurementUnits = false;
+                                else
+                                    incorrectMeasurementUnits = true;
+                            }
                             else
-                                incorrectMeasurementUnits = false;
-                        }
-                        else if (items.contains("G21"))// millimeters
-                        {
-                            if (userSetMmMode)
-                                incorrectMeasurementUnits = false;
-                            else
+                            {
+                                // not in list!
                                 incorrectMeasurementUnits = true;
-                        }
-                        else
-                        {
-                            // not in list!
-                            incorrectMeasurementUnits = true;
+                            }
                         }
                     }
                 }
-            }
-            else
-            {
-                QString state;
-                if (parseCoordinates(received, state, machineCoord, workCoord))
-                {
-                    if (workCoord.z > maxZ)
-                        maxZ = workCoord.z;
-
-                    emit updateCoordinates(machineCoord, workCoord);
-                    emit setLastState(state);
-
-                    lastState = state;
-                }
                 else
-                    lastState = "";
+                {
+                    parseCoordinates(received, aggressive);
+                }
             }
-
             count = 0;
         }
 
@@ -485,11 +558,14 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
 
     if (status)
     {
-        SLEEP(100);
+        if (!aggressive)
+            SLEEP(100);
 
         if (resetState.get())
         {
-            emit addList("Wait interrupted via Reset");
+            QString msg("Wait interrupted by user");
+            err("%s", msg.toLocal8Bit().constData());
+            emit addList(msg);
         }
     }
 
@@ -500,7 +576,7 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
         //status = false;
     }
 
-    QStringList list = QString(result).split("\r\n");
+    QStringList list = QString(result).split(port.getDetectedLineFeed());
     QStringList listToSend;
     for (int i = 0; i < list.size(); i++)
     {
@@ -519,8 +595,18 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
     return status;
 }
 
-bool GCode::parseCoordinates(const QString received, QString& state, Coord3D& machineCoord, Coord3D& workCoord)
+void GCode::parseCoordinates(const QString& received, bool aggressive)
 {
+    if (aggressive)
+    {
+        int ms = parseCoordTimer.elapsed();
+        if (ms < 500)
+            return;
+
+        parseCoordTimer.restart();
+    }
+
+    QString state;
     QString prepend;
     QString append;
     QString preamble = "([a-zA-Z]+),MPos:";
@@ -560,13 +646,21 @@ bool GCode::parseCoordinates(const QString received, QString& state, Coord3D& ma
              state.toLocal8Bit().constData(),
              machineCoord.x, machineCoord.y, machineCoord.z,
              workCoord.x, workCoord.y, workCoord.z);
-        return true;
+
+        if (workCoord.z > maxZ)
+            maxZ = workCoord.z;
+
+        emit updateCoordinates(machineCoord, workCoord);
+        emit setLastState(state);
+
+        lastState = state;
+        return;
     }
     else if (received.indexOf("MPos:") != -1)
     {
-        diag("Error decoding position data!\n");
+        err("Error decoding position data!\n");
     }
-    return false;
+    lastState = "";
 }
 
 void GCode::sendStatusList(QStringList& listToSend)
@@ -606,7 +700,7 @@ void GCode::timerEvent(QTimerEvent *event)
             return;
         }
 
-        QStringList list = QString(result).split("\r\n");
+        QStringList list = QString(result).split(port.getDetectedLineFeed());
         QStringList listToSend;
         for (int i = 0; i < list.size(); i++)
         {
@@ -645,9 +739,22 @@ void GCode::sendFile(QString path)
 
         code.seek(0);
 
+        // set here once so that it doesn't change in the middle of a file send
+        bool aggressive = useAggressivePreload;
+        if (aggressive)
+            sendCount.clear();
+
+        sentI = 0;
+        rcvdI = 0;
         emit resetTimer(true);
 
-        float currLine = 0;
+        parseCoordTimer.restart();
+
+        QTime pollPosTimer;
+        pollPosTimer.start();
+
+        int currLine = 0;
+        bool xyRateSet = false;
         QString strline = code.readLine();
         while ((code.atEnd() == false) && (!abortState.get()))
         {
@@ -668,23 +775,45 @@ void GCode::sendFile(QString path)
                 if (strline.contains("G", Qt::CaseInsensitive)
                     && (!isGCommandValid(num)))
                 {
-                    emit addList(QString("Removing unsupported G command '%1'").arg(strline));
+                    QString msg(QString("Removing unsupported G command '%1'").arg(strline));
+                    warn("%s", msg.toLocal8Bit().constData());
+                    emit addList(msg);
                 }
                 else if (strline.contains("M", Qt::CaseInsensitive)
                          && (num == 1 || num > 7))
                 {
-                    emit addList(QString("Removing unsupported M command '%1'").arg(strline));
+                    QString msg(QString("Removing unsupported M command '%1'").arg(strline));
+                    warn("%s", msg.toLocal8Bit().constData());
+                    emit addList(msg);
                 }
                 else
                 {
                     QString rateLimitMsg;
+                    QStringList outputList;
                     if (zRateLimit)
                     {
-                        strline = doZRateLimit(strline, rateLimitMsg);
+                        outputList = doZRateLimit(strline, rateLimitMsg, xyRateSet);
+                    }
+                    else
+                    {
+                        outputList.append(strline);
                     }
 
-                    strline.append("\r");
-                    bool ret = sendGcodeLocal(strline, false);
+                    bool ret = false;
+                    if (outputList.size() == 1)
+                    {
+                        ret = sendGcodeLocal(outputList.at(0), false, -1, aggressive);
+                    }
+                    else
+                    {
+                        foreach (QString outputLine, outputList)
+                        {
+                            ret = sendGcodeLocal(outputLine, false, -1, aggressive);
+
+                            if (!ret)
+                                break;
+                        }
+                    }
 
                     if (rateLimitMsg.size() > 0)
                         addList(rateLimitMsg);
@@ -700,11 +829,40 @@ void GCode::sendFile(QString path)
             float percentComplete = (++currLine * 100.0) / totalLineCount;
             setProgress((int)percentComplete);
 
-            sendGcodeLocal(REQUEST_CURRENT_POS);
-
+            if (!aggressive)
+            {
+                sendGcodeLocal(REQUEST_CURRENT_POS);
+            }
+            else
+            {
+                int ms = pollPosTimer.elapsed();
+                if (ms >= 1000)
+                {
+                    pollPosTimer.restart();
+                    sendGcodeLocal(REQUEST_CURRENT_POS, false, -1, aggressive);
+                }
+            }
             strline = code.readLine();
         }
         file.close();
+
+        if (aggressive)
+        {
+            int limitCount = 0;
+            while (sendCount.size() > 0 && limitCount < 5000)
+            {
+                QString result;
+                waitForOk(result, waitTime, false, false, aggressive);
+                SLEEP(100);
+
+                if (shutdownState.get())
+                    return;
+
+                limitCount++;
+            }
+        }
+
+        sendGcodeLocal(REQUEST_CURRENT_POS);
 
         emit resetTimer(false);
 
@@ -729,9 +887,6 @@ void GCode::sendFile(QString path)
 
         emit sendMsg(msg);
         emit addList(msg);
-
-        // Removed code right here that would return back to home, because this could cause
-        // piece to get cut unintentionally due to beeline back to home
     }
 
     pollPosWaitForIdle(true);
@@ -753,7 +908,11 @@ QString GCode::removeInvalidMultipleGCommands(QString line)
         if (isGCommandValid(value))
             tmp.append(s).append(" ");
         else
-            emit addList(QString("Removing unsupported G command '%1'").arg(s));
+        {
+            QString msg(QString("Removing unsupported G command '%1'").arg(s));
+            warn("%s", msg.toLocal8Bit().constData());
+            emit addList(msg);
+        }
     }
     return tmp.trimmed();
 }
@@ -768,66 +927,210 @@ bool GCode::isGCommandValid(int value)
             || (value > 94));
 }
 
-QString GCode::doZRateLimit(QString line, QString& msg)
+QStringList GCode::doZRateLimit(QString inputLine, QString& msg, bool& xyRateSet)
 {
     // i.e.
     //G00 Z1 => G01 Z1 F100
     //G01 Z1 F260 => G01 Z1 F100
     //G01 Z1 F30 => G01 Z1 F30
+    //G01 X1 Y1 Z1 F200 -> G01 X1 Y1 & G01 Z1 F100
+    QStringList list;
+    QString line = inputLine.toUpper();
 
     if (line.count("Z") > 0)
     {
         QStringList components = line.split(" ", QString::SkipEmptyParts);
-        QString tmp;
         QString s;
         bool foundFeed = false;
         bool didLimit = false;
+
+        // We need to build one or two command strings depending on input.
+        QString x, y, g, f;
+
+        // First get all component parts
+        bool inLimit = false;
+        foreach (s, components)
+        {
+            if (s.at(0) == 'G')
+            {
+                g = s;
+            }
+            else if (s.at(0) == 'F')
+            {
+                f = s;
+
+                double value = s.mid(1,-1).toDouble();
+                if (value > zRateLimitAmount)
+                    inLimit = true;
+            }
+            else if (s.at(0) == 'X')
+            {
+                x = s;
+            }
+            else if (s.at(0) == 'Y')
+            {
+                y = s;
+            }
+        }
+
+        // Determine whether we want to have one or two command lins
+        // 1 string: Have !G0 and F but not in limit
+        // 1 string: Have Z only
+        // 2 strings: All other conditions
+        QString line1;
+        QString line2;
+        if ((g != "G0" && f.size() > 0 && !inLimit)
+                || (x.size() == 0 && y.size() == 0))
+        {
+            foreach (s, components)
+            {
+                if (s.at(0) == 'G')
+                {
+                    int value = s.mid(1,-1).toInt();
+                    if (value == 0)
+                        line1.append("G1");
+                    else
+                        line1.append(s);
+                }
+                else if (s.at(0) == 'F')
+                {
+                    double value = s.mid(1,-1).toDouble();
+                    if (value > zRateLimitAmount)
+                    {
+                        line1.append("F").append(QString::number(zRateLimitAmount));
+                        didLimit = true;
+                    }
+                    else
+                        line1.append(s);
+
+                    foundFeed = true;
+                }
+                else
+                {
+                    line1.append(s);
+                }
+                line1.append(" ");
+            }
+        }
+        else
+        {
+            // two lines
+            foreach (s, components)
+            {
+                if (s.at(0) == 'G')
+                {
+                    int value = s.mid(1,-1).toInt();
+                    if (value == 0)
+                        line1.append("G1").append(" ");
+                    else
+                        line1.append(s).append(" ");
+
+                    line2.append(s).append(" ");
+                }
+                else if (s.at(0) == 'F')
+                {
+                    double value = s.mid(1,-1).toDouble();
+                    if (value > zRateLimitAmount)
+                    {
+                        line1.append("F").append(QString::number(zRateLimitAmount));
+                        didLimit = true;
+                    }
+                    else
+                        line1.append(s).append(" ");
+
+                    line2.append(s).append(" ");
+
+                    foundFeed = true;
+                }
+                else if (s.at(0) == 'Z')
+                {
+                    line1.append(s).append(" ");
+                }
+                else
+                {
+                    line2.append(s).append(" ");
+                }
+            }
+        }
+
+        if (!foundFeed)
+        {
+            line1.append("F").append(QString::number(zRateLimitAmount));
+            didLimit = true;
+        }
+
+        line1 = line1.trimmed();
+        line2 = line2.trimmed();
+
+        if (didLimit)
+        {
+            if (line2.size() == 0)
+            {
+                msg = QString("Z-Rate Limit: [%1]=>[%2]").arg(inputLine).arg(line1);
+                xyRateSet = true;
+            }
+            else
+            {
+                msg = QString("Z-Rate Limit: [%1]=>[%2,%3]").arg(inputLine).arg(line1).arg(line2);
+                line2.append(QString(" F").append(QString::number(xyRateAmount)));
+            }
+        }
+
+        list.append(line1);
+        if (line2.size() > 0)
+            list.append(line2);
+        return list;
+    }
+    else if (xyRateSet)
+    {
+        QStringList components = line.split(" ", QString::SkipEmptyParts);
+        QString s;
+
+        bool addRateG = false;
+        bool addRateXY = false;
+        bool gotF = false;
         foreach (s, components)
         {
             if (s.at(0) == 'G')
             {
                 int value = s.mid(1,-1).toInt();
-                if (value == 0)
-                    tmp.append("G1");
-                else
-                    tmp.append(s);
+                if (value != 0)
+                {
+                    addRateG = true;
+                }
             }
             else if (s.at(0) == 'F')
             {
-                double value = s.mid(1,-1).toDouble();
-                if (value > zRateLimitAmount)
-                {
-                    tmp.append("F").append(QString::number(zRateLimitAmount));
-                    didLimit = true;
-                }
-                else
-                    tmp.append(s);
+                gotF = true;
+            }
+            else if (s.at(0) == 'X' || s.at(0) == 'Y')
+            {
+                addRateXY = true;
+            }
+        }
 
-                foundFeed = true;
+        if (addRateG && addRateXY)
+        {
+            if (!gotF)
+            {
+                QString line = inputLine;
+                line.append(QString(" F").append(QString::number(xyRateAmount)));
+                msg = QString("XY-Rate Limit FIX: [%1]=>[%2]").arg(inputLine).arg(line);
+                list.append(line);
             }
             else
             {
-                tmp.append(s);
+                list.append(inputLine);
             }
-            tmp.append(" ");
+
+            xyRateSet = false;
+
+            return list;
         }
-
-        if (!foundFeed)
-        {
-            tmp.append("F").append(QString::number(zRateLimitAmount));
-            didLimit = true;
-        }
-
-        tmp = tmp.trimmed();
-
-        if (didLimit)
-        {
-            msg = QString("Z-Rate Limit: [%1]=>[%2]").arg(line).arg(tmp);
-        }
-
-        return tmp;
     }
-    return line;
+
+    list.append(inputLine);
+    return list;
 
 }
 
@@ -870,7 +1173,9 @@ void GCode::gotoXYZ(QString line)
     }
     else
     {
-        emit addList("Bad command.");
+        QString msg(QString("Bad command: %1").arg(line));
+        warn("%s", msg.toLocal8Bit().constData());
+        emit addList(msg);
     }
 
     emit setCommandText("");
@@ -928,12 +1233,14 @@ bool GCode::SendJog(QString cmd, bool absoluteAfterAxisAdj)
 }
 
 // settings change calls here
-void GCode::setResponseWait(int wt, double zj, bool useMm, bool zRL, double zRLAmount)
+void GCode::setResponseWait(int wt, double zj, bool useMm, bool zRL, double zRLAmount, double xyRAmount, bool useAggr)
 {
     waitTime = wt;
     zJogRate = zj;
     zRateLimit = zRL;
     zRateLimitAmount = zRLAmount;
+    xyRateAmount = xyRAmount;
+    useAggressivePreload = useAggr;
 
     if ((userSetMmMode != useMm) && isPortOpen() && doubleDollarFormat)
     {

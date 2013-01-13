@@ -10,7 +10,7 @@
 #include "rs232.h"
 
 RS232::RS232()
-    : port(NULL)
+    : port(NULL), detectedEOL(0)
 {
 }
 
@@ -42,11 +42,99 @@ int RS232::PollComport(char *buf, int size)
     return(n);
 }
 
+// This is different than QIoDevice.readline() - this method only returns data if it has a full line in the
+// input buffer by peeking at the buffer. It never removes items unless it can remove a full line.
+int RS232::PollComportLine(char *buf, int size)
+{
+    if (port == NULL || !port->isOpen())
+        return 0;
+
+    int n = port->bytesAvailable();
+    if (!n)
+        return 0;
+
+    n = port->peek(buf, size);
+    if (n <= 0)
+        return n;
+
+    //printf("PEEK: %d out of %d\n", n, size);
+    if (detectedEOL == 0)
+    {
+        // algorithm assumes we received both eol chars if there are two in this peek
+        int pos = 0;
+        char firstEOL = 0;
+        char secondEOL = 0;
+        for (int i = 0; i < n; i++)
+        {
+            char b = buf[i];
+            if (b == '\n' || b == '\r')
+            {
+                if (firstEOL == 0)
+                {
+                    firstEOL = b;
+                    pos = i;
+                }
+                else if ((pos + 1) == i)
+                {
+                    secondEOL = b;
+                    break;
+                }
+                else
+                    break;
+            }
+        }
+
+        if (firstEOL != 0)
+        {
+            if (secondEOL != 0)
+            {
+                detectedEOL = secondEOL;
+                detectedLineFeed = firstEOL;
+                detectedLineFeed += secondEOL;
+            }
+            else
+            {
+                detectedEOL = firstEOL;
+                detectedLineFeed = firstEOL;
+            }
+        }
+    }
+
+    int toRead = 0;
+    if (detectedEOL)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            char b = buf[i];
+            if (b == detectedEOL)
+            {
+                toRead = i + 1;
+                break;
+            }
+        }
+    }
+
+    // let's hope the serial subsystem's read buffer is big enough to find a linefeed
+    if (!toRead)
+    {
+        return 0;
+    }
+
+    n = port->read(buf, toRead);
+
+    return n;
+}
 
 int RS232::SendBuf(const char *buf, int size)
 {
     if (port == NULL || !port->isOpen())
         return 0;
+
+    if (size <= 0)
+    {
+        err("Unexpected: Told to send %d bytes\n", size);
+        return 1;
+    }
 
     char b[300] = {0};
     memcpy(b, buf, size);
@@ -59,7 +147,36 @@ int RS232::SendBuf(const char *buf, int size)
     printf("\n");
     fflush(stdout);
 #endif
-    return(port->write(buf, size));
+
+    port->waitForBytesWritten(-1);// this usually doesn't do anything, but let's put it here in case
+
+    int result = port->write(buf, size);
+    if (result == 0)
+    {
+        err("Unable to write bytes to port probably due to outgoing queue full. Write data lost!");
+        /* the following code doesn't seem to help. Generate an error instead
+        int limit = 0;
+        while (!result && limit < 100)
+        {
+            SLEEP(100);
+            result = port->write(buf, size);
+            limit++;
+        }
+
+        if (!result)
+        {
+            err("Unable to write %d bytes to port!", size);
+        }
+        else if (result != size)
+            err("Unexpected: Retry send wrote %d bytes out of expected %d\n", result, size);
+        */
+    }
+    else if (result == -1)
+    {
+        err("Error writing to port. Write data lost!");
+        result = 0;
+    }
+    return result;
 }
 
 
@@ -96,3 +213,13 @@ bool RS232::isPortOpen()
     return port->isOpen();
 }
 
+QString RS232::getDetectedLineFeed()
+{
+    return detectedLineFeed;
+}
+
+int RS232::bytesAvailable()
+{
+    int n = port->bytesAvailable();
+    return n;
+}

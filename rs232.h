@@ -47,16 +47,21 @@ public:
     //methods
     bool OpenComport(QString commPortStr);
     int PollComport(char *buf, int size);
+    int PollComportLine(char *buf, int size);
     int SendBuf(const char *buf, int size);
     void CloseComport();
     void Reset();
     void flush();
     bool isPortOpen();
+    QString getDetectedLineFeed();
+    int bytesAvailable();
 
 private:
     QextSerialPort *port;
+    char detectedEOL;
+    QString detectedLineFeed;
+
 };
 
-void diag(const char *str, ...);
 
 #endif // RS232_H

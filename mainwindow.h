@@ -16,6 +16,8 @@
 #include <QFile>
 #include <QSettings>
 #include <QCloseEvent>
+#include <QItemDelegate>
+#include <QListView>
 #include "about.h"
 #include "definitions.h"
 #include "grbldialog.h"
@@ -28,6 +30,41 @@
 #define APPLICATION_NAME "GrblController"
 #define DOMAIN_NAME "org.zapmaker"
 
+/* testing optimizing scrollbar, doesn't work right
+class MyItemDelegate : public QItemDelegate
+{
+private:
+    int width;
+    QAbstractItemView *parentWidget;
+
+public:
+
+    MyItemDelegate(QAbstractItemView *p) : parentWidget(p) {}
+
+    void setWidth(int w)
+    {
+        width = w;
+    }
+
+    void drawDisplay(QPainter *painter,const
+    QStyleOptionViewItem &option,const QRect &rect,const QString &text) const{
+
+        QRect tempRect(rect);
+        tempRect.setWidth(parentWidget->width());
+        QItemDelegate::drawDisplay(painter,option,tempRect,text);
+
+    }
+
+    QSize sizeHint(const QStyleOptionViewItem & option, const
+    QModelIndex & index ) const  {
+
+        QListView *list = qobject_cast<QListView*>(parentWidget);
+        QSize newSize(QItemDelegate::sizeHint(option,index));
+        if( list ) newSize.setWidth( width );
+        return newSize;
+    }
+};
+*/
 
 namespace Ui {
 class MainWindow;
@@ -54,7 +91,7 @@ signals:
     void sendFile(QString path);
     void gotoXYZ(QString line);
     void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj);
-    void setResponseWait(int waitTime, double zJogRate, bool useMm, bool zRateLimit, double zRateLimitAmount);
+    void setResponseWait(int waitTime, double zJogRate, bool useMm, bool zRateLimit, double zRateLimitAmount, double xyRateAmount, bool useAggressivePreload);
     void setProgress(int percent);
     void setRuntime(QString runtime);
     void sendSetHome();
@@ -134,7 +171,11 @@ private:
     bool useMm;
     bool zRateLimiting;
     double zRateLimitAmount;
-
+    double xyRateAmount;
+    bool useAggressivePreload;
+    bool checkLogWrite;
+    QTime scrollStatusTimer;
+  
     //methods
     int SendJog(QString strline);
     void readSettings();
@@ -147,8 +188,9 @@ private:
     void refreshLcd();
     void lcdDisplay(char axis, bool workCoord, float value);
     void updateSettingsFromOptionDlg(QSettings& settings);
+    void doScroll();
+    int computeListViewMinimumWidth(QAbstractItemView* view);
 };
-
 
 
 #endif // MAINWINDOW_H

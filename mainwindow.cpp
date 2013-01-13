@@ -10,10 +10,13 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
+extern Log4Qt::FileAppender *p_fappender;
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    absoluteAfterAxisAdj(false)
+    absoluteAfterAxisAdj(false),
+    checkLogWrite(false)
 {
     // Setup our application information to be used by QSettings
     QCoreApplication::setOrganizationName(COMPANY_NAME);
@@ -26,6 +29,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->setupUi(this);
 
     readSettings();
+
+    info("%s has started", GRBL_CONTROLLER_NAME_AND_VERSION);
 
     // see http://blog.qt.digia.com/2010/06/17/youre-doing-it-wrong/
     // The thread points out that the documentation for QThread is wrong :) and
@@ -51,6 +56,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->SpindleOn,SIGNAL(toggled(bool)),this,SLOT(toggleSpindle()));
     connect(ui->chkRestoreAbsolute,SIGNAL(toggled(bool)),this,SLOT(toggleRestoreAbsolute()));
     connect(ui->actionOptions,SIGNAL(triggered()),this,SLOT(getOptions()));
+    connect(ui->actionExit,SIGNAL(triggered()),this,SLOT(close()));
     connect(ui->actionAbout,SIGNAL(triggered()),this,SLOT(showAbout()));
     connect(ui->btnResetGrbl,SIGNAL(clicked()),this,SLOT(grblReset()));
     connect(ui->btnUnlockGrbl,SIGNAL(clicked()),this,SLOT(grblUnlock()));
@@ -62,7 +68,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(sendGcode(QString)), &gcode, SLOT(sendGcode(QString)));
     connect(this, SIGNAL(gotoXYZ(QString)), &gcode, SLOT(gotoXYZ(QString)));
     connect(this, SIGNAL(axisAdj(char, float, bool, bool)), &gcode, SLOT(axisAdj(char, float, bool, bool)));
-    connect(this, SIGNAL(setResponseWait(int, double, bool, bool, double)), &gcode, SLOT(setResponseWait(int, double, bool, bool, double)));
+    connect(this, SIGNAL(setResponseWait(int, double, bool, bool, double, double, bool)), &gcode, SLOT(setResponseWait(int, double, bool, bool, double, double, bool)));
     connect(this, SIGNAL(shutdown()), &gcodeThread, SLOT(quit()));
     connect(this, SIGNAL(shutdown()), &timerThread, SLOT(quit()));
     connect(this, SIGNAL(setProgress(int)), ui->progressFileSend, SLOT(setValue(int)));
@@ -99,6 +105,14 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboStep->addItem("1");
     ui->comboStep->addItem("10");
     ui->comboStep->setCurrentIndex(2);
+
+    ui->statusList->setUniformItemSizes(true);
+	// Does not work correctly for horizontal scrollbar:
+    //MyItemDelegate *scrollDelegate = new MyItemDelegate(ui->statusList);
+    //scrollDelegate->setWidth(600);
+    //ui->statusList->setItemDelegate(scrollDelegate);
+
+    scrollStatusTimer.start();
 
     // Cool utility class off Google code that enumerates COM ports in platform-independent manner
     QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
@@ -140,7 +154,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->setWindowTitle(GRBL_CONTROLLER_NAME_AND_VERSION);
 
-    emit setResponseWait(waitTime, zJogRate, useMm, zRateLimiting, zRateLimitAmount);
+    emit setResponseWait(waitTime, zJogRate, useMm, zRateLimiting, zRateLimitAmount, xyRateAmount, useAggressivePreload);
 }
 
 MainWindow::~MainWindow()
@@ -156,6 +170,8 @@ void MainWindow::closeEvent(QCloseEvent *event)
     gcode.setReset();
 
     writeSettings();
+
+    info("%s has stopped", GRBL_CONTROLLER_NAME_AND_VERSION);
 
     SLEEP(300);
 
@@ -548,7 +564,7 @@ void MainWindow::setSettings()
     updateSettingsFromOptionDlg(settings);
 
     // update gcode thread with latest values
-    emit setResponseWait(waitTime, zJogRate, useMm, zRateLimiting, zRateLimitAmount);
+    emit setResponseWait(waitTime, zJogRate, useMm, zRateLimiting, zRateLimitAmount, xyRateAmount, useAggressivePreload);
 }
 
 void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
@@ -560,6 +576,20 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
     QString sdbgLog = settings.value(SETTINGS_ENABLE_DEBUG_LOG, "false").value<QString>();
     g_enableDebugLog.set(sdbgLog == "true");
 
+    // only enable/not enable file logging at startup. There are some kind of
+    // multithreaded issues turning on or off file logging at runtime causing
+    // crashes.
+    if (!checkLogWrite)
+    {
+        checkLogWrite = true;
+
+        if (g_enableDebugLog.get())
+        {
+            p_fappender->activateOptions();
+            Log4Qt::Logger::rootLogger()->addAppender(p_fappender);
+        }
+    }
+
     invX = sinvX == "true";
     invY = sinvY == "true";
     invZ = sinvZ == "true";
@@ -568,6 +598,8 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
     zJogRate = settings.value(SETTINGS_Z_JOG_RATE, DEFAULT_Z_JOG_RATE).value<double>();
     QString useMmManualCmds = settings.value(SETTINGS_USE_MM_FOR_MANUAL_CMDS, "true").value<QString>();
     useMm = useMmManualCmds == "true";
+    QString useAggrPreload = settings.value(SETTINGS_USE_AGGRESSIVE_PRELOAD, "false").value<QString>();
+    useAggressivePreload = useAggrPreload == "true";
 
     QString absAfterAdj = settings.value(SETTINGS_ABSOLUTE_AFTER_AXIS_ADJ, "false").value<QString>();
     absoluteAfterAxisAdj = absAfterAdj == "true";
@@ -576,7 +608,8 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
     QString zRateLimit = settings.value(SETTINGS_Z_RATE_LIMIT, "false").value<QString>();
     zRateLimiting = zRateLimit == "true";
 
-    zRateLimitAmount = settings.value(SETTINGS_Z_RATE_LIMIT_AMOUNT, DEFAULT_Z_LIMT_RATE).value<double>();
+    zRateLimitAmount = settings.value(SETTINGS_Z_RATE_LIMIT_AMOUNT, DEFAULT_Z_LIMIT_RATE).value<double>();
+    xyRateAmount = settings.value(SETTINGS_XY_RATE_AMOUNT, DEFAULT_XY_RATE).value<double>();
 }
 
 // save last state of settings
@@ -616,11 +649,14 @@ void MainWindow::addToStatusList(bool in, QString msg)
     if (msg.length() == 0)
         return;
 
-    if (in)
-        ui->statusList->addItem(msg);
-    else
-        ui->statusList->addItem("> " + msg);
-    ui->statusList->scrollToBottom();
+    QString nMsg(msg);
+    if (!in)
+        nMsg = "> " + msg;
+    ui->statusList->addItem(nMsg);
+
+    status("%s", nMsg.toLocal8Bit().constData());
+
+    doScroll();
 }
 
 void MainWindow::addToStatusList(QStringList& list)
@@ -636,6 +672,8 @@ void MainWindow::addToStatusList(QStringList& list)
             continue;
 
         cleanList.append(msg);
+
+        status("%s", msg.toLocal8Bit().constData());
     }
 
     if (cleanList.size() == 0)
@@ -643,8 +681,53 @@ void MainWindow::addToStatusList(QStringList& list)
 
     ui->statusList->addItems(cleanList);
 
-    ui->statusList->scrollToBottom();
+    doScroll();
 }
+
+void MainWindow::doScroll()
+{
+    if (scrollStatusTimer.elapsed() > 1000)
+    {
+        ui->statusList->scrollToBottom();
+        QApplication::processEvents();
+        scrollStatusTimer.restart();
+    }
+}
+
+/* testing optimizing scrollbar, doesn't work
+int MainWindow::computeListViewMinimumWidth(QAbstractItemView* view)
+{
+    int minWidth = 0;
+    QAbstractItemModel* model = view->model();
+
+    QStyleOptionViewItem option;
+
+    int rowCount = model->rowCount();
+    for (int row = 0; row < rowCount; ++row)
+    {
+        QModelIndex index = model->index(row, 0);
+        QSize size = view->itemDelegate()->sizeHint(option, index);
+        scrollDelegate = new MyItemDelegate(view);
+        view->setItemDelegate(scrollDelegate);
+
+        minWidth = qMax(size.width(), minWidth);
+    }
+
+    if (rowCount > 0)
+    {
+        if (scrollDelegate == NULL)
+        {
+            scrollDelegate = new MyItemDelegate(view);
+            QModelIndex index = model->index(0, 0);
+            view->setItemDelegate(scrollDelegate);
+        }
+
+        scrollDelegate->setWidth(minWidth);
+        info("Width is %d\n", minWidth);
+    }
+    return minWidth;
+}
+*/
 
 void MainWindow::receiveMsg(QString msg)
 {
