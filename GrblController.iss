@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Grbl Controller"
-#define MyAppVersion "3.0"
+#define MyAppVersion "3.2"
 #define MyAppPublisher "Zapmaker"
 #define MyAppURL "http://zapmaker.org"
 #define MyAppExeName "GrblController.exe"
@@ -25,7 +25,7 @@ AllowNoIcons=yes
 LicenseFile=C:\dev\github\GrblHoming\winlicense.txt
 InfoBeforeFile=C:\dev\github\GrblHoming\wininfobefore.txt
 InfoAfterFile=C:\dev\github\GrblHoming\wininfoafter.txt
-OutputBaseFilename=GrblController3Setup
+OutputBaseFilename=GrblController32Setup
 Compression=lzma
 SolidCompression=yes
 
@@ -42,6 +42,7 @@ Source: "C:\Qt\4.8.3\bin\libgcc_s_dw2-1.dll"; DestDir: "{app}"; Flags: ignorever
 Source: "C:\Qt\4.8.3\bin\mingwm10.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Qt\4.8.3\bin\QtCore4.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C:\Qt\4.8.3\bin\QtGui4.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C:\mingw\bin\libstdc++-6.dll"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
