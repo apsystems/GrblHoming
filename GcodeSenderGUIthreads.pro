@@ -22,7 +22,14 @@ SOURCES += main.cpp\
     gcode.cpp \
     timer.cpp \
     atomicintbool.cpp \
-    coord3d.cpp
+    coord3d.cpp \
+    renderarea.cpp \
+    positem.cpp \
+    renderitemlist.cpp \
+    lineitem.cpp \
+    itemtobase.cpp \
+    arcitem.cpp \
+    pointitem.cpp
 
 HEADERS  += mainwindow.h \
     rs232.h \
@@ -35,7 +42,14 @@ HEADERS  += mainwindow.h \
     timer.h \
     atomicintbool.h \
     coord3d.h \
-    log4qtdef.h
+    log4qtdef.h \
+    renderarea.h \
+    positem.h \
+    renderitemlist.h \
+    lineitem.h \
+    itemtobase.h \
+    arcitem.h \
+    pointitem.h
 
 FORMS    += mainwindow.ui \
     options.ui \

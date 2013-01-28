@@ -20,6 +20,19 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.3
+Enhancemetns
+- Added "Visualizer" feature. It is now possible to see top-down view of the
+  file to be milled.
+  * Shows actual file units (inches or millimeters) independent of coordinate display
+  * Auto-scaling
+  * Supports limited subset of commands (G0/G1/G2/G3)
+  * Visualizer on tab panel shared with Axis control
+  * Actual last spindle cutter position is shown; auto-scales to include both cutter
+    and file
+  * When file is being run, overlay of all commands sent to Grbl is shown in green
+  * Displays dimensions of design, along with design's width and depth in file's units
+
 V3.2
 Enhancements
 - Support for "Aggressive Preload" of commands when sending file to Grbl

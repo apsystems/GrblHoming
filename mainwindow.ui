@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>838</width>
-    <height>592</height>
+    <height>625</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -288,229 +288,6 @@
      </rect>
     </property>
    </widget>
-   <widget class="QGroupBox" name="groupBoxAxisControl">
-    <property name="enabled">
-     <bool>false</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>380</x>
-      <y>220</y>
-      <width>431</width>
-      <height>221</height>
-     </rect>
-    </property>
-    <property name="title">
-     <string>Axis Adjust</string>
-    </property>
-    <widget class="QWidget" name="layoutWidget3">
-     <property name="geometry">
-      <rect>
-       <x>40</x>
-       <y>20</y>
-       <width>214</width>
-       <height>120</height>
-      </rect>
-     </property>
-     <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0">
-      <item row="0" column="1">
-       <widget class="QPushButton" name="IncYBtn">
-        <property name="text">
-         <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="GrblController.qrc">
-          <normaloff>:/img/up.PNG</normaloff>:/img/up.PNG</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>24</width>
-          <height>24</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <spacer name="verticalSpacer">
-        <property name="orientation">
-         <enum>Qt::Vertical</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>18</width>
-          <height>17</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item row="2" column="0">
-       <widget class="QPushButton" name="DecXBtn">
-        <property name="text">
-         <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="GrblController.qrc">
-          <normaloff>:/img/left.PNG</normaloff>:/img/left.PNG</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>24</width>
-          <height>24</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="1">
-       <widget class="QPushButton" name="DecYBtn">
-        <property name="text">
-         <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="GrblController.qrc">
-          <normaloff>:/img/down.PNG</normaloff>:/img/down.PNG</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>24</width>
-          <height>24</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="2">
-       <widget class="QPushButton" name="IncXBtn">
-        <property name="text">
-         <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="GrblController.qrc">
-          <normaloff>:/img/right.PNG</normaloff>:/img/right.PNG</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>24</width>
-          <height>24</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-    <widget class="QWidget" name="layoutWidget4">
-     <property name="geometry">
-      <rect>
-       <x>330</x>
-       <y>20</y>
-       <width>70</width>
-       <height>132</height>
-      </rect>
-     </property>
-     <layout class="QVBoxLayout" name="layoutZJog">
-      <item>
-       <widget class="QPushButton" name="IncZBtn">
-        <property name="text">
-         <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="GrblController.qrc">
-          <normaloff>:/img/up.PNG</normaloff>:/img/up.PNG</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>24</width>
-          <height>24</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QLabel" name="lblZJog">
-        <property name="font">
-         <font>
-          <pointsize>10</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Z Jog</string>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QPushButton" name="DecZBtn">
-        <property name="text">
-         <string/>
-        </property>
-        <property name="icon">
-         <iconset resource="GrblController.qrc">
-          <normaloff>:/img/down.PNG</normaloff>:/img/down.PNG</iconset>
-        </property>
-        <property name="iconSize">
-         <size>
-          <width>24</width>
-          <height>24</height>
-         </size>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-    <widget class="QWidget" name="layoutWidget5">
-     <property name="geometry">
-      <rect>
-       <x>320</x>
-       <y>160</y>
-       <width>91</width>
-       <height>51</height>
-      </rect>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayoutStepSize">
-      <item>
-       <widget class="QLabel" name="lblStep">
-        <property name="text">
-         <string>Step Size           </string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QComboBox" name="comboStep"/>
-      </item>
-     </layout>
-    </widget>
-    <widget class="QWidget" name="verticalLayoutWidget_2">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>150</y>
-       <width>281</width>
-       <height>61</height>
-      </rect>
-     </property>
-     <layout class="QVBoxLayout" name="verticalLayout">
-      <item>
-       <widget class="QCheckBox" name="chkRestoreAbsolute">
-        <property name="text">
-         <string>Absolute coordinates after adjust</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <widget class="QCheckBox" name="SpindleOn">
-        <property name="text">
-         <string>Spindle On</string>
-        </property>
-        <property name="checked">
-         <bool>false</bool>
-        </property>
-       </widget>
-      </item>
-     </layout>
-    </widget>
-   </widget>
    <widget class="QGroupBox" name="groupBoxSendFile">
     <property name="enabled">
      <bool>false</bool>
@@ -628,7 +405,7 @@
     <property name="geometry">
      <rect>
       <x>700</x>
-      <y>510</y>
+      <y>530</y>
       <width>121</width>
       <height>31</height>
      </rect>
@@ -932,7 +709,7 @@
     <property name="geometry">
      <rect>
       <x>380</x>
-      <y>450</y>
+      <y>470</y>
       <width>161</width>
       <height>91</height>
      </rect>
@@ -1022,9 +799,9 @@
    <widget class="QWidget" name="horizontalLayoutWidget_4">
     <property name="geometry">
      <rect>
-      <x>420</x>
-      <y>170</y>
-      <width>161</width>
+      <x>160</x>
+      <y>50</y>
+      <width>201</width>
       <height>31</height>
      </rect>
     </property>
@@ -1049,9 +826,9 @@
     <property name="geometry">
      <rect>
       <x>550</x>
-      <y>460</y>
-      <width>125</width>
-      <height>91</height>
+      <y>480</y>
+      <width>141</width>
+      <height>81</height>
      </rect>
     </property>
     <layout class="QVBoxLayout" name="verticalLayout_4">
@@ -1078,6 +855,313 @@
       </widget>
      </item>
     </layout>
+   </widget>
+   <widget class="QTabWidget" name="tabAxisVisualizer">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>180</y>
+      <width>441</width>
+      <height>281</height>
+     </rect>
+    </property>
+    <property name="currentIndex">
+     <number>0</number>
+    </property>
+    <widget class="QWidget" name="tab">
+     <attribute name="title">
+      <string>Axis Control</string>
+     </attribute>
+     <widget class="QWidget" name="layoutWidget3">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>20</y>
+        <width>214</width>
+        <height>120</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout" rowstretch="0,0,0">
+       <item row="0" column="1">
+        <widget class="QPushButton" name="IncYBtn">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="GrblController.qrc">
+           <normaloff>:/img/up.PNG</normaloff>:/img/up.PNG</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <spacer name="verticalSpacer">
+         <property name="orientation">
+          <enum>Qt::Vertical</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>18</width>
+           <height>17</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item row="2" column="0">
+        <widget class="QPushButton" name="DecXBtn">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="GrblController.qrc">
+           <normaloff>:/img/left.PNG</normaloff>:/img/left.PNG</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QPushButton" name="DecYBtn">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="GrblController.qrc">
+           <normaloff>:/img/down.PNG</normaloff>:/img/down.PNG</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="2">
+        <widget class="QPushButton" name="IncXBtn">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="GrblController.qrc">
+           <normaloff>:/img/right.PNG</normaloff>:/img/right.PNG</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget4">
+      <property name="geometry">
+       <rect>
+        <x>330</x>
+        <y>10</y>
+        <width>70</width>
+        <height>132</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="layoutZJog">
+       <item>
+        <widget class="QPushButton" name="IncZBtn">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="GrblController.qrc">
+           <normaloff>:/img/up.PNG</normaloff>:/img/up.PNG</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QLabel" name="lblZJog">
+         <property name="font">
+          <font>
+           <pointsize>10</pointsize>
+           <weight>75</weight>
+           <bold>true</bold>
+          </font>
+         </property>
+         <property name="text">
+          <string>Z Jog</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="DecZBtn">
+         <property name="text">
+          <string/>
+         </property>
+         <property name="icon">
+          <iconset resource="GrblController.qrc">
+           <normaloff>:/img/down.PNG</normaloff>:/img/down.PNG</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>24</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="layoutWidget5">
+      <property name="geometry">
+       <rect>
+        <x>320</x>
+        <y>170</y>
+        <width>101</width>
+        <height>51</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayoutStepSize">
+       <item>
+        <widget class="QLabel" name="lblStep">
+         <property name="text">
+          <string>Step Size           </string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QComboBox" name="comboStep"/>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="verticalLayoutWidget_2">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>170</y>
+        <width>281</width>
+        <height>61</height>
+       </rect>
+      </property>
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QCheckBox" name="chkRestoreAbsolute">
+         <property name="text">
+          <string>Absolute coordinates after adjust</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="SpindleOn">
+         <property name="text">
+          <string>Spindle On</string>
+         </property>
+         <property name="checked">
+          <bool>false</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+    <widget class="QWidget" name="tab_">
+     <attribute name="title">
+      <string>Visualizer</string>
+     </attribute>
+     <widget class="RenderArea" name="wgtVisualizer" native="true">
+      <property name="geometry">
+       <rect>
+        <x>-1</x>
+        <y>-1</y>
+        <width>437</width>
+        <height>259</height>
+       </rect>
+      </property>
+      <property name="palette">
+       <palette>
+        <active>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>255</green>
+            <blue>255</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>244</red>
+            <green>237</green>
+            <blue>187</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </active>
+        <inactive>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>255</red>
+            <green>255</green>
+            <blue>255</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>244</red>
+            <green>237</green>
+            <blue>187</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </inactive>
+        <disabled>
+         <colorrole role="Base">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>244</red>
+            <green>237</green>
+            <blue>187</blue>
+           </color>
+          </brush>
+         </colorrole>
+         <colorrole role="Window">
+          <brush brushstyle="SolidPattern">
+           <color alpha="255">
+            <red>244</red>
+            <green>237</green>
+            <blue>187</blue>
+           </color>
+          </brush>
+         </colorrole>
+        </disabled>
+       </palette>
+      </property>
+      <property name="autoFillBackground">
+       <bool>true</bool>
+      </property>
+     </widget>
+    </widget>
    </widget>
   </widget>
   <widget class="QMenuBar" name="menuBar">
@@ -1129,6 +1213,14 @@
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>RenderArea</class>
+   <extends>QWidget</extends>
+   <header>renderarea.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="GrblController.qrc"/>
  </resources>

@@ -25,6 +25,8 @@ MainWindow::MainWindow(QWidget *parent) :
 
     // required if passing the object by reference into signals/slots
     qRegisterMetaType<Coord3D>("Coord3D");
+    qRegisterMetaType<PosItem>("PosItem");
+
 
     ui->setupUi(this);
 
@@ -77,6 +79,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(sendGrblReset()), &gcode, SLOT(sendGrblReset()));
     connect(this, SIGNAL(sendGrblUnlock()), &gcode, SLOT(sendGrblUnlock()));
     connect(this, SIGNAL(goToHome()), &gcode, SLOT(goToHome()));
+    connect(this, SIGNAL(setItems(QList<PosItem>)), ui->wgtVisualizer, SLOT(setItems(QList<PosItem>)));
 
     connect(&gcode, SIGNAL(sendMsg(QString)),this,SLOT(receiveMsg(QString)));
     connect(&gcode, SIGNAL(portIsClosed(bool)), this, SLOT(portIsClosed(bool)));
@@ -94,6 +97,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&gcode, SIGNAL(setLastState(QString)), ui->outputLastState, SLOT(setText(QString)));
     connect(&gcode, SIGNAL(setUnitsWork(QString)), ui->outputUnitsWork, SLOT(setText(QString)));
     connect(&gcode, SIGNAL(setUnitsMachine(QString)), ui->outputUnitsMachine, SLOT(setText(QString)));
+    connect(&gcode, SIGNAL(setLivePoint(double, double, bool)), ui->wgtVisualizer, SLOT(setLivePoint(double, double, bool)));
+    connect(&gcode, SIGNAL(setVisCurrLine(int)), ui->wgtVisualizer, SLOT(setVisCurrLine(int)));
 
     connect(&timer, SIGNAL(setRuntime(QString)), ui->outputRuntime, SLOT(setText(QString)));
 
@@ -135,7 +140,7 @@ MainWindow::MainWindow(QWidget *parent) :
     if (ports.size() > 0)
         ui->cmbPort->setCurrentIndex(portIndex);
 
-    ui->groupBoxAxisControl->setEnabled(false);
+    ui->tabAxisVisualizer->setEnabled(false);
     ui->groupBoxSendFile->setEnabled(true);
     ui->groupBoxManualGCode->setEnabled(false);
     ui->Begin->setEnabled(false);
@@ -185,7 +190,7 @@ void MainWindow::begin()
     //receiveList("Starting File Send.");
     resetProgress();
 
-    ui->groupBoxAxisControl->setEnabled(false);
+    ui->tabAxisVisualizer->setEnabled(false);
     ui->groupBoxManualGCode->setEnabled(false);
 
     ui->Begin->setEnabled(false);
@@ -235,7 +240,7 @@ void MainWindow::goHomeSafe()
 // slot called from GCode class to update our state
 void MainWindow::stopSending()
 {
-    ui->groupBoxAxisControl->setEnabled(true);
+    ui->tabAxisVisualizer->setEnabled(true);
     ui->groupBoxManualGCode->setEnabled(true);
     ui->Begin->setEnabled(true);
     ui->Stop->setEnabled(false);
@@ -304,7 +309,7 @@ void MainWindow::openPortCtl(bool reopen)
         ui->btnOpenPort->setEnabled(false);
         ui->openFile->setEnabled(false);
 
-        ui->groupBoxAxisControl->setEnabled(false);
+        ui->tabAxisVisualizer->setEnabled(false);
         ui->groupBoxSendFile->setEnabled(false);
         ui->groupBoxManualGCode->setEnabled(false);
         ui->cmbPort->setEnabled(false);
@@ -323,7 +328,7 @@ void MainWindow::portIsClosed(bool reopen)
 {
     SLEEP(100);
 
-    ui->groupBoxAxisControl->setEnabled(false);
+    ui->tabAxisVisualizer->setEnabled(false);
     ui->groupBoxSendFile->setEnabled(false);
     ui->groupBoxManualGCode->setEnabled(false);
     ui->cmbPort->setEnabled(true);
@@ -353,7 +358,7 @@ void MainWindow::portIsOpen(bool sendCode)
 
 void MainWindow::adjustedAxis()
 {
-    ui->groupBoxAxisControl->setEnabled(true);
+    ui->tabAxisVisualizer->setEnabled(true);
     ui->groupBoxManualGCode->setEnabled(true);
 
     if (ui->filePath->text().length() > 0)
@@ -375,7 +380,7 @@ void MainWindow::adjustedAxis()
 
 void MainWindow::disableAllButtons()
 {
-    ui->groupBoxAxisControl->setEnabled(false);
+    ui->tabAxisVisualizer->setEnabled(false);
     ui->groupBoxManualGCode->setEnabled(false);
     ui->Begin->setEnabled(false);
     ui->Stop->setEnabled(false);
@@ -397,7 +402,7 @@ void MainWindow::enableGrblDialogButton()
     ui->btnOpenPort->setText(CLOSE_BUTTON_TEXT);
     ui->btnOpenPort->setStyleSheet("* { background-color: rgb(255,125,100) }");
     ui->cmbPort->setEnabled(false);
-    ui->groupBoxAxisControl->setEnabled(true);
+    ui->tabAxisVisualizer->setEnabled(true);
     ui->groupBoxSendFile->setEnabled(true);
     ui->groupBoxManualGCode->setEnabled(true);
     ui->btnSetHome->setEnabled(true);
@@ -525,7 +530,7 @@ void MainWindow::openFile()
     }
 
     ui->filePath->setText(fileName);
-    if(ui->filePath->text() != "" && ui->btnOpenPort->text() == CLOSE_BUTTON_TEXT)
+    if(ui->filePath->text().length() > 0 && ui->btnOpenPort->text() == CLOSE_BUTTON_TEXT)
     {
         ui->Begin->setEnabled(true);
         ui->Stop->setEnabled(false);
@@ -541,6 +546,133 @@ void MainWindow::openFile()
         ui->outputRuntime->setEnabled(false);
         ui->labelRuntime->setEnabled(false);
     }
+
+    if (ui->filePath->text().length() > 0)
+    {
+        // read in the file to process it
+        preProcessFile(ui->filePath->text());
+
+        if (ui->tabAxisVisualizer->currentIndex() != TAB_VISUALIZER_INDEX)
+        {
+            emit ui->tabAxisVisualizer->setCurrentIndex(TAB_VISUALIZER_INDEX);
+        }
+    }
+}
+
+void MainWindow::preProcessFile(QString filepath)
+{
+    QFile file(filepath);
+    if (file.open(QFile::ReadOnly))
+    {
+        posList.clear();
+
+        float totalLineCount = 0;
+        QTextStream code(&file);
+        while ((code.atEnd() == false))
+        {
+            totalLineCount++;
+            code.readLine();
+        }
+        if (totalLineCount == 0)
+            totalLineCount = 1;
+
+        code.seek(0);
+
+        double x = 0;
+        double y = 0;
+        double i = 0;
+        double j = 0;
+        bool arc = false;
+        bool cw = false;
+        bool mm = true;
+        int index = 0;
+
+        bool zeroInsert = false;
+        QString strline = code.readLine();
+        while ((code.atEnd() == false))
+        {
+            index++;
+            strline = strline.trimmed();
+            if ((strline.at(0) == '(') || (strline.at(0) == '%'))
+            {}//ignore comments
+            else
+            {
+                strline = strline.toUpper();
+                strline = strline.replace("M6", "M06");
+                strline = strline.replace(QRegExp("\\s+"), " ");
+                if (strline.contains("G", Qt::CaseInsensitive))
+                {
+                    if (processGCode(strline, x, y, i, j, arc, cw, mm))
+                    {
+                        if (!zeroInsert)
+                        {
+                            // insert 0,0 position
+                            posList.append(PosItem(0, 0, 0, 0, false, false, mm, 0));
+                            zeroInsert = true;
+                        }
+                        posList.append(PosItem(x, y, i, j, arc, cw, mm, index));
+
+                        //printf("Got G command:%s (%f,%f)\n", strline.toLocal8Bit().constData(), x, y);
+                    }
+                }
+            }
+
+            strline = code.readLine();
+        }
+        file.close();
+
+        emit setItems(posList);
+    }
+    else
+        printf("Can't open file\n");
+}
+
+bool MainWindow::processGCode(QString inputLine, double& x, double& y, double& i, double& j, bool& arc, bool& cw, bool& mm)
+{
+    QString line = inputLine.toUpper();
+
+    QStringList components = line.split(" ", QString::SkipEmptyParts);
+    QString s;
+    arc = false;
+    cw = false;
+    bool valid = false;
+    foreach (s, components)
+    {
+        if (s.at(0) == 'G')
+        {
+            int value = s.mid(1,-1).toInt();
+            if (value == 2)
+                cw = true;
+            else if (value == 3)
+                cw = false;
+            else if (value == 20)
+                mm = false;
+            else if (value == 21)
+                mm = true;
+        }
+        else if (s.at(0) == 'X')
+        {
+            x = s.mid(1,-1).toDouble();
+            valid = true;
+        }
+        else if (s.at(0) == 'Y')
+        {
+            y = s.mid(1,-1).toDouble();
+            valid = true;
+        }
+        else if (s.at(0) == 'I')
+        {
+            i = s.mid(1,-1).toDouble();
+            arc = true;
+        }
+        else if (s.at(0) == 'J')
+        {
+            j = s.mid(1,-1).toDouble();
+            arc = true;
+        }
+    }
+
+    return valid;
 }
 
 void MainWindow::readSettings()

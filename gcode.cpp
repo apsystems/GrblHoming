@@ -15,7 +15,7 @@ GCode::GCode()
       incorrectMeasurementUnits(false), incorrectLcdDisplayUnits(false),
       userSetMmMode(true), zRateLimit(false), zRateLimitAmount(DEFAULT_Z_LIMIT_RATE),
       xyRateAmount(DEFAULT_XY_RATE),
-      maxZ(0), useAggressivePreload(false)
+      maxZ(0), useAggressivePreload(false), motionOccurred(false)
 {
     // use base class's timer - use it to capture random text from the controller
     startTimer(1000);
@@ -23,7 +23,7 @@ GCode::GCode()
 
 void GCode::openPort(QString commPortStr)
 {
-    maxZ = 0;
+    clearToHome();
 
     currComPort = commPortStr;
 
@@ -84,7 +84,8 @@ void GCode::setShutdown()
 // Slot for interrupting current operation or doing a clean reset of grbl without changing position values
 void GCode::sendGrblReset()
 {
-    maxZ = 0;
+    clearToHome();
+
     QString x(CTRL_X);
     sendGcodeLocal(x, true, SHORT_WAIT_SEC);
 }
@@ -97,13 +98,14 @@ void GCode::sendGrblUnlock()
 // Slot for gcode-based 'zero out the current position values without motion'
 void GCode::grblSetHome()
 {
-    maxZ = 0;
+    clearToHome();
+
     gotoXYZ("G92 x0 y0 z0");
 }
 
 void GCode::goToHome()
 {
-    if (maxZ == 0)
+    if (!motionOccurred)
         return;
 
     double maxZOver = maxZ;
@@ -124,6 +126,8 @@ void GCode::goToHome()
     gotoXYZ(QString("G1 x0 y0"));
 
     maxZ -= maxZOver;
+
+    motionOccurred = false;
 }
 
 // Slot called from other threads (i.e. main window, grbl dialog, etc.)
@@ -304,6 +308,8 @@ bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponse
 
         sentReqForSettings = true;
     }
+    else
+        motionOccurred = true;
 
     // adds to UI list, but prepends a > indicating a sent command
     if (ctrlX)
@@ -651,6 +657,7 @@ void GCode::parseCoordinates(const QString& received, bool aggressive)
             maxZ = workCoord.z;
 
         emit updateCoordinates(machineCoord, workCoord);
+        emit setLivePoint(workCoord.x, workCoord.y, userSetMmMode);
         emit setLastState(state);
 
         lastState = state;
@@ -758,6 +765,8 @@ void GCode::sendFile(QString path)
         QString strline = code.readLine();
         while ((code.atEnd() == false) && (!abortState.get()))
         {
+            emit setVisCurrLine(currLine + 1);
+
             strline = strline.trimmed();
             if ((strline.at(0) == '(') || (strline.at(0) == '%'))
             {}//ignore comments
@@ -826,7 +835,7 @@ void GCode::sendFile(QString path)
                 }
             }
 
-            float percentComplete = (++currLine * 100.0) / totalLineCount;
+            float percentComplete = (currLine * 100.0) / totalLineCount;
             setProgress((int)percentComplete);
 
             if (!aggressive)
@@ -843,6 +852,7 @@ void GCode::sendFile(QString path)
                 }
             }
             strline = code.readLine();
+            currLine++;
         }
         file.close();
 
@@ -1343,3 +1353,8 @@ void GCode::setUnitsTypeDisplay(bool millimeters)
     }
 }
 
+void GCode::clearToHome()
+{
+    maxZ = 0;
+    motionOccurred = false;
+}

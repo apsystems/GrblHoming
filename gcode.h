@@ -62,6 +62,8 @@ signals:
     void setLastState(QString state);
     void setUnitsWork(QString value);
     void setUnitsMachine(QString value);
+    void setLivePoint(double x, double y, bool isMM);
+    void setVisCurrLine(int currLine);
 
 public slots:
     void openPort(QString commPortStr);
@@ -98,6 +100,7 @@ private:
     void setConfigureInchesMode(bool setGrblUnits);
     QStringList doZRateLimit(QString strline, QString& msg, bool& xyRateSet);
     void sendStatusList(QStringList& listToSend);
+    void clearToHome();
 
 private:
     RS232 port;
@@ -123,6 +126,7 @@ private:
     QList<int> sendCount;
     QTime parseCoordTimer;
     bool useAggressivePreload;
+    bool motionOccurred;
 
     int sentI;
     int rcvdI;

@@ -24,11 +24,17 @@
 #include "options.h"
 //#include "filesender.h"
 #include "timer.h"
+#include "positem.h"
 #include "gcode.h"
+#include "renderarea.h"
 
 #define COMPANY_NAME "zapmaker"
 #define APPLICATION_NAME "GrblController"
 #define DOMAIN_NAME "org.zapmaker"
+
+#define TAB_AXIS_INDEX          0
+#define TAB_VISUALIZER_INDEX    1
+
 
 /* testing optimizing scrollbar, doesn't work right
 class MyItemDelegate : public QItemDelegate
@@ -98,6 +104,7 @@ signals:
     void sendGrblReset();
     void sendGrblUnlock();
     void goToHome();
+    void setItems(QList<PosItem>);
 
 private slots:
     //buttons
@@ -175,6 +182,7 @@ private:
     bool useAggressivePreload;
     bool checkLogWrite;
     QTime scrollStatusTimer;
+    QList<PosItem> posList;
   
     //methods
     int SendJog(QString strline);
@@ -190,6 +198,8 @@ private:
     void updateSettingsFromOptionDlg(QSettings& settings);
     void doScroll();
     int computeListViewMinimumWidth(QAbstractItemView* view);
+    void preProcessFile(QString filepath);
+    bool processGCode(QString inputLine, double& x, double& y, double& i, double& j, bool& arc, bool& cw, bool& mm);
 };
 
 
