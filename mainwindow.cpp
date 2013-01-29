@@ -588,12 +588,14 @@ void MainWindow::preProcessFile(QString filepath)
         int index = 0;
 
         bool zeroInsert = false;
-        QString strline = code.readLine();
-        while ((code.atEnd() == false))
+        do
         {
+            QString strline = code.readLine();
+
             index++;
             strline = strline.trimmed();
-            if ((strline.at(0) == '(') || (strline.at(0) == '%'))
+            if ((strline.size() == 0) || (strline.at(0) == '(')
+                    || (strline.at(0) == '%') || (strline.at(0) == ';'))
             {}//ignore comments
             else
             {
@@ -616,9 +618,8 @@ void MainWindow::preProcessFile(QString filepath)
                     }
                 }
             }
+        } while (code.atEnd() == false);
 
-            strline = code.readLine();
-        }
         file.close();
 
         emit setItems(posList);
@@ -636,6 +637,7 @@ bool MainWindow::processGCode(QString inputLine, double& x, double& y, double& i
     arc = false;
     cw = false;
     bool valid = false;
+    int nextIsValue = NO_ITEM;
     foreach (s, components)
     {
         if (s.at(0) == 'G')
@@ -652,27 +654,67 @@ bool MainWindow::processGCode(QString inputLine, double& x, double& y, double& i
         }
         else if (s.at(0) == 'X')
         {
-            x = s.mid(1,-1).toDouble();
-            valid = true;
+            x = decodeLineItem(s, X_ITEM, valid, nextIsValue);
         }
         else if (s.at(0) == 'Y')
         {
-            y = s.mid(1,-1).toDouble();
-            valid = true;
+            y = decodeLineItem(s, Y_ITEM, valid, nextIsValue);
         }
         else if (s.at(0) == 'I')
         {
-            i = s.mid(1,-1).toDouble();
-            arc = true;
+            i = decodeLineItem(s, I_ITEM, arc, nextIsValue);
         }
         else if (s.at(0) == 'J')
         {
-            j = s.mid(1,-1).toDouble();
-            arc = true;
+            j = decodeLineItem(s, J_ITEM, arc, nextIsValue);
+        }
+        else if (nextIsValue != NO_ITEM)
+        {
+            switch (nextIsValue)
+            {
+            case X_ITEM:
+                x = decodeDouble(s, valid);
+                break;
+            case Y_ITEM:
+                y = decodeDouble(s, valid);
+                break;
+            case I_ITEM:
+                i = decodeDouble(s, arc);
+                break;
+            case J_ITEM:
+                j = decodeDouble(s, arc);
+                break;
+            };
+            nextIsValue = NO_ITEM;
         }
     }
 
     return valid;
+}
+
+double MainWindow::decodeLineItem(const QString& item, const int next, bool& valid, int& nextIsValue)
+{
+    if (item.size() == 1)
+    {
+        nextIsValue = next;
+        return 0;
+    }
+    else
+    {
+        nextIsValue = NO_ITEM;
+        return decodeDouble(item.mid(1,-1), valid);
+    }
+}
+
+double MainWindow::decodeDouble(QString value, bool& valid)
+{
+    QDoubleValidator v;
+    int pos = 0;
+    QValidator::State s = v.validate(value, pos);
+    if (s == QValidator::Invalid)
+        return 0;
+    valid = true;
+    return value.toDouble();
 }
 
 void MainWindow::readSettings()

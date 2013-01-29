@@ -20,6 +20,14 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.3.1
+Bug Fixes
+- Hardened the visualizer's file parser so that it supports spaces between positional 
+  arguments and values
+- No longer skips last line in file if that line contains a valid command
+- No longer crashes if line contains one or more stray whilespace characters
+- Also accepts semi-colon as a comment line (in addition to existing open paren and percent)
+
 V3.3
 Enhancemetns
 - Added "Visualizer" feature. It is now possible to see top-down view of the

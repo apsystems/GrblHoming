@@ -6,6 +6,10 @@ Primary:
 - Save/Load current GRBL settings from disk
 - Suppress some bookkeeping output from the status window
 - Add local Help linked from main screen and options dialog
+- When parsing for visualizer, if bad value arg, warn user
+- If nothing appears in visualizer, attempt to diagnose and explain to user
+- Every second or so, if not scrolled to bottom, scroll to bottom of status
+- If get error from grbl, provide command that generated error on same line
 
 Secondary:
 - Clear log button

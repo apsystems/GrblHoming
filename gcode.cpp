@@ -762,13 +762,16 @@ void GCode::sendFile(QString path)
 
         int currLine = 0;
         bool xyRateSet = false;
-        QString strline = code.readLine();
-        while ((code.atEnd() == false) && (!abortState.get()))
+
+        do
         {
+            QString strline = code.readLine();
+
             emit setVisCurrLine(currLine + 1);
 
             strline = strline.trimmed();
-            if ((strline.at(0) == '(') || (strline.at(0) == '%'))
+            if ((strline.size() == 0) || (strline.at(0) == '(')
+                    || (strline.at(0) == '%') || (strline.at(0) == ';'))
             {}//ignore comments
             else
             {
@@ -851,9 +854,8 @@ void GCode::sendFile(QString path)
                     sendGcodeLocal(REQUEST_CURRENT_POS, false, -1, aggressive);
                 }
             }
-            strline = code.readLine();
             currLine++;
-        }
+        } while ((code.atEnd() == false) && (!abortState.get()));
         file.close();
 
         if (aggressive)

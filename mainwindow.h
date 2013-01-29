@@ -152,6 +152,15 @@ private slots:
     void goHomeSafe();
 
 private:
+    // enums
+    enum
+    {
+        NO_ITEM = 0,
+        X_ITEM,
+        Y_ITEM,
+        I_ITEM,
+        J_ITEM,
+    };
     //objects
     Ui::MainWindow *ui;
     //FileSender fileSender;
@@ -200,6 +209,8 @@ private:
     int computeListViewMinimumWidth(QAbstractItemView* view);
     void preProcessFile(QString filepath);
     bool processGCode(QString inputLine, double& x, double& y, double& i, double& j, bool& arc, bool& cw, bool& mm);
+    double decodeLineItem(const QString& item, const int next, bool& valid, int& nextIsValue);
+    double decodeDouble(QString value, bool& valid);
 };
 
 
