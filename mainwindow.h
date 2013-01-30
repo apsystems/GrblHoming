@@ -208,7 +208,7 @@ private:
     void doScroll();
     int computeListViewMinimumWidth(QAbstractItemView* view);
     void preProcessFile(QString filepath);
-    bool processGCode(QString inputLine, double& x, double& y, double& i, double& j, bool& arc, bool& cw, bool& mm);
+    bool processGCode(QString inputLine, double& x, double& y, double& i, double& j, bool& arc, bool& cw, bool& mm, int& g);
     double decodeLineItem(const QString& item, const int next, bool& valid, int& nextIsValue);
     double decodeDouble(QString value, bool& valid);
 };

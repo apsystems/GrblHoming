@@ -20,6 +20,11 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.3.2
+Bug Fix
+- G-command can now be set once and multiple X/Y commands then issued on lines following
+  (Allows "ShapeOko_Calibration_Pattern_01b.ngc to be rendered)
+  
 V3.3.1
 Bug Fixes
 - Hardened the visualizer's file parser so that it supports spaces between positional 

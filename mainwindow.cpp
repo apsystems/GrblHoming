@@ -586,6 +586,7 @@ void MainWindow::preProcessFile(QString filepath)
         bool cw = false;
         bool mm = true;
         int index = 0;
+        int g = 0;
 
         bool zeroInsert = false;
         do
@@ -602,9 +603,9 @@ void MainWindow::preProcessFile(QString filepath)
                 strline = strline.toUpper();
                 strline = strline.replace("M6", "M06");
                 strline = strline.replace(QRegExp("\\s+"), " ");
-                if (strline.contains("G", Qt::CaseInsensitive))
+                //if (strline.contains("G", Qt::CaseInsensitive))
                 {
-                    if (processGCode(strline, x, y, i, j, arc, cw, mm))
+                    if (processGCode(strline, x, y, i, j, arc, cw, mm, g))
                     {
                         if (!zeroInsert)
                         {
@@ -628,7 +629,7 @@ void MainWindow::preProcessFile(QString filepath)
         printf("Can't open file\n");
 }
 
-bool MainWindow::processGCode(QString inputLine, double& x, double& y, double& i, double& j, bool& arc, bool& cw, bool& mm)
+bool MainWindow::processGCode(QString inputLine, double& x, double& y, double& i, double& j, bool& arc, bool& cw, bool& mm, int& g)
 {
     QString line = inputLine.toUpper();
 
@@ -643,28 +644,32 @@ bool MainWindow::processGCode(QString inputLine, double& x, double& y, double& i
         if (s.at(0) == 'G')
         {
             int value = s.mid(1,-1).toInt();
-            if (value == 2)
-                cw = true;
-            else if (value == 3)
-                cw = false;
+            if (value >= 0 && value <= 3)
+            {
+                g = value;
+                if (value == 2)
+                    cw = true;
+                else if (value == 3)
+                    cw = false;
+            }
             else if (value == 20)
                 mm = false;
             else if (value == 21)
                 mm = true;
         }
-        else if (s.at(0) == 'X')
+        else if (g >= 0 && g <= 3 && s.at(0) == 'X')
         {
             x = decodeLineItem(s, X_ITEM, valid, nextIsValue);
         }
-        else if (s.at(0) == 'Y')
+        else if (g >= 0 && g <= 3 && s.at(0) == 'Y')
         {
             y = decodeLineItem(s, Y_ITEM, valid, nextIsValue);
         }
-        else if (s.at(0) == 'I')
+        else if ((g == 2 || g == 3) && s.at(0) == 'I')
         {
             i = decodeLineItem(s, I_ITEM, arc, nextIsValue);
         }
-        else if (s.at(0) == 'J')
+        else if ((g == 2 || g == 3) && s.at(0) == 'J')
         {
             j = decodeLineItem(s, J_ITEM, arc, nextIsValue);
         }

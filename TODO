@@ -10,6 +10,7 @@ Primary:
 - If nothing appears in visualizer, attempt to diagnose and explain to user
 - Every second or so, if not scrolled to bottom, scroll to bottom of status
 - If get error from grbl, provide command that generated error on same line
+- Allow user to choose how to handle unspecified units in file for visualizer
 
 Secondary:
 - Clear log button
