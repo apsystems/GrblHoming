@@ -15,8 +15,9 @@
 
 #include <stdio.h>
 #include <string.h>
-#if defined(Q_WS_X11) || defined(Q_WS_MACX)
+#if defined(Q_WS_X11) || defined(Q_WS_MACX) || defined(Q_OS_ANDROID)
 #include <termios.h>
+#include "../termiosext.h"
 #include <sys/ioctl.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -33,7 +34,7 @@
 #include "definitions.h"
 
 
-#if defined(Q_WS_X11) || defined(Q_WS_MACX)
+#if defined(Q_WS_X11) || defined(Q_WS_MACX) || defined(Q_OS_ANDROID)
 #define SLEEP(x) usleep(1000 * x);
 #else
 #define SLEEP(x) Sleep(x);
