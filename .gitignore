@@ -10,3 +10,4 @@ object_script.GcodeSenderGUI.Release
 settings
 ui_*.h
 Output/
+android/

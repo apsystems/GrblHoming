@@ -37,6 +37,9 @@
 #ifdef Q_OS_UNIX
 #include <termios.h>
 #endif
+#ifdef Q_OS_ANDROID
+#include "../termiosext.h"
+#endif
 /*line status constants*/
 // ### QESP2.0 move to enum
 #define LS_CTS  0x01
