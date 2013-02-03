@@ -20,6 +20,12 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.3.3
+Bug Fix
+- Modal G arc (where G2 or G3 is specified once followed by X/Y/I/J) was failing for certain
+  arc combinations in the visualizer due to resetting the cw to false with each line. Fixed
+  to not reset the cw variable and retain from previous lines.
+  
 V3.3.2
 Bug Fix
 - G-command can now be set once and multiple X/Y commands then issued on lines following

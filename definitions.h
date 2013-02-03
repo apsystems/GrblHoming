@@ -34,7 +34,7 @@
 
 #define CLOSE_BUTTON_TEXT               "Close / Reset"
 
-#define GRBL_CONTROLLER_NAME_AND_VERSION    "Grbl Controller 3.3.2"
+#define GRBL_CONTROLLER_NAME_AND_VERSION    "Grbl Controller 3.3.3"
 
 #define LOG_MSG_TYPE_DIAG       "DIAG"
 #define LOG_MSG_TYPE_STATUS     "STATUS"

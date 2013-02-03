@@ -636,7 +636,6 @@ bool MainWindow::processGCode(QString inputLine, double& x, double& y, double& i
     QStringList components = line.split(" ", QString::SkipEmptyParts);
     QString s;
     arc = false;
-    cw = false;
     bool valid = false;
     int nextIsValue = NO_ITEM;
     foreach (s, components)

@@ -11,8 +11,11 @@ Primary:
 - Every second or so, if not scrolled to bottom, scroll to bottom of status
 - If get error from grbl, provide command that generated error on same line
 - Allow user to choose how to handle unspecified units in file for visualizer
+- Popup to let user know they can run jobs faster if using aggressive preload
+- Auto-scale widgets to full screen size
 
 Secondary:
+- Recent files list under 'Files'
 - Clear log button
 - Restore "Favorites" feature
 - Print current GRBL settings
