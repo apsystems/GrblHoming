@@ -154,8 +154,8 @@ void RenderItemList::drawMeasurements(QPainter& painter)
 
     QString units = mm ? " mm" : " inches";
 
-    QString info(QString::number(extents.j).append(units).append("  (Width: ").append(QString::number(extents.width()))
-                .append("  Depth: ").append(QString::number(extents.height())).append(")"));
+    QString info(QString::number(extents.j).append(units).append("  (Width-X: ").append(QString::number(extents.width()))
+                .append("  Height-Y: ").append(QString::number(extents.height())).append(")"));
 
     int xMsgTop = x + wd;
     QRect br = painter.fontMetrics().boundingRect(info);

@@ -15,7 +15,7 @@ GCode::GCode()
       incorrectMeasurementUnits(false), incorrectLcdDisplayUnits(false),
       userSetMmMode(true), zRateLimit(false), zRateLimitAmount(DEFAULT_Z_LIMIT_RATE),
       xyRateAmount(DEFAULT_XY_RATE),
-      maxZ(0), useAggressivePreload(false), motionOccurred(false)
+      maxZ(0), useAggressivePreload(false), motionOccurred(false), filterFileCommands(false)
 {
     // use base class's timer - use it to capture random text from the controller
     startTimer(1000);
@@ -769,36 +769,27 @@ void GCode::sendFile(QString path)
 
             emit setVisCurrLine(currLine + 1);
 
+            if (filterFileCommands)
+            {
+                trimToEnd(strline, '(');
+                trimToEnd(strline, ';');
+                trimToEnd(strline, '%');
+            }
+
             strline = strline.trimmed();
-            if ((strline.size() == 0) || (strline.at(0) == '(')
-                    || (strline.at(0) == '%') || (strline.at(0) == ';'))
+
+            if (strline.size() == 0)
             {}//ignore comments
             else
             {
-                strline = strline.toUpper();
-                strline = strline.replace("M6", "M06");
-                int times = strline.count("G");
-                if (times > 1)
+                if (filterFileCommands)
                 {
-                    strline = removeInvalidMultipleGCommands(strline);
+                    strline = strline.toUpper();
+                    strline.replace(QRegExp("([A-Z])"), " \\1");
+                    strline = removeUnsupportedCommands(strline);
                 }
-                strline = strline.replace(QRegExp("\\s+"), " ");
-                int num = strline.mid(1, strline.indexOf(" ")).toInt();
-                if (strline.contains("G", Qt::CaseInsensitive)
-                    && (!isGCommandValid(num)))
-                {
-                    QString msg(QString("Removing unsupported G command '%1'").arg(strline));
-                    warn("%s", msg.toLocal8Bit().constData());
-                    emit addList(msg);
-                }
-                else if (strline.contains("M", Qt::CaseInsensitive)
-                         && (num == 1 || num > 7))
-                {
-                    QString msg(QString("Removing unsupported M command '%1'").arg(strline));
-                    warn("%s", msg.toLocal8Bit().constData());
-                    emit addList(msg);
-                }
-                else
+
+                if (strline.size() != 0)
                 {
                     QString rateLimitMsg;
                     QStringList outputList;
@@ -909,34 +900,100 @@ void GCode::sendFile(QString path)
     }
 }
 
-QString GCode::removeInvalidMultipleGCommands(QString line)
+void GCode::trimToEnd(QString& strline, QChar ch)
+{
+    int pos = strline.indexOf(ch);
+    if (pos != -1)
+        strline = strline.left(pos);
+}
+
+QString GCode::removeUnsupportedCommands(QString line)
 {
     QStringList components = line.split(" ", QString::SkipEmptyParts);
     QString tmp;
     QString s;
     foreach (s, components)
     {
-        int value = s.mid(1,-1).toInt();
-        if (isGCommandValid(value))
+        if (s.at(0) == 'G')
+        {
+            float value = s.mid(1,-1).toFloat();
+            if (isGCommandValid(value))
+                tmp.append(s).append(" ");
+            else
+            {
+                QString msg(QString("Removing unsupported G command '%1'").arg(s));
+                warn("%s", msg.toLocal8Bit().constData());
+                emit addList(msg);
+            }
+        }
+        else if (s.at(0) == 'M')
+        {
+            float value = s.mid(1,-1).toFloat();
+            if (isMCommandValid(value))
+                tmp.append(s).append(" ");
+            else
+            {
+                QString msg(QString("Removing unsupported M command '%1'").arg(s));
+                warn("%s", msg.toLocal8Bit().constData());
+                emit addList(msg);
+            }
+        }
+        else if (s.at(0) == 'N')
+        {
+            // skip line numbers
+        }
+        else if (s.at(0) == 'X' || s.at(0) == 'Y' || s.at(0) == 'Z'
+                 || s.at(0) == 'I' || s.at(0) == 'J' || s.at(0) == 'K'
+                 || s.at(0) == 'F' || s.at(0) == 'L' || s.at(0) == 'S')
+        {
             tmp.append(s).append(" ");
+        }
         else
         {
-            QString msg(QString("Removing unsupported G command '%1'").arg(s));
+            QString msg(QString("Removing unsupported command '%1'").arg(s));
             warn("%s", msg.toLocal8Bit().constData());
             emit addList(msg);
         }
     }
+
     return tmp.trimmed();
 }
 
-bool GCode::isGCommandValid(int value)
+bool GCode::isGCommandValid(float value)
 {
-    return !((value > 4 && value < 17)
-            || (value > 21 && value < 28)
-            || (value > 28 && value < 53)
-            || (value > 53 && value < 80)
-            || (value > 80 && value < 90)
-            || (value > 94));
+    // supported values obtained from https://github.com/grbl/grbl/wiki
+    const static float supported[] =
+    {
+        0,    1,    2,    3,    4,
+        10,    17,    18,    19,    20,    21,    28,    28.1,    30,    30.1,
+        53,    54,    55,    56,    57,    58,    59,
+        80,    90,    91,    92,    92.1,    93,    94
+    };
+
+    int len = sizeof(supported) / sizeof(float);
+    for (int i = 0; i < len; i++)
+    {
+        if (value == supported[i])
+            return true;
+    }
+    return false;
+}
+
+bool GCode::isMCommandValid(float value)
+{
+    // supported values obtained from https://github.com/grbl/grbl/wiki
+    const static float supported[] =
+    {
+        0,    2,    3,    4,    5,    8,    9,    30
+    };
+
+    int len = sizeof(supported) / sizeof(float);
+    for (int i = 0; i < len; i++)
+    {
+        if (value == supported[i])
+            return true;
+    }
+    return false;
 }
 
 QStringList GCode::doZRateLimit(QString inputLine, QString& msg, bool& xyRateSet)
@@ -1245,7 +1302,7 @@ bool GCode::SendJog(QString cmd, bool absoluteAfterAxisAdj)
 }
 
 // settings change calls here
-void GCode::setResponseWait(int wt, double zj, bool useMm, bool zRL, double zRLAmount, double xyRAmount, bool useAggr)
+void GCode::setResponseWait(int wt, double zj, bool useMm, bool zRL, double zRLAmount, double xyRAmount, bool useAggr, bool ffCommands)
 {
     waitTime = wt;
     zJogRate = zj;
@@ -1253,6 +1310,7 @@ void GCode::setResponseWait(int wt, double zj, bool useMm, bool zRL, double zRLA
     zRateLimitAmount = zRLAmount;
     xyRateAmount = xyRAmount;
     useAggressivePreload = useAggr;
+    filterFileCommands = ffCommands;
 
     if ((userSetMmMode != useMm) && isPortOpen() && doubleDollarFormat)
     {

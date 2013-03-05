@@ -70,7 +70,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(sendGcode(QString)), &gcode, SLOT(sendGcode(QString)));
     connect(this, SIGNAL(gotoXYZ(QString)), &gcode, SLOT(gotoXYZ(QString)));
     connect(this, SIGNAL(axisAdj(char, float, bool, bool)), &gcode, SLOT(axisAdj(char, float, bool, bool)));
-    connect(this, SIGNAL(setResponseWait(int, double, bool, bool, double, double, bool)), &gcode, SLOT(setResponseWait(int, double, bool, bool, double, double, bool)));
+    connect(this, SIGNAL(setResponseWait(int, double, bool, bool, double, double, bool, bool)), &gcode, SLOT(setResponseWait(int, double, bool, bool, double, double, bool, bool)));
     connect(this, SIGNAL(shutdown()), &gcodeThread, SLOT(quit()));
     connect(this, SIGNAL(shutdown()), &timerThread, SLOT(quit()));
     connect(this, SIGNAL(setProgress(int)), ui->progressFileSend, SLOT(setValue(int)));
@@ -159,7 +159,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->setWindowTitle(GRBL_CONTROLLER_NAME_AND_VERSION);
 
-    emit setResponseWait(waitTime, zJogRate, useMm, zRateLimiting, zRateLimitAmount, xyRateAmount, useAggressivePreload);
+    emit setResponseWait(waitTime, zJogRate, useMm, zRateLimiting, zRateLimitAmount, xyRateAmount, useAggressivePreload, filterFileCommands);
 }
 
 MainWindow::~MainWindow()
@@ -594,15 +594,21 @@ void MainWindow::preProcessFile(QString filepath)
             QString strline = code.readLine();
 
             index++;
+
+            GCode::trimToEnd(strline, '(');
+            GCode::trimToEnd(strline, ';');
+            GCode::trimToEnd(strline, '%');
+
             strline = strline.trimmed();
-            if ((strline.size() == 0) || (strline.at(0) == '(')
-                    || (strline.at(0) == '%') || (strline.at(0) == ';'))
+
+            if (strline.size() == 0)
             {}//ignore comments
             else
             {
                 strline = strline.toUpper();
-                strline = strline.replace("M6", "M06");
-                strline = strline.replace(QRegExp("\\s+"), " ");
+                strline.replace("M6", "M06");
+                strline.replace(QRegExp("([A-Z])"), " \\1");
+                strline.replace(QRegExp("\\s+"), " ");
                 //if (strline.contains("G", Qt::CaseInsensitive))
                 {
                     if (processGCode(strline, x, y, i, j, arc, cw, mm, g))
@@ -712,10 +718,14 @@ double MainWindow::decodeLineItem(const QString& item, const int next, bool& val
 
 double MainWindow::decodeDouble(QString value, bool& valid)
 {
+    /*
     QDoubleValidator v;
     int pos = 0;
     QValidator::State s = v.validate(value, pos);
     if (s == QValidator::Invalid)
+        return 0;
+    */
+    if (value.indexOf(QRegExp("^[+-]?[0-9]*\\.?[0-9]*$")) == -1)
         return 0;
     valid = true;
     return value.toDouble();
@@ -742,7 +752,7 @@ void MainWindow::setSettings()
     updateSettingsFromOptionDlg(settings);
 
     // update gcode thread with latest values
-    emit setResponseWait(waitTime, zJogRate, useMm, zRateLimiting, zRateLimitAmount, xyRateAmount, useAggressivePreload);
+    emit setResponseWait(waitTime, zJogRate, useMm, zRateLimiting, zRateLimitAmount, xyRateAmount, useAggressivePreload, filterFileCommands);
 }
 
 void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
@@ -785,6 +795,9 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
 
     QString zRateLimit = settings.value(SETTINGS_Z_RATE_LIMIT, "false").value<QString>();
     zRateLimiting = zRateLimit == "true";
+
+    QString ffCommands = settings.value(SETTINGS_FILTER_FILE_COMMANDS, "true").value<QString>();
+    filterFileCommands = ffCommands == "true";
 
     zRateLimitAmount = settings.value(SETTINGS_Z_RATE_LIMIT_AMOUNT, DEFAULT_Z_LIMIT_RATE).value<double>();
     xyRateAmount = settings.value(SETTINGS_XY_RATE_AMOUNT, DEFAULT_XY_RATE).value<double>();

@@ -20,6 +20,27 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.3.4
+Enhancements
+- Added option checkbox to choose to filter gcode or send it as-is to the controller. The
+  filtering removes gcode that is not supported in v0.8 of Grbl, which reduces the error
+  reports from Grbl. Some files generate unexpected codes like G91.1 which can actually
+  affect the motion in unexpected ways- filtering helps prevent this from happening. 
+  
+  IMPORTANT: The default is to not filter, which is different than previous versions! This 
+  may result in unexpected command processing. If using advanced gcodes, perform an air run 
+  first.
+  
+Bug Fixes
+- Mach3 files have no whitespace in the gcode. Fixed code to handle such files. Affects
+  the Visualizer only.
+- The filtering logic was fixed to properly filter gcode when sending a file - previous 
+  versions would filter out gcode that Grbl supported.
+- Changed validator for double (i.e. float) values so that code compiles under older Qt 
+  versions.
+- Changed Visualizer display to say Width-X and Height-Y instead of Width and Depth to make
+  it less confusing.
+
 V3.3.3
 Bug Fix
 - Modal G arc (where G2 or G3 is specified once followed by X/Y/I/J) was failing for certain

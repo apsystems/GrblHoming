@@ -13,8 +13,31 @@ Primary:
 - Allow user to choose how to handle unspecified units in file for visualizer
 - Popup to let user know they can run jobs faster if using aggressive preload
 - Auto-scale widgets to full screen size
+- Allow reload of same file from same location
+- Fix Width/Depth legend to use Width-X Depth-Y Height-Z
+- Can't see drill holes under axis, move axes under toolpaths?
+- Fix Zero position next to begin?
+- Collect all detected errors and display them at the end after a file run
+- Don't filter Program Pause/End in 0.8 (i.e. M30) - meaning, look at Grbl
+  wiki https://github.com/grbl/grbl/wiki and compare supported codes to filtered
+- UI support for homing limit switches
+- Show drill holes as larger dots?
+- Display current feedrate in mm/sec or in/sec
+- Don't fail on timeout waiting for command - let user continue if they want
+- Add additional rs232 error logging value (-1 is not very useful)
+- Pick up from where left off (if GC dies due to PC falling asleep, etc.)
+- Turn log on by default
+- Report system settings at beginning of log file. Include OS.
+- Recommend to user to use aggressive preload if not using it
+- Analyze file ahead of time and determine if it will go beyond extents
+- Build in calibration pattern
+- Build in "flatten table feature"
+- Filtered commands sent option vs raw as-is checkbox
+- File viewer
 
 Secondary:
+- Look at all hardware connection options of Grbl on the shield and make
+  sure that we have some way to control those, i.e. spindle control.
 - Recent files list under 'Files'
 - Clear log button
 - Restore "Favorites" feature
@@ -22,3 +45,4 @@ Secondary:
 - Add option to auto connect to last port
 - Provide diagnostic response view
 - Provide counter showing time waiting for a response if time > 5s
+- Estimated time to completion (this can acutally be computed from feedrates)

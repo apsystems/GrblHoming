@@ -56,6 +56,10 @@ Options::Options(QWidget *parent) :
         ui->doubleSpinZRateLimit->setEnabled(false);
         ui->doubleSpinXYRate->setEnabled(false);
     }
+
+    QString ffCmd = settings.value(SETTINGS_FILTER_FILE_COMMANDS, "false").value<QString>();
+    ui->chkFilterFileCommands->setChecked(ffCmd == "true");
+
 }
 
 Options::~Options()
@@ -81,6 +85,8 @@ void Options::accept()
     settings.setValue(SETTINGS_Z_RATE_LIMIT, ui->chkLimitZRate->isChecked());
     settings.setValue(SETTINGS_Z_RATE_LIMIT_AMOUNT, ui->doubleSpinZRateLimit->value());
     settings.setValue(SETTINGS_XY_RATE_AMOUNT, ui->doubleSpinXYRate->value());
+
+    settings.setValue(SETTINGS_FILTER_FILE_COMMANDS, ui->chkFilterFileCommands->isChecked());
 
     connect(this, SIGNAL(setSettings()), parentWidget(), SLOT(setSettings()));
 

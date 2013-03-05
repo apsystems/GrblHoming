@@ -44,6 +44,8 @@ public:
     void setShutdown();
     int getSettingsItemCount();
 
+    static void trimToEnd(QString& strline, QChar);
+
 signals:
     void addList(QString line);
     void addListFull(QStringList list);
@@ -73,7 +75,8 @@ public slots:
     void sendFile(QString path);
     void gotoXYZ(QString line);
     void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj);
-    void setResponseWait(int waitTime, double zJogRate, bool useMm, bool zRateLimit, double zRateLimitAmount, double xyRateLimitAmount, bool useAggressivePreload);
+    void setResponseWait(int waitTime, double zJogRate, bool useMm, bool zRateLimit, double zRateLimitAmount, double xyRateLimitAmount,
+                         bool useAggressivePreload, bool filterFileCommands);
     void grblSetHome();
     void sendGrblReset();
     void sendGrblUnlock();
@@ -86,8 +89,9 @@ private:
     bool sendGcodeLocal(QString line, bool recordResponseOnFail = false, int waitSec = -1, bool aggressive = false);
     bool waitForOk(QString& result, int waitCount, bool sentReqForLocation, bool sentReqForParserState, bool aggressive);
     bool sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec, bool aggressive);
-    QString removeInvalidMultipleGCommands(QString line);
-    bool isGCommandValid(int value);
+    QString removeUnsupportedCommands(QString line);
+    bool isGCommandValid(float value);
+    bool isMCommandValid(float value);
     bool isPortOpen();
     QString getMoveAmountFromString(QString prefix, QString item);
     bool SendJog(QString strline, bool absoluteAfterAxisAdj);
@@ -127,6 +131,7 @@ private:
     QTime parseCoordTimer;
     bool useAggressivePreload;
     bool motionOccurred;
+    bool filterFileCommands;
 
     int sentI;
     int rcvdI;

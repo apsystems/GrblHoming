@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>529</width>
-    <height>398</height>
+    <height>420</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <property name="geometry">
     <rect>
      <x>220</x>
-     <y>350</y>
+     <y>370</y>
      <width>281</width>
      <height>32</height>
     </rect>
@@ -270,7 +270,7 @@
      <x>40</x>
      <y>270</y>
      <width>461</width>
-     <height>71</height>
+     <height>91</height>
     </rect>
    </property>
    <layout class="QVBoxLayout" name="verticalLayoutExtras">
@@ -278,6 +278,13 @@
      <widget class="QCheckBox" name="chkAggressivePreload">
       <property name="text">
        <string>Use aggressive preload strategy for Grbl</string>
+      </property>
+     </widget>
+    </item>
+    <item>
+     <widget class="QCheckBox" name="chkFilterFileCommands">
+      <property name="text">
+       <string>Filter file commands before sending</string>
       </property>
      </widget>
     </item>

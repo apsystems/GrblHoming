@@ -97,7 +97,8 @@ signals:
     void sendFile(QString path);
     void gotoXYZ(QString line);
     void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj);
-    void setResponseWait(int waitTime, double zJogRate, bool useMm, bool zRateLimit, double zRateLimitAmount, double xyRateAmount, bool useAggressivePreload);
+    void setResponseWait(int waitTime, double zJogRate, bool useMm, bool zRateLimit, double zRateLimitAmount, double xyRateAmount,
+                         bool useAggressivePreload, bool filterFileCommands);
     void setProgress(int percent);
     void setRuntime(QString runtime);
     void sendSetHome();
@@ -192,6 +193,7 @@ private:
     bool checkLogWrite;
     QTime scrollStatusTimer;
     QList<PosItem> posList;
+    bool filterFileCommands;
   
     //methods
     int SendJog(QString strline);
