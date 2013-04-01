@@ -135,11 +135,15 @@ void GCode::sendGcode(QString line)
 {
     bool checkMeasurementUnits = false;
 
+    // empty line means we have just opened the com port
     if (line.length() == 0)
     {
-        // empty line means we want to see what the device responds with. Pass params to not fail if nothing happens.
-        // normally get here after opening connection to com port
-        sendGcodeLocal(line, true, SHORT_WAIT_SEC);
+        resetState.set(false);
+
+        QString result;
+        if (!waitForStartupBanner(result, SHORT_WAIT_SEC))
+            return;
+
         checkMeasurementUnits = true;
     }
     else
@@ -237,42 +241,50 @@ bool GCode::sendGcodeLocal(QString line, bool recordResponseOnFail /* = false */
     }
     else
     {
-        if (result.contains("Grbl"))
+        if (checkGrbl(result))
         {
-            QRegExp rx("Grbl (\\d+)\\.(\\d+)(\\w*)");
-            if (rx.indexIn(result) != -1 && rx.captureCount() > 0)
-            {
-                doubleDollarFormat = false;
-
-                QStringList list = rx.capturedTexts();
-                if (list.size() >= 3)
-                {
-                    int majorVer = list.at(1).toInt();
-                    int minorVer = list.at(2).toInt();
-                    char letter = 'a';
-                    if (list.size() == 4 && list.at(3).size() > 0)
-                    {
-                        letter = list.at(3).toAscii().at(0);
-                    }
-
-                    if (majorVer > 0 || (minorVer > 8 && minorVer < 51) || letter > 'a')
-                    {
-                        doubleDollarFormat = true;
-                    }
-
-                    diag("Got Grbl Version (Parsed:) %d.%d%c ($$=%d)\n",
-                                majorVer, minorVer, letter, doubleDollarFormat);
-                }
-
-                if (!doubleDollarFormat)
-                    setUnitsTypeDisplay(true);
-            }
-
             emit enableGrblDialogButton();
         }
     }
     resetState.set(false);
     return ret;
+}
+
+bool GCode::checkGrbl(const QString& result)
+{
+    if (result.contains("Grbl"))
+    {
+        QRegExp rx("Grbl (\\d+)\\.(\\d+)(\\w*)");
+        if (rx.indexIn(result) != -1 && rx.captureCount() > 0)
+        {
+            doubleDollarFormat = false;
+
+            QStringList list = rx.capturedTexts();
+            if (list.size() >= 3)
+            {
+                int majorVer = list.at(1).toInt();
+                int minorVer = list.at(2).toInt();
+                char letter = 'a';
+                if (list.size() == 4 && list.at(3).size() > 0)
+                {
+                    letter = list.at(3).toAscii().at(0);
+                }
+
+                if (majorVer > 0 || (minorVer > 8 && minorVer < 51) || letter > 'a')
+                {
+                    doubleDollarFormat = true;
+                }
+
+                diag("Got Grbl Version (Parsed:) %d.%d%c ($$=%d)\n",
+                            majorVer, minorVer, letter, doubleDollarFormat);
+            }
+
+            if (!doubleDollarFormat)
+                setUnitsTypeDisplay(true);
+        }
+        return true;
+    }
+    return false;
 }
 
 // Wrapped method. Should only be called from above method.
@@ -587,6 +599,112 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
     for (int i = 0; i < list.size(); i++)
     {
         if (list.at(i).length() > 0 && list.at(i) != RESPONSE_OK && !sentReqForLocation)
+            listToSend.append(list.at(i));
+    }
+
+    sendStatusList(listToSend);
+
+    if (resetState.get())
+    {
+        // we have been told by the user to stop.
+        status = false;
+    }
+
+    return status;
+}
+
+bool GCode::waitForStartupBanner(QString& result, int waitSec)
+{
+    char tmp[BUF_SIZE + 1] = {0};
+    int count = 0;
+    int waitCount = waitSec * 10;// multiplier depends on sleep values below
+    bool status = true;
+    result.clear();
+    while (!resetState.get())
+    {
+        int n = port.PollComportLine(tmp, BUF_SIZE);
+        if (n == 0)
+        {
+            count++;
+            SLEEP(100);
+        }
+        else if (n < 0)
+        {
+            err("Error reading data from COM port\n");
+        }
+        else
+        {
+            tmp[n] = 0;
+            result.append(tmp);
+
+            QString tmpTrim(tmp);
+            int pos = tmpTrim.indexOf(port.getDetectedLineFeed());
+            if (pos != -1)
+                tmpTrim.remove(pos, port.getDetectedLineFeed().size());
+            diag("GOT:%s\n", tmpTrim.toLocal8Bit().constData());
+
+            if (tmpTrim.length() > 0)
+            {
+                if (!checkGrbl(tmpTrim))
+                {
+                    QString msg("Expecting Grbl version string. Unable to parse response.");
+                    emit addList(msg);
+                    emit sendMsg(msg);
+
+                    closePort(false);
+                }
+                else
+                {
+                    emit enableGrblDialogButton();
+                }
+                break;
+            }
+        }
+
+        SLEEP(100);
+
+        if (count > waitCount)
+        {
+            // waited too long for a response, fail
+
+            QString msg("No data from COM port after connect. Expecting Grbl version string.");
+            emit addList(msg);
+            emit sendMsg(msg);
+
+            closePort(false);
+
+            status = false;
+            break;
+        }
+    }
+
+    if (shutdownState.get())
+    {
+        return false;
+    }
+
+    if (status)
+    {
+        if (resetState.get())
+        {
+            QString msg("Wait interrupted by user (startup)");
+            err("%s", msg.toLocal8Bit().constData());
+            emit addList(msg);
+        }
+    }
+
+    if (result.contains(RESPONSE_ERROR))
+    {
+        errorCount++;
+        // skip over errors
+        //status = false;
+    }
+
+    QStringList list = QString(result).split(port.getDetectedLineFeed());
+    QStringList listToSend;
+    for (int i = 0; i < list.size(); i++)
+    {
+        if (list.at(i).length() > 0 && list.at(i) != RESPONSE_OK)
             listToSend.append(list.at(i));
     }
 

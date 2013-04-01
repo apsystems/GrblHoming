@@ -11,6 +11,7 @@ Planned for 3.4:
 - Turn log on by default
 - Can't see drill holes under axis, move axes under toolpaths?
 - Create test plan (i.e. verify all text appears correctly on all platforms)
+- Display detected version of Grbl
 
 Planned for 3.5:
 - Implement support for Grbl 0.8c "homing" feature (using limit switches)

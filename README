@@ -20,6 +20,15 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.3.5
+Bug Fixes
+- Changed how we detect Grbl upon opening on COM port. 
+  ** NOTE ** This change will probably break older V0.51 capability
+  Previously we sent out a linefeed to trigger a response, however, this caused problems 
+  on some arduino variants and would not result in correct sync with the controller. 
+  Fixed by no longer sending the linefeed and instead just watch the port for Grbl response.
+- Changed the default "short" wait timeout to 2 seconds from 1 second in case of slow responses.
+
 V3.3.4
 Enhancements
 - Added option checkbox to choose to filter gcode or send it as-is to the controller. The

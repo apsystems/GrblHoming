@@ -282,7 +282,7 @@ void MainWindow::resetProgress()
 // the controller.
 void MainWindow::openPortCtl(bool reopen)
 {
-    if (ui->btnOpenPort->text() == "Open")
+    if (ui->btnOpenPort->text() == OPEN_BUTTON_TEXT)
     {
         // Port is closed if the button says 'Open'
         QString portStr = ui->cmbPort->currentText();
@@ -333,7 +333,7 @@ void MainWindow::portIsClosed(bool reopen)
     ui->groupBoxManualGCode->setEnabled(false);
     ui->cmbPort->setEnabled(true);
     ui->btnOpenPort->setEnabled(true);
-    ui->btnOpenPort->setText("Open");
+    ui->btnOpenPort->setText(OPEN_BUTTON_TEXT);
     ui->btnOpenPort->setStyleSheet(styleSheet);
     ui->btnGRBL->setEnabled(false);
     ui->btnSetHome->setEnabled(false);

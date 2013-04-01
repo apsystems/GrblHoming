@@ -20,7 +20,7 @@
 #include "rs232.h"
 #include "coord3d.h"
 
-#define SHORT_WAIT_SEC 1
+#define SHORT_WAIT_SEC 2
 #define LONG_WAIT_SEC  100
 
 #define BUF_SIZE 300
@@ -88,6 +88,7 @@ protected:
 private:
     bool sendGcodeLocal(QString line, bool recordResponseOnFail = false, int waitSec = -1, bool aggressive = false);
     bool waitForOk(QString& result, int waitCount, bool sentReqForLocation, bool sentReqForParserState, bool aggressive);
+    bool waitForStartupBanner(QString& result, int waitSec);
     bool sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec, bool aggressive);
     QString removeUnsupportedCommands(QString line);
     bool isGCommandValid(float value);
@@ -105,6 +106,7 @@ private:
     QStringList doZRateLimit(QString strline, QString& msg, bool& xyRateSet);
     void sendStatusList(QStringList& listToSend);
     void clearToHome();
+    bool checkGrbl(const QString& result);
 
 private:
     RS232 port;

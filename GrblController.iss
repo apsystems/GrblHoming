@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "Grbl Controller"
-#define MyAppVersion "3.3.4"
+#define MyAppVersion "3.3.5"
 #define MyAppPublisher "Zapmaker"
 #define MyAppURL "http://zapmaker.org"
 #define MyAppExeName "GrblController.exe"
@@ -25,7 +25,7 @@ AllowNoIcons=yes
 LicenseFile=C:\dev\github\GrblHoming\winlicense.txt
 InfoBeforeFile=C:\dev\github\GrblHoming\wininfobefore.txt
 InfoAfterFile=C:\dev\github\GrblHoming\wininfoafter.txt
-OutputBaseFilename=GrblController334Setup
+OutputBaseFilename=GrblController335Setup
 Compression=lzma
 SolidCompression=yes
 
