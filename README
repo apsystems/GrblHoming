@@ -20,6 +20,12 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.3.6
+Bug Fixes
+- Fixed decimal on the LCD display to always show three decimal points so that 
+  it is easier to read the display (it doesn't jump around anymore). Tested to
+  hold up to 9999.999 and -9999.999, which should handle 10 x 10 meter Shapeokos.
+
 V3.3.5
 Bug Fixes
 - Changed how we detect Grbl upon opening on COM port. 

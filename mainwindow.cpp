@@ -41,6 +41,13 @@ MainWindow::MainWindow(QWidget *parent) :
     gcode.moveToThread(&gcodeThread);
     timer.moveToThread(&timerThread);
 
+    ui->lcdWorkNumberX->setDigitCount(8);
+    ui->lcdMachNumberX->setDigitCount(8);
+    ui->lcdWorkNumberY->setDigitCount(8);
+    ui->lcdMachNumberY->setDigitCount(8);
+    ui->lcdWorkNumberZ->setDigitCount(8);
+    ui->lcdMachNumberZ->setDigitCount(8);
+
     //buttons
     connect(ui->btnOpenPort,SIGNAL(clicked()),this,SLOT(openPort()));
     connect(ui->btnGRBL,SIGNAL(clicked()),this,SLOT(setGRBL()));
@@ -976,8 +983,9 @@ void MainWindow::refreshLcd()
     lcdDisplay('Z', false, machineCoordinates.z);
 }
 
-void MainWindow::lcdDisplay(char axis, bool workCoord, float value)
+void MainWindow::lcdDisplay(char axis, bool workCoord, float floatVal)
 {
+    QString value = QString::number(floatVal, 'f', 3);
     switch (axis)
     {
     case 'X':

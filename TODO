@@ -12,6 +12,8 @@ Planned for 3.4:
 - Can't see drill holes under axis, move axes under toolpaths?
 - Create test plan (i.e. verify all text appears correctly on all platforms)
 - Display detected version of Grbl
+- Faster jog button-to-motion response
+- Allow stacking jog actions
 
 Planned for 3.5:
 - Implement support for Grbl 0.8c "homing" feature (using limit switches)
