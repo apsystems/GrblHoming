@@ -74,7 +74,7 @@ public slots:
     void sendGcodeAndGetResult(int id, QString line);
     void sendFile(QString path);
     void gotoXYZ(QString line);
-    void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj);
+    void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj, int sliderZCount);
     void setResponseWait(int waitTime, double zJogRate, bool useMm, bool zRateLimit, double zRateLimitAmount, double xyRateLimitAmount,
                          bool useAggressivePreload, bool filterFileCommands);
     void grblSetHome();
@@ -134,6 +134,7 @@ private:
     bool useAggressivePreload;
     bool motionOccurred;
     bool filterFileCommands;
+    int sliderZCount;
 
     int sentI;
     int rcvdI;

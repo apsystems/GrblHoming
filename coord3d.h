@@ -13,6 +13,8 @@ public:
     float x;
     float y;
     float z;
+    bool stoppedZ;
+    int sliderZIndex;
 };
 
 Q_DECLARE_METATYPE ( Coord3D )

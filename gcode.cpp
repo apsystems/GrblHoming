@@ -15,7 +15,8 @@ GCode::GCode()
       incorrectMeasurementUnits(false), incorrectLcdDisplayUnits(false),
       userSetMmMode(true), zRateLimit(false), zRateLimitAmount(DEFAULT_Z_LIMIT_RATE),
       xyRateAmount(DEFAULT_XY_RATE),
-      maxZ(0), useAggressivePreload(false), motionOccurred(false), filterFileCommands(false)
+      maxZ(0), useAggressivePreload(false), motionOccurred(false), filterFileCommands(false),
+      sliderZCount(0)
 {
     // use base class's timer - use it to capture random text from the controller
     startTimer(1000);
@@ -766,6 +767,13 @@ void GCode::parseCoordinates(const QString& received, bool aggressive)
         workCoord.y = list.at(2).toFloat();
         workCoord.z = list.at(3).toFloat();
 
+        if (state != "Run")
+            workCoord.stoppedZ = true;
+        else
+            workCoord.stoppedZ = false;
+
+        workCoord.sliderZIndex = sliderZCount;
+
         diag("Decoded: State:%s MPos: %f,%f,%f WPos: %f,%f,%f\n",
              state.toLocal8Bit().constData(),
              machineCoord.x, machineCoord.y, machineCoord.z,
@@ -1379,7 +1387,7 @@ QString GCode::getMoveAmountFromString(QString prefix, QString item)
     return "";
 }
 
-void GCode::axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj)
+void GCode::axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj, int sZC)
 {
     if (inv)
     {
@@ -1395,6 +1403,9 @@ void GCode::axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj)
     }
 
     SendJog(cmd, absoluteAfterAxisAdj);
+
+    if (axis == 'Z')
+        sliderZCount = sZC;
 
     emit adjustedAxis();
 }

@@ -16,7 +16,10 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     absoluteAfterAxisAdj(false),
-    checkLogWrite(false)
+    checkLogWrite(false),
+    sliderPressed(false),
+    sliderTo(0),
+    sliderZCount(0)
 {
     // Setup our application information to be used by QSettings
     QCoreApplication::setOrganizationName(COMPANY_NAME);
@@ -70,13 +73,16 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->btnResetGrbl,SIGNAL(clicked()),this,SLOT(grblReset()));
     connect(ui->btnUnlockGrbl,SIGNAL(clicked()),this,SLOT(grblUnlock()));
     connect(ui->btnGoHomeSafe,SIGNAL(clicked()),this,SLOT(goHomeSafe()));
+    connect(ui->verticalSliderZJog,SIGNAL(valueChanged(int)),this,SLOT(zJogSliderDisplay(int)));
+    connect(ui->verticalSliderZJog,SIGNAL(sliderPressed()),this,SLOT(zJogSliderPressed()));
+    connect(ui->verticalSliderZJog,SIGNAL(sliderReleased()),this,SLOT(zJogSliderReleased()));
 
     connect(this, SIGNAL(sendFile(QString)), &gcode, SLOT(sendFile(QString)));
     connect(this, SIGNAL(openPort(QString)), &gcode, SLOT(openPort(QString)));
     connect(this, SIGNAL(closePort(bool)), &gcode, SLOT(closePort(bool)));
     connect(this, SIGNAL(sendGcode(QString)), &gcode, SLOT(sendGcode(QString)));
     connect(this, SIGNAL(gotoXYZ(QString)), &gcode, SLOT(gotoXYZ(QString)));
-    connect(this, SIGNAL(axisAdj(char, float, bool, bool)), &gcode, SLOT(axisAdj(char, float, bool, bool)));
+    connect(this, SIGNAL(axisAdj(char, float, bool, bool, int)), &gcode, SLOT(axisAdj(char, float, bool, bool, int)));
     connect(this, SIGNAL(setResponseWait(int, double, bool, bool, double, double, bool, bool)), &gcode, SLOT(setResponseWait(int, double, bool, bool, double, double, bool, bool)));
     connect(this, SIGNAL(shutdown()), &gcodeThread, SLOT(quit()));
     connect(this, SIGNAL(shutdown()), &timerThread, SLOT(quit()));
@@ -266,6 +272,8 @@ void MainWindow::stopSending()
 // User has asked to open the port
 void MainWindow::openPort()
 {
+    info("User clicked Port Open/Close");
+
     openPortCtl(false);
 }
 
@@ -441,42 +449,42 @@ void MainWindow::incX()
 {
     float coord = ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('X', coord, invX, absoluteAfterAxisAdj);
+    emit axisAdj('X', coord, invX, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::incY()
 {
     float coord = ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('Y', coord, invY, absoluteAfterAxisAdj);
+    emit axisAdj('Y', coord, invY, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::incZ()
 {
     float coord = ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('Z', coord, invZ, absoluteAfterAxisAdj);
+    emit axisAdj('Z', coord, invZ, absoluteAfterAxisAdj, sliderZCount++);
 }
 
 void MainWindow::decX()
 {
     float coord = -ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('X', coord, invX, absoluteAfterAxisAdj);
+    emit axisAdj('X', coord, invX, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::decY()
 {
     float coord = -ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('Y', coord, invY, absoluteAfterAxisAdj);
+    emit axisAdj('Y', coord, invY, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::decZ()
 {
     float coord = -ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('Z', coord, invZ, absoluteAfterAxisAdj);
+    emit axisAdj('Z', coord, invZ, absoluteAfterAxisAdj, sliderZCount++);
 }
 
 void MainWindow::getOptions()
@@ -969,7 +977,17 @@ void MainWindow::updateCoordinates(Coord3D machineCoord, Coord3D workCoord)
 {
     machineCoordinates = machineCoord;
     workCoordinates = workCoord;
+/*
+    if (workCoordinates.stoppedZ == false)
+    {
+        int newPos = workCoordinates.z + sliderTo;
 
+        QString to;
+        to.sprintf("%d", newPos);
+
+        ui->resultingZJogSliderPosition->setText(to);
+    }
+*/
     refreshLcd();
 }
 
@@ -1007,4 +1025,76 @@ void MainWindow::lcdDisplay(char axis, bool workCoord, float floatVal)
             ui->lcdMachNumberZ->display(value);
         break;
     }
+}
+
+void MainWindow::zJogSliderDisplay(int pos)
+{
+    QString str;
+
+    pos -= CENTER_POS;
+
+    if (pos > 0)
+        str.sprintf("+%d", pos);
+    else if (pos < 0)
+        str.sprintf("%d", pos);
+    else
+        str = "0";
+
+    ui->currentZJogSliderDelta->setText(str);
+
+    int newPos = pos + sliderTo;
+
+    QString to;
+    to.sprintf("%d", newPos);
+
+    if (sliderPressed)
+    {
+        ui->resultingZJogSliderPosition->setText(to);
+        info("Usr chg: pos=%d new=%d\n", pos, newPos);
+    }
+    else
+    {
+        ui->verticalSliderZJog->setSliderPosition(CENTER_POS);
+        ui->currentZJogSliderDelta->setText("0");
+        info("Usr chg no slider: %d\n", pos);
+    }
+}
+
+void MainWindow::zJogSliderPressed()
+{
+    sliderPressed = true;
+    if (workCoordinates.stoppedZ && workCoordinates.sliderZIndex == sliderZCount)
+    {
+        info("Pressed and stopped\n");
+        sliderTo = workCoordinates.z;
+    }
+    else
+    {
+        info("Pressed not stopped\n");
+    }
+}
+
+void MainWindow::zJogSliderReleased()
+{
+    info("Released\n");
+    if (sliderPressed)
+    {
+        sliderPressed = false;
+        int value = ui->verticalSliderZJog->value();
+
+        ui->verticalSliderZJog->setSliderPosition(CENTER_POS);
+        ui->currentZJogSliderDelta->setText("0");
+
+        value -= CENTER_POS;
+
+        if (value != 0)
+        {
+            sliderTo += value;
+            float setTo = value;
+            emit axisAdj('Z', setTo, invZ, absoluteAfterAxisAdj, sliderZCount++);
+        }
+    }
+
+
+    //ui->resultingZJogSliderPosition->setText("0");
 }
