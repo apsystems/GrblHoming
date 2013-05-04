@@ -43,7 +43,7 @@ void GCode::openPort(QString commPortStr)
         addList("-Is hardware connected to USB?");
         addList("-Is correct port chosen?");
         addList("-Does current user have sufficient permissions?");
-#if defined(Q_WS_X11)
+#if defined(Q_OS_LINUX)
         addList("-Is current user in sudoers group?");
 #endif
         //QMessageBox(QMessageBox::Critical,"Error","Could not open port.",QMessageBox::Ok).exec();
@@ -268,7 +268,7 @@ bool GCode::checkGrbl(const QString& result)
                 char letter = 'a';
                 if (list.size() == 4 && list.at(3).size() > 0)
                 {
-                    letter = list.at(3).toAscii().at(0);
+                    letter = list.at(3).toLatin1().at(0);
                 }
 
                 if (majorVer > 0 || (minorVer > 8 && minorVer < 51) || letter > 'a')
@@ -300,7 +300,7 @@ bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponse
         return false;
     }
 
-    bool ctrlX = line.size() > 0 ? (line.at(0).toAscii() == CTRL_X) : false;
+    bool ctrlX = line.size() > 0 ? (line.at(0).toLatin1() == CTRL_X) : false;
 
     bool sentReqForLocation = false;
     bool sentReqForSettings = false;
@@ -347,7 +347,7 @@ bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponse
         return false;
     }
     for (int i = 0; i < line.length(); i++)
-        buf[i] = line.at(i).toAscii();
+        buf[i] = line.at(i).toLatin1();
 
     if (ctrlX)
         diag("SENDING: 0x%02X (CTRL-X)\n", buf[0]);
