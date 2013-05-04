@@ -20,6 +20,10 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.3.7
+Enhancement
+- Made COM port field editable
+
 V3.3.6
 Bug Fixes
 - Fixed decimal on the LCD display to always show three decimal points so that 
