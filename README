@@ -20,6 +20,15 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.3.8
+Enhancement/Fix
+- Modified code that detects presence of Grbl upon serial port opening, the original
+  assumption was that we would get the version string upon serial port open, but some
+  Arduino-compatible boards like the AlaMode did not behave this way. Fixed the code
+  so that if there is no response upon serial port open, we send a soft reset (Ctrl-X)
+  and wait for the version string. Tested to work with AlaMode and with traditional
+  Ardiuno Uno.
+
 V3.3.7
 Enhancement
 - Made COM port field editable
