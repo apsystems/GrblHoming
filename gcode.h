@@ -88,7 +88,7 @@ protected:
 private:
     bool sendGcodeLocal(QString line, bool recordResponseOnFail = false, int waitSec = -1, bool aggressive = false);
     bool waitForOk(QString& result, int waitCount, bool sentReqForLocation, bool sentReqForParserState, bool aggressive);
-    bool waitForStartupBanner(QString& result, int waitSec);
+    bool waitForStartupBanner(QString& result, int waitSec, bool failOnNoFound);
     bool sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec, bool aggressive);
     QString removeUnsupportedCommands(QString line);
     bool isGCommandValid(float value);

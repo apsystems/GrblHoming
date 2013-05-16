@@ -141,8 +141,33 @@ void GCode::sendGcode(QString line)
         resetState.set(false);
 
         QString result;
-        if (!waitForStartupBanner(result, SHORT_WAIT_SEC))
-            return;
+        if (!waitForStartupBanner(result, SHORT_WAIT_SEC, false))
+        {
+            if (shutdownState.get() || resetState.get())
+                return;
+            // it is possible that we are already connected and missed the
+            // signon banner. Force a reset (is this ok?) to get the banner
+
+            emit addListOut("(CTRL-X)");
+
+            char buf[2] = {0};
+
+            buf[0] = CTRL_X;
+
+            diag("SENDING: 0x%02X (CTRL-X) to check presence of Grbl\n", buf[0]);
+
+            if (!port.SendBuf(buf, 1))
+            {
+                QString msg = "Sending to port failed";
+                err("%s", msg.toLocal8Bit().constData());
+                emit addList(msg);
+                emit sendMsg(msg);
+                return;
+            }
+
+            if (!waitForStartupBanner(result, SHORT_WAIT_SEC, true))
+                return;
+        }
 
         checkMeasurementUnits = true;
     }
@@ -613,7 +638,7 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
     return status;
 }
 
-bool GCode::waitForStartupBanner(QString& result, int waitSec)
+bool GCode::waitForStartupBanner(QString& result, int waitSec, bool failOnNoFound)
 {
     char tmp[BUF_SIZE + 1] = {0};
     int count = 0;
@@ -647,11 +672,14 @@ bool GCode::waitForStartupBanner(QString& result, int waitSec)
             {
                 if (!checkGrbl(tmpTrim))
                 {
-                    QString msg("Expecting Grbl version string. Unable to parse response.");
-                    emit addList(msg);
-                    emit sendMsg(msg);
+                    if (failOnNoFound)
+                    {
+                        QString msg("Expecting Grbl version string. Unable to parse response.");
+                        emit addList(msg);
+                        emit sendMsg(msg);
 
-                    closePort(false);
+                        closePort(false);
+                    }
                 }
                 else
                 {
@@ -665,13 +693,16 @@ bool GCode::waitForStartupBanner(QString& result, int waitSec)
 
         if (count > waitCount)
         {
-            // waited too long for a response, fail
+            if (failOnNoFound)
+            {
+                // waited too long for a response, fail
 
-            QString msg("No data from COM port after connect. Expecting Grbl version string.");
-            emit addList(msg);
-            emit sendMsg(msg);
+                QString msg("No data from COM port after connect. Expecting Grbl version string.");
+                emit addList(msg);
+                emit sendMsg(msg);
 
-            closePort(false);
+                closePort(false);
+            }
 
             status = false;
             break;
