@@ -129,7 +129,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // Cool utility class off Google code that enumerates COM ports in platform-independent manner
     QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
 
-    int portIndex = 0;
+    int portIndex = -1;
     for (int i = 0; i < ports.size(); i++)
     {
         ui->cmbPort->addItem(ports.at(i).portName.toLocal8Bit().constData());
@@ -144,8 +144,21 @@ MainWindow::MainWindow(QWidget *parent) :
         //diag("===================================\n\n");
     }
 
-    if (ports.size() > 0)
+    if (portIndex >= 0)
+    {
+        // found matching port
         ui->cmbPort->setCurrentIndex(portIndex);
+    }
+    else if (lastOpenPort.size() > 0)
+    {
+        // did not find matching port
+        // This code block is used to restore a port to view that isn't visible to QextSerialEnumerator
+        ui->cmbPort->addItem(lastOpenPort.toLocal8Bit().constData());
+        if (ports.size() > 0)
+            ui->cmbPort->setCurrentIndex(ports.size());
+        else
+            ui->cmbPort->setCurrentIndex(0);
+    }
 
     ui->tabAxisVisualizer->setEnabled(false);
     ui->groupBoxSendFile->setEnabled(true);

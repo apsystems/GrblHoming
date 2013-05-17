@@ -15,6 +15,9 @@ Planned for 3.4:
 - Faster jog button-to-motion response
 - Allow stacking jog actions
 - Support other baud rates
+- Speed limit for X and Y like the Z speed limit
+- Trim excess precision when line length maxes out at 50 characters (make it an option)
+- Allow manual entry of port number
 
 Planned for 3.5:
 - Implement support for Grbl 0.8c "homing" feature (using limit switches)

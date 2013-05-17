@@ -20,6 +20,11 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.3.9
+Enhancement
+- We now are able to remember and restore ports that are not visible to QextSerialEnumerator
+  so that user doesn't have to retype the ghost port every time they start Grbl Controller.
+  
 V3.3.8
 Enhancement/Fix
 - Modified code that detects presence of Grbl upon serial port opening, the original
