@@ -814,7 +814,7 @@ void MainWindow::readSettings()
     directory = settings.value(SETTINGS_DIRECTORY).value<QString>();
     nameFilter = settings.value(SETTINGS_NAME_FILTER).value<QString>();
     lastOpenPort = settings.value(SETTINGS_PORT).value<QString>();
-    lastBaudRate = settings.value(SETTINGS_BAUD, QString::number(BAUD_9600)).value<QString>();
+    lastBaudRate = settings.value(SETTINGS_BAUD, QString::number(BAUD9600)).value<QString>();
 
     promptedAggrPreload = settings.value(SETTINGS_PROMPTED_AGGR_PRELOAD, false).value<bool>();
 
