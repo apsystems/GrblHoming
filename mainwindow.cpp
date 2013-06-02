@@ -16,7 +16,10 @@ MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     absoluteAfterAxisAdj(false),
-    checkLogWrite(false)
+    checkLogWrite(false),
+    sliderPressed(false),
+    sliderTo(0),
+    sliderZCount(0)
 {
     // Setup our application information to be used by QSettings
     QCoreApplication::setOrganizationName(COMPANY_NAME);
@@ -26,6 +29,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // required if passing the object by reference into signals/slots
     qRegisterMetaType<Coord3D>("Coord3D");
     qRegisterMetaType<PosItem>("PosItem");
+    qRegisterMetaType<ControlParams>("ControlParams");
 
 
     ui->setupUi(this);
@@ -70,14 +74,17 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->btnResetGrbl,SIGNAL(clicked()),this,SLOT(grblReset()));
     connect(ui->btnUnlockGrbl,SIGNAL(clicked()),this,SLOT(grblUnlock()));
     connect(ui->btnGoHomeSafe,SIGNAL(clicked()),this,SLOT(goHomeSafe()));
+    connect(ui->verticalSliderZJog,SIGNAL(valueChanged(int)),this,SLOT(zJogSliderDisplay(int)));
+    connect(ui->verticalSliderZJog,SIGNAL(sliderPressed()),this,SLOT(zJogSliderPressed()));
+    connect(ui->verticalSliderZJog,SIGNAL(sliderReleased()),this,SLOT(zJogSliderReleased()));
 
     connect(this, SIGNAL(sendFile(QString)), &gcode, SLOT(sendFile(QString)));
-    connect(this, SIGNAL(openPort(QString)), &gcode, SLOT(openPort(QString)));
+    connect(this, SIGNAL(openPort(QString,QString)), &gcode, SLOT(openPort(QString,QString)));
     connect(this, SIGNAL(closePort(bool)), &gcode, SLOT(closePort(bool)));
     connect(this, SIGNAL(sendGcode(QString)), &gcode, SLOT(sendGcode(QString)));
     connect(this, SIGNAL(gotoXYZ(QString)), &gcode, SLOT(gotoXYZ(QString)));
-    connect(this, SIGNAL(axisAdj(char, float, bool, bool)), &gcode, SLOT(axisAdj(char, float, bool, bool)));
-    connect(this, SIGNAL(setResponseWait(int, double, bool, bool, double, double, bool, bool)), &gcode, SLOT(setResponseWait(int, double, bool, bool, double, double, bool, bool)));
+    connect(this, SIGNAL(axisAdj(char, float, bool, bool, int)), &gcode, SLOT(axisAdj(char, float, bool, bool, int)));
+    connect(this, SIGNAL(setResponseWait(ControlParams)), &gcode, SLOT(setResponseWait(ControlParams)));
     connect(this, SIGNAL(shutdown()), &gcodeThread, SLOT(quit()));
     connect(this, SIGNAL(shutdown()), &timerThread, SLOT(quit()));
     connect(this, SIGNAL(setProgress(int)), ui->progressFileSend, SLOT(setValue(int)));
@@ -160,6 +167,21 @@ MainWindow::MainWindow(QWidget *parent) :
             ui->cmbPort->setCurrentIndex(0);
     }
 
+    int baudRates[] = { 9600, 19200, 38400, 57600, 115200 };
+    int baudRateCount = sizeof baudRates / sizeof baudRates[0];
+    int baudRateIndex = 0;
+    for (int i = 0; i < baudRateCount; i++)
+    {
+        QString baudRate = QString::number(baudRates[i]);
+        ui->comboBoxBaudRate->addItem(baudRate);
+        if (baudRate == lastBaudRate)
+        {
+            baudRateIndex = i;
+        }
+    }
+
+    ui->comboBoxBaudRate->setCurrentIndex(baudRateIndex);
+
     ui->tabAxisVisualizer->setEnabled(false);
     ui->groupBoxSendFile->setEnabled(true);
     ui->groupBoxManualGCode->setEnabled(false);
@@ -179,7 +201,31 @@ MainWindow::MainWindow(QWidget *parent) :
 
     this->setWindowTitle(GRBL_CONTROLLER_NAME_AND_VERSION);
 
-    emit setResponseWait(waitTime, zJogRate, useMm, zRateLimiting, zRateLimitAmount, xyRateAmount, useAggressivePreload, filterFileCommands);
+    QSettings settings;
+    QString useAggrPreload = settings.value(SETTINGS_USE_AGGRESSIVE_PRELOAD, "true").value<QString>();
+    controlParams.useAggressivePreload = useAggrPreload == "true";
+
+    if (!controlParams.useAggressivePreload && !promptedAggrPreload)
+    {
+        QMessageBox msgBox;
+        msgBox.setText("You appear to have upgraded to the latest version of Grbl Controller. "
+                       "Please be aware that as of version 3.4 the default behavior of sending commands "
+                       "to Grbl has been changed to send them as fast as possible (Aggressive preload mode).\n\n"
+                       "Your settings have been changed to enable this mode. Why? Because it provides the most "
+                       "optimal use of Grbl and greatly reduces the time to finish a typical job.\n\n"
+                       "What does this mean to you? "
+                       "Arc commands will now run smoother and faster than before, which may "
+                       "cause your spindle to work slightly harder, so please run some tests first. "
+                       "Alternately, go to the Options dialog and manually disable Aggressive Preload");
+        msgBox.exec();
+
+        controlParams.useAggressivePreload = true;
+        settings.setValue(SETTINGS_USE_AGGRESSIVE_PRELOAD, controlParams.useAggressivePreload);
+    }
+
+    promptedAggrPreload = true;
+
+    emit setResponseWait(controlParams);
 }
 
 MainWindow::~MainWindow()
@@ -279,6 +325,8 @@ void MainWindow::stopSending()
 // User has asked to open the port
 void MainWindow::openPort()
 {
+    info("User clicked Port Open/Close");
+
     openPortCtl(false);
 }
 
@@ -306,8 +354,11 @@ void MainWindow::openPortCtl(bool reopen)
     {
         // Port is closed if the button says 'Open'
         QString portStr = ui->cmbPort->currentText();
+        QString baudRate = ui->comboBoxBaudRate->currentText();
+
         ui->btnOpenPort->setEnabled(false);
-        emit openPort(portStr);
+        ui->comboBoxBaudRate->setEnabled(false);
+        emit openPort(portStr, baudRate);
     }
     else
     {
@@ -333,6 +384,7 @@ void MainWindow::openPortCtl(bool reopen)
         ui->groupBoxSendFile->setEnabled(false);
         ui->groupBoxManualGCode->setEnabled(false);
         ui->cmbPort->setEnabled(false);
+        ui->comboBoxBaudRate->setEnabled(false);
         ui->btnOpenPort->setEnabled(false);
         ui->btnGRBL->setEnabled(false);
 
@@ -352,6 +404,7 @@ void MainWindow::portIsClosed(bool reopen)
     ui->groupBoxSendFile->setEnabled(false);
     ui->groupBoxManualGCode->setEnabled(false);
     ui->cmbPort->setEnabled(true);
+    ui->comboBoxBaudRate->setEnabled(true);
     ui->btnOpenPort->setEnabled(true);
     ui->btnOpenPort->setText(OPEN_BUTTON_TEXT);
     ui->btnOpenPort->setStyleSheet(styleSheet);
@@ -400,7 +453,7 @@ void MainWindow::adjustedAxis()
 
 void MainWindow::disableAllButtons()
 {
-    ui->tabAxisVisualizer->setEnabled(false);
+    //ui->tabAxisVisualizer->setEnabled(false);
     ui->groupBoxManualGCode->setEnabled(false);
     ui->Begin->setEnabled(false);
     ui->Stop->setEnabled(false);
@@ -422,6 +475,7 @@ void MainWindow::enableGrblDialogButton()
     ui->btnOpenPort->setText(CLOSE_BUTTON_TEXT);
     ui->btnOpenPort->setStyleSheet("* { background-color: rgb(255,125,100) }");
     ui->cmbPort->setEnabled(false);
+    ui->comboBoxBaudRate->setEnabled(false);
     ui->tabAxisVisualizer->setEnabled(true);
     ui->groupBoxSendFile->setEnabled(true);
     ui->groupBoxManualGCode->setEnabled(true);
@@ -454,42 +508,42 @@ void MainWindow::incX()
 {
     float coord = ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('X', coord, invX, absoluteAfterAxisAdj);
+    emit axisAdj('X', coord, invX, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::incY()
 {
     float coord = ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('Y', coord, invY, absoluteAfterAxisAdj);
+    emit axisAdj('Y', coord, invY, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::incZ()
 {
     float coord = ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('Z', coord, invZ, absoluteAfterAxisAdj);
+    emit axisAdj('Z', coord, invZ, absoluteAfterAxisAdj, sliderZCount++);
 }
 
 void MainWindow::decX()
 {
     float coord = -ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('X', coord, invX, absoluteAfterAxisAdj);
+    emit axisAdj('X', coord, invX, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::decY()
 {
     float coord = -ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('Y', coord, invY, absoluteAfterAxisAdj);
+    emit axisAdj('Y', coord, invY, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::decZ()
 {
     float coord = -ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('Z', coord, invZ, absoluteAfterAxisAdj);
+    emit axisAdj('Z', coord, invZ, absoluteAfterAxisAdj, sliderZCount++);
 }
 
 void MainWindow::getOptions()
@@ -760,6 +814,9 @@ void MainWindow::readSettings()
     directory = settings.value(SETTINGS_DIRECTORY).value<QString>();
     nameFilter = settings.value(SETTINGS_NAME_FILTER).value<QString>();
     lastOpenPort = settings.value(SETTINGS_PORT).value<QString>();
+    lastBaudRate = settings.value(SETTINGS_BAUD, QString::number(BAUD_9600)).value<QString>();
+
+    promptedAggrPreload = settings.value(SETTINGS_PROMPTED_AGGR_PRELOAD, false).value<bool>();
 
     updateSettingsFromOptionDlg(settings);
 }
@@ -772,7 +829,7 @@ void MainWindow::setSettings()
     updateSettingsFromOptionDlg(settings);
 
     // update gcode thread with latest values
-    emit setResponseWait(waitTime, zJogRate, useMm, zRateLimiting, zRateLimitAmount, xyRateAmount, useAggressivePreload, filterFileCommands);
+    emit setResponseWait(controlParams);
 }
 
 void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
@@ -781,7 +838,7 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
     QString sinvY = settings.value(SETTINGS_INVERSE_Y, "false").value<QString>();
     QString sinvZ = settings.value(SETTINGS_INVERSE_Z, "false").value<QString>();
 
-    QString sdbgLog = settings.value(SETTINGS_ENABLE_DEBUG_LOG, "false").value<QString>();
+    QString sdbgLog = settings.value(SETTINGS_ENABLE_DEBUG_LOG, "true").value<QString>();
     g_enableDebugLog.set(sdbgLog == "true");
 
     // only enable/not enable file logging at startup. There are some kind of
@@ -802,25 +859,28 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
     invY = sinvY == "true";
     invZ = sinvZ == "true";
 
-    waitTime = settings.value(SETTINGS_RESPONSE_WAIT_TIME, DEFAULT_WAIT_TIME_SEC).value<int>();
-    zJogRate = settings.value(SETTINGS_Z_JOG_RATE, DEFAULT_Z_JOG_RATE).value<double>();
+    controlParams.waitTime = settings.value(SETTINGS_RESPONSE_WAIT_TIME, DEFAULT_WAIT_TIME_SEC).value<int>();
+    controlParams.zJogRate = settings.value(SETTINGS_Z_JOG_RATE, DEFAULT_Z_JOG_RATE).value<double>();
     QString useMmManualCmds = settings.value(SETTINGS_USE_MM_FOR_MANUAL_CMDS, "true").value<QString>();
-    useMm = useMmManualCmds == "true";
+    controlParams.useMm = useMmManualCmds == "true";
     QString useAggrPreload = settings.value(SETTINGS_USE_AGGRESSIVE_PRELOAD, "false").value<QString>();
-    useAggressivePreload = useAggrPreload == "true";
+    controlParams.useAggressivePreload = useAggrPreload == "true";
 
     QString absAfterAdj = settings.value(SETTINGS_ABSOLUTE_AFTER_AXIS_ADJ, "false").value<QString>();
     absoluteAfterAxisAdj = absAfterAdj == "true";
     ui->chkRestoreAbsolute->setChecked(absoluteAfterAxisAdj);
 
     QString zRateLimit = settings.value(SETTINGS_Z_RATE_LIMIT, "false").value<QString>();
-    zRateLimiting = zRateLimit == "true";
+    controlParams.zRateLimit = zRateLimit == "true";
 
-    QString ffCommands = settings.value(SETTINGS_FILTER_FILE_COMMANDS, "true").value<QString>();
-    filterFileCommands = ffCommands == "true";
+    QString ffCommands = settings.value(SETTINGS_FILTER_FILE_COMMANDS, "false").value<QString>();
+    controlParams.filterFileCommands = ffCommands == "true";
+    QString rPrecision = settings.value(SETTINGS_REDUCE_PREC_FOR_LONG_LINES, "false").value<QString>();
+    controlParams.reducePrecision = rPrecision == "true";
+    controlParams.grblLineBufferLen = settings.value(SETTINGS_GRBL_LINE_BUFFER_LEN, DEFAULT_GRBL_LINE_BUFFER_LEN).value<int>();
 
-    zRateLimitAmount = settings.value(SETTINGS_Z_RATE_LIMIT_AMOUNT, DEFAULT_Z_LIMIT_RATE).value<double>();
-    xyRateAmount = settings.value(SETTINGS_XY_RATE_AMOUNT, DEFAULT_XY_RATE).value<double>();
+    controlParams.zRateLimitAmount = settings.value(SETTINGS_Z_RATE_LIMIT_AMOUNT, DEFAULT_Z_LIMIT_RATE).value<double>();
+    controlParams.xyRateAmount = settings.value(SETTINGS_XY_RATE_AMOUNT, DEFAULT_XY_RATE).value<double>();
 }
 
 // save last state of settings
@@ -832,6 +892,9 @@ void MainWindow::writeSettings()
     settings.setValue(SETTINGS_NAME_FILTER, nameFilter);
     settings.setValue(SETTINGS_DIRECTORY, directory);
     settings.setValue(SETTINGS_PORT, ui->cmbPort->currentText());
+    settings.setValue(SETTINGS_BAUD, ui->comboBoxBaudRate->currentText());
+
+    settings.setValue(SETTINGS_PROMPTED_AGGR_PRELOAD, promptedAggrPreload);
 
     settings.setValue(SETTINGS_ABSOLUTE_AFTER_AXIS_ADJ, ui->chkRestoreAbsolute->isChecked());
 }
@@ -982,7 +1045,17 @@ void MainWindow::updateCoordinates(Coord3D machineCoord, Coord3D workCoord)
 {
     machineCoordinates = machineCoord;
     workCoordinates = workCoord;
+/*
+    if (workCoordinates.stoppedZ == false)
+    {
+        int newPos = workCoordinates.z + sliderTo;
 
+        QString to;
+        to.sprintf("%d", newPos);
+
+        ui->resultingZJogSliderPosition->setText(to);
+    }
+*/
     refreshLcd();
 }
 
@@ -1020,4 +1093,76 @@ void MainWindow::lcdDisplay(char axis, bool workCoord, float floatVal)
             ui->lcdMachNumberZ->display(value);
         break;
     }
+}
+
+void MainWindow::zJogSliderDisplay(int pos)
+{
+    QString str;
+
+    pos -= CENTER_POS;
+
+    if (pos > 0)
+        str.sprintf("+%d", pos);
+    else if (pos < 0)
+        str.sprintf("%d", pos);
+    else
+        str = "0";
+
+    ui->currentZJogSliderDelta->setText(str);
+
+    int newPos = pos + sliderTo;
+
+    QString to;
+    to.sprintf("%d", newPos);
+
+    if (sliderPressed)
+    {
+        ui->resultingZJogSliderPosition->setText(to);
+        info("Usr chg: pos=%d new=%d\n", pos, newPos);
+    }
+    else
+    {
+        ui->verticalSliderZJog->setSliderPosition(CENTER_POS);
+        ui->currentZJogSliderDelta->setText("0");
+        info("Usr chg no slider: %d\n", pos);
+    }
+}
+
+void MainWindow::zJogSliderPressed()
+{
+    sliderPressed = true;
+    if (workCoordinates.stoppedZ && workCoordinates.sliderZIndex == sliderZCount)
+    {
+        info("Pressed and stopped\n");
+        sliderTo = workCoordinates.z;
+    }
+    else
+    {
+        info("Pressed not stopped\n");
+    }
+}
+
+void MainWindow::zJogSliderReleased()
+{
+    info("Released\n");
+    if (sliderPressed)
+    {
+        sliderPressed = false;
+        int value = ui->verticalSliderZJog->value();
+
+        ui->verticalSliderZJog->setSliderPosition(CENTER_POS);
+        ui->currentZJogSliderDelta->setText("0");
+
+        value -= CENTER_POS;
+
+        if (value != 0)
+        {
+            sliderTo += value;
+            float setTo = value;
+            emit axisAdj('Z', setTo, invZ, absoluteAfterAxisAdj, sliderZCount++);
+        }
+    }
+
+
+    //ui->resultingZJogSliderPosition->setText("0");
 }

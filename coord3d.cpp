@@ -1,7 +1,7 @@
 #include "coord3d.h"
 
 Coord3D::Coord3D()
-    : x(0.0), y(0.0), z(0.0)
+    : x(0.0), y(0.0), z(0.0), stoppedZ(true), sliderZIndex(0)
 {
 }
 

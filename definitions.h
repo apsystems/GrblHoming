@@ -21,6 +21,8 @@
 #define DEFAULT_Z_LIMIT_RATE    100.0
 #define DEFAULT_XY_RATE         2000.0
 
+#define DEFAULT_GRBL_LINE_BUFFER_LEN    50
+
 #define MM_IN_AN_INCH           25.4
 #define PRE_HOME_Z_ADJ_MM       5.0
 
@@ -35,7 +37,7 @@
 #define OPEN_BUTTON_TEXT                "Open"
 #define CLOSE_BUTTON_TEXT               "Close / Reset"
 
-#define GRBL_CONTROLLER_NAME_AND_VERSION    "Grbl Controller 3.3.9"
+#define GRBL_CONTROLLER_NAME_AND_VERSION    "Grbl Controller 3.4"
 
 #define LOG_MSG_TYPE_DIAG       "DIAG"
 #define LOG_MSG_TYPE_STATUS     "STATUS"

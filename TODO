@@ -1,25 +1,21 @@
 This file contains enhancements the developer and user community would like to see:
 
-Planned for 3.4:
-- Detect machine state at end of run and display it properly (i.e. "transitioning" when it is still moving)
-- Make aggressive preload default. Tell user if not using it to offer to switch over.
+
+Planned for 3.4.1:
+- Qt5 builds
+
+Planned for 3.5:
+- (What is the problem here? Run is shown, then Idle when stopped) Detect machine state at end of run and display it properly (i.e. "transitioning" when it is still moving)
 - Every second or so, if not scrolled to bottom, scroll to bottom of status
 - Allow reload of same file from same location
-- Collect all detected errors and display them at the end after a file run, including line that caused error
 - After a run, suppress $$ output with a single line
 - Report system settings at beginning of log file. Include OS.
-- Turn log on by default
 - Can't see drill holes under axis, move axes under toolpaths?
 - Create test plan (i.e. verify all text appears correctly on all platforms)
 - Display detected version of Grbl
-- Faster jog button-to-motion response
-- Allow stacking jog actions
-- Support other baud rates
 - Speed limit for X and Y like the Z speed limit
-- Trim excess precision when line length maxes out at 50 characters (make it an option)
-- Allow manual entry of port number
 
-Planned for 3.5:
+Planned for 3.6:
 - Implement support for Grbl 0.8c "homing" feature (using limit switches)
 - UI support for homing limit switches
 - Restore "Tool change" feature, including popup dialog
@@ -29,7 +25,7 @@ Planned for 3.5:
 - Analyze file ahead of time and determine if it will go beyond extents
 - Update manual since 3.3
 
-Planned for 3.6
+Planned for 3.7
 - Switch to compiling using Qt 5
 - Auto-scale widgets to full screen size
 - Localization ready code

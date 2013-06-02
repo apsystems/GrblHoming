@@ -35,6 +35,7 @@
 #define TAB_AXIS_INDEX          0
 #define TAB_VISUALIZER_INDEX    1
 
+#define CENTER_POS              40
 
 /* testing optimizing scrollbar, doesn't work right
 class MyItemDelegate : public QItemDelegate
@@ -90,15 +91,14 @@ public:
 
 signals:
     //threads
-    void openPort(QString port);
+    void openPort(QString port, QString baudRate);
     void closePort(bool reopen);
     void shutdown();
     void sendGcode(QString line, bool recordResponseOnFail = false, int waitCount = SHORT_WAIT_SEC);
     void sendFile(QString path);
     void gotoXYZ(QString line);
-    void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj);
-    void setResponseWait(int waitTime, double zJogRate, bool useMm, bool zRateLimit, double zRateLimitAmount, double xyRateAmount,
-                         bool useAggressivePreload, bool filterFileCommands);
+    void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj, int sliderZCount);
+    void setResponseWait(ControlParams controlParams);
     void setProgress(int percent);
     void setRuntime(QString runtime);
     void sendSetHome();
@@ -151,6 +151,9 @@ private slots:
     void grblUnlock();
     void updateCoordinates(Coord3D machineCoord, Coord3D workCoord);
     void goHomeSafe();
+    void zJogSliderDisplay(int pos);
+    void zJogSliderPressed();
+    void zJogSliderReleased();
 
 private:
     // enums
@@ -179,22 +182,20 @@ private:
     QString directory;
     QString nameFilter;
     QString lastOpenPort;
+    QString lastBaudRate;
     QByteArray fileOpenDialogState;
-    int waitTime;
-    double zJogRate;
     Coord3D machineCoordinates;
     Coord3D workCoordinates;
     bool absoluteAfterAxisAdj;
-    bool useMm;
-    bool zRateLimiting;
-    double zRateLimitAmount;
-    double xyRateAmount;
-    bool useAggressivePreload;
     bool checkLogWrite;
     QTime scrollStatusTimer;
     QList<PosItem> posList;
-    bool filterFileCommands;
-  
+    bool sliderPressed;
+    int sliderTo;
+    int sliderZCount;
+    bool promptedAggrPreload;
+    ControlParams controlParams;
+
     //methods
     int SendJog(QString strline);
     void readSettings();

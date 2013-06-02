@@ -29,8 +29,10 @@ Options::Options(QWidget *parent) :
     ui->chkInvY->setChecked(invY == "true");
     ui->chkInvZ->setChecked(invZ == "true");
 
-    QString enDebugLog = settings.value(SETTINGS_ENABLE_DEBUG_LOG, "false").value<QString>();
-    QString enAggressivePreload = settings.value(SETTINGS_USE_AGGRESSIVE_PRELOAD, "false").value<QString>();
+    // enable logging by default
+    QString enDebugLog = settings.value(SETTINGS_ENABLE_DEBUG_LOG, "true").value<QString>();
+    // default aggressive preload behavior to 'true'!
+    QString enAggressivePreload = settings.value(SETTINGS_USE_AGGRESSIVE_PRELOAD, "true").value<QString>();
     QString useMmManualCmds = settings.value(SETTINGS_USE_MM_FOR_MANUAL_CMDS, "true").value<QString>();
 
     ui->checkBoxEnableDebugLog->setChecked(enDebugLog == "true");
@@ -59,7 +61,9 @@ Options::Options(QWidget *parent) :
 
     QString ffCmd = settings.value(SETTINGS_FILTER_FILE_COMMANDS, "false").value<QString>();
     ui->chkFilterFileCommands->setChecked(ffCmd == "true");
-
+    QString rPrecision = settings.value(SETTINGS_REDUCE_PREC_FOR_LONG_LINES, "false").value<QString>();
+    ui->checkBoxReducePrecForLongLines->setChecked(rPrecision == "true");
+    ui->spinBoxGrblLineBufferSize->setValue(settings.value(SETTINGS_GRBL_LINE_BUFFER_LEN, DEFAULT_GRBL_LINE_BUFFER_LEN).value<int>());
 }
 
 Options::~Options()
@@ -87,6 +91,8 @@ void Options::accept()
     settings.setValue(SETTINGS_XY_RATE_AMOUNT, ui->doubleSpinXYRate->value());
 
     settings.setValue(SETTINGS_FILTER_FILE_COMMANDS, ui->chkFilterFileCommands->isChecked());
+    settings.setValue(SETTINGS_REDUCE_PREC_FOR_LONG_LINES, ui->checkBoxReducePrecForLongLines->isChecked());
+    settings.setValue(SETTINGS_GRBL_LINE_BUFFER_LEN, ui->spinBoxGrblLineBufferSize->value());
 
     connect(this, SIGNAL(setSettings()), parentWidget(), SLOT(setSettings()));
 

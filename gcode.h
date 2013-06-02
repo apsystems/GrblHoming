@@ -19,9 +19,7 @@
 #include "definitions.h"
 #include "rs232.h"
 #include "coord3d.h"
-
-#define SHORT_WAIT_SEC 2
-#define LONG_WAIT_SEC  100
+#include "controlparams.h"
 
 #define BUF_SIZE 300
 
@@ -32,6 +30,35 @@
 #define GRBL_RX_BUFFER_SIZE     128
 
 #define CTRL_X '\x18'
+
+class CmdResponse
+{
+public:
+    CmdResponse(const char *buf, int c, int l) : cmd(buf), count(c), line(l)
+    {
+        waitForMe = false;
+        if (buf[0] == 'M')
+        {
+            int value = cmd.mid(1,-1).toInt();
+            if (value == 9)
+                waitForMe = true;
+        }
+    }
+public:
+    QString cmd;
+    int count;
+    int line;
+    bool waitForMe;
+};
+
+class DecimalFilter
+{
+public:
+    DecimalFilter(QString t) : token(t), decimals(0) {}
+public:
+    QString token;
+    int decimals;
+};
 
 class GCode : public QObject
 {
@@ -68,15 +95,14 @@ signals:
     void setVisCurrLine(int currLine);
 
 public slots:
-    void openPort(QString commPortStr);
+    void openPort(QString commPortStr, QString baudRate);
     void closePort(bool reopen);
     void sendGcode(QString line);
     void sendGcodeAndGetResult(int id, QString line);
     void sendFile(QString path);
     void gotoXYZ(QString line);
-    void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj);
-    void setResponseWait(int waitTime, double zJogRate, bool useMm, bool zRateLimit, double zRateLimitAmount, double xyRateLimitAmount,
-                         bool useAggressivePreload, bool filterFileCommands);
+    void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj, int sliderZCount);
+    void setResponseWait(ControlParams controlParams);
     void grblSetHome();
     void sendGrblReset();
     void sendGrblUnlock();
@@ -86,11 +112,12 @@ protected:
     void timerEvent(QTimerEvent *event);
 
 private:
-    bool sendGcodeLocal(QString line, bool recordResponseOnFail = false, int waitSec = -1, bool aggressive = false);
+    bool sendGcodeLocal(QString line, bool recordResponseOnFail = false, int waitSec = -1, bool aggressive = false, int currLine = 0);
     bool waitForOk(QString& result, int waitCount, bool sentReqForLocation, bool sentReqForParserState, bool aggressive);
     bool waitForStartupBanner(QString& result, int waitSec, bool failOnNoFound);
-    bool sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec, bool aggressive);
+    bool sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec, bool aggressive, int currLine = 0);
     QString removeUnsupportedCommands(QString line);
+    QString reducePrecision(QString line);
     bool isGCommandValid(float value);
     bool isMCommandValid(float value);
     bool isPortOpen();
@@ -113,8 +140,7 @@ private:
     AtomicIntBool abortState;
     AtomicIntBool resetState;
     AtomicIntBool shutdownState;
-    int waitTime;
-    double zJogRate;
+    ControlParams controlParams;
     int errorCount;
     QString currComPort;
     bool doubleDollarFormat;
@@ -122,18 +148,15 @@ private:
     QString lastState;
     bool incorrectMeasurementUnits;
     bool incorrectLcdDisplayUnits;
-    bool userSetMmMode;
     Coord3D machineCoord, workCoord;
     Coord3D machineCoordLastIdlePos, workCoordLastIdlePos;
-    bool zRateLimit;
-    double zRateLimitAmount;
-    double xyRateAmount;
     double maxZ;
-    QList<int> sendCount;
+    QList<CmdResponse> sendCount;
     QTime parseCoordTimer;
-    bool useAggressivePreload;
     bool motionOccurred;
-    bool filterFileCommands;
+    int sliderZCount;
+    QStringList grblCmdErrors;
+    QStringList grblFilteredCmds;
 
     int sentI;
     int rcvdI;

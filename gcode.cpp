@@ -10,24 +10,22 @@
 #include "gcode.h"
 
 GCode::GCode()
-    : waitTime(LONG_WAIT_SEC), zJogRate(DEFAULT_Z_JOG_RATE),
-      errorCount(0), doubleDollarFormat(false),
+    : errorCount(0), doubleDollarFormat(false),
       incorrectMeasurementUnits(false), incorrectLcdDisplayUnits(false),
-      userSetMmMode(true), zRateLimit(false), zRateLimitAmount(DEFAULT_Z_LIMIT_RATE),
-      xyRateAmount(DEFAULT_XY_RATE),
-      maxZ(0), useAggressivePreload(false), motionOccurred(false), filterFileCommands(false)
+      maxZ(0), motionOccurred(false),
+      sliderZCount(0)
 {
     // use base class's timer - use it to capture random text from the controller
     startTimer(1000);
 }
 
-void GCode::openPort(QString commPortStr)
+void GCode::openPort(QString commPortStr, QString baudRate)
 {
     clearToHome();
 
     currComPort = commPortStr;
 
-    if (port.OpenComport(commPortStr))
+    if (port.OpenComport(commPortStr, baudRate))
     {
         emit portIsOpen(true);
     }
@@ -112,7 +110,7 @@ void GCode::goToHome()
 
     if (doubleDollarFormat)
     {
-        maxZOver += (userSetMmMode ? PRE_HOME_Z_ADJ_MM : (PRE_HOME_Z_ADJ_MM / MM_IN_AN_INCH));
+        maxZOver += (controlParams.useMm ? PRE_HOME_Z_ADJ_MM : (PRE_HOME_Z_ADJ_MM / MM_IN_AN_INCH));
     }
     else
     {
@@ -243,13 +241,13 @@ void GCode::sendGcodeAndGetResult(int id, QString line)
 
 // To be called only from this class, not from other threads. Use above two methods for that.
 // Wraps sendGcodeInternal() to allow proper handling of failure cases, etc.
-bool GCode::sendGcodeLocal(QString line, bool recordResponseOnFail /* = false */, int waitSec /* = -1 */, bool aggressive /* = false */)
+bool GCode::sendGcodeLocal(QString line, bool recordResponseOnFail /* = false */, int waitSec /* = -1 */, bool aggressive /* = false */, int currLine /* = 0 */)
 {
     QString result;
     sendMsg("");
     resetState.set(false);
 
-    bool ret = sendGcodeInternal(line, result, recordResponseOnFail, waitSec, aggressive);
+    bool ret = sendGcodeInternal(line, result, recordResponseOnFail, waitSec, aggressive, currLine);
     if (shutdownState.get())
         return false;
 
@@ -313,7 +311,7 @@ bool GCode::checkGrbl(const QString& result)
 }
 
 // Wrapped method. Should only be called from above method.
-bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec, bool aggressive)
+bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec, bool aggressive, int currLine /* = 0 */)
 {
     if (!port.isPortOpen())
     {
@@ -374,15 +372,18 @@ bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponse
         buf[i] = line.at(i).toAscii();
 
     if (ctrlX)
-        diag("SENDING: 0x%02X (CTRL-X)\n", buf[0]);
+        diag("SENDING[%d]: 0x%02X (CTRL-X)\n", currLine, buf[0]);
     else
-        diag("SENDING: %s\n", buf);
+        diag("SENDING[%d]: %s\n", currLine, buf);
 
-    int waitSecActual = waitSec == -1 ? waitTime : waitSec;
+    int waitSecActual = waitSec == -1 ? controlParams.waitTime : waitSec;
 
     if (aggressive)
     {
-        sendCount.append(line.length());
+        if (ctrlX)
+            sendCount.append(CmdResponse("(CTRL-X)", line.length(), currLine));
+        else
+            sendCount.append(CmdResponse(buf, line.length(), currLine));
 
         waitForOk(result, waitSecActual, false, false, aggressive);
 
@@ -433,12 +434,12 @@ bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponse
                         {
                             if (!capList.at(2).compare("0"))
                             {
-                                if (!userSetMmMode)
+                                if (!controlParams.useMm)
                                     incorrectLcdDisplayUnits = true;
                             }
                             else
                             {
-                                if (userSetMmMode)
+                                if (controlParams.useMm)
                                     incorrectLcdDisplayUnits = true;
                             }
                             break;
@@ -460,16 +461,24 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
         if (!port.bytesAvailable())
         {
             int total = 0;
-            foreach (int count, sendCount)
+            bool haveWait = false;
+            foreach (CmdResponse cmdResp, sendCount)
             {
-                total += count;
+                total += cmdResp.count;
+                if (cmdResp.waitForMe)
+                {
+                    haveWait = true;
+                }
             }
 
-            //printf("Total out (a): %d (%d)\n", total, sendCount.size());
+            //printf("Total out (a): %d (%d) (%d)\n", total, sendCount.size(), haveWait);
 
-            if (total < (GRBL_RX_BUFFER_SIZE - 1))
+            if (!haveWait)
             {
-                return true;
+                if (total < (GRBL_RX_BUFFER_SIZE - 1))
+                {
+                    return true;
+                }
             }
         }
     }
@@ -484,12 +493,18 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
         int n = port.PollComportLine(tmp, BUF_SIZE);
         if (n == 0)
         {
+            if (aggressive && sendCount.size() == 0)
+                return false;
+
             count++;
             SLEEP(100);
         }
         else if (n < 0)
         {
             err("Error reading data from COM port\n");
+
+            if (aggressive && sendCount.size() == 0)
+                return false;
         }
         else
         {
@@ -500,32 +515,49 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
             int pos = tmpTrim.indexOf(port.getDetectedLineFeed());
             if (pos != -1)
                 tmpTrim.remove(pos, port.getDetectedLineFeed().size());
-            diag("GOT:%s\n", tmpTrim.toLocal8Bit().constData());
             QString received(tmp);
 
             if (aggressive)
             {
                 if (received.contains(RESPONSE_OK))
                 {
-                    sendCount.removeFirst();
+                    if (sendCount.isEmpty())
+                        err("Unexpected: list is empty (o)!");
+                    else
+                    {
+                        CmdResponse cmdResp = sendCount.takeFirst();
+                        diag("GOT[%d]:%s for %s\n", cmdResp.line, tmpTrim.toLocal8Bit().constData(), cmdResp.cmd.toLocal8Bit().constData());
+                    }
                     rcvdI++;
                 }
                 else if (received.contains(RESPONSE_ERROR))
                 {
-                    sendCount.removeFirst();
+                    QString orig("Error?");
+                    if (sendCount.isEmpty())
+                        err("Unexpected: list is empty (e)!");
+                    else
+                    {
+                        CmdResponse cmdResp = sendCount.takeFirst();
+                        orig = cmdResp.cmd;
+                        diag("GOT[%d]:%s for %s\n", cmdResp.line, tmpTrim.toLocal8Bit().constData(), orig.toLocal8Bit().constData());
+                    }
                     errorCount++;
-                    emit addList(received);
+                    QString result;
+                    QTextStream(&result) << received << " [for " << orig << "]";
+                    emit addList(result);
+                    grblCmdErrors.append(result);
                     rcvdI++;
                 }
                 else
                 {
+                    diag("GOT:%s\n", tmpTrim.toLocal8Bit().constData());
                     parseCoordinates(received, aggressive);
                 }
 
                 int total = 0;
-                foreach (int count, sendCount)
+                foreach (CmdResponse cmdResp, sendCount)
                 {
-                    total += count;
+                    total += cmdResp.count;
                 }
 
                 //printf("Total out (b): %d (%d)\n", total, sendCount.size());
@@ -540,6 +572,10 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
                 {
                     return true;
                 }
+            }
+            else
+            {
+                diag("GOT:%s\n", tmpTrim.toLocal8Bit().constData());
             }
 
             if (!received.contains(RESPONSE_OK) && !received.contains(RESPONSE_ERROR))
@@ -556,14 +592,14 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
                             QStringList items = list.at(1).split(" ");
                             if (items.contains("G20"))// inches
                             {
-                                if (userSetMmMode)
+                                if (controlParams.useMm)
                                     incorrectMeasurementUnits = true;
                                 else
                                     incorrectMeasurementUnits = false;
                             }
                             else if (items.contains("G21"))// millimeters
                             {
-                                if (userSetMmMode)
+                                if (controlParams.useMm)
                                     incorrectMeasurementUnits = false;
                                 else
                                     incorrectMeasurementUnits = true;
@@ -797,6 +833,13 @@ void GCode::parseCoordinates(const QString& received, bool aggressive)
         workCoord.y = list.at(2).toFloat();
         workCoord.z = list.at(3).toFloat();
 
+        if (state != "Run")
+            workCoord.stoppedZ = true;
+        else
+            workCoord.stoppedZ = false;
+
+        workCoord.sliderZIndex = sliderZCount;
+
         diag("Decoded: State:%s MPos: %f,%f,%f WPos: %f,%f,%f\n",
              state.toLocal8Bit().constData(),
              machineCoord.x, machineCoord.y, machineCoord.z,
@@ -806,7 +849,7 @@ void GCode::parseCoordinates(const QString& received, bool aggressive)
             maxZ = workCoord.z;
 
         emit updateCoordinates(machineCoord, workCoord);
-        emit setLivePoint(workCoord.x, workCoord.y, userSetMmMode);
+        emit setLivePoint(workCoord.x, workCoord.y, controlParams.useMm);
         emit setLastState(state);
 
         lastState = state;
@@ -877,7 +920,8 @@ void GCode::sendFile(QString path)
     //sendGcodeLocal("", true, SHORT_WAIT_SEC);
 
     setProgress(0);
-
+    grblCmdErrors.clear();
+    grblFilteredCmds.clear();
     errorCount = 0;
     abortState.set(false);
     QFile file(path);
@@ -896,7 +940,7 @@ void GCode::sendFile(QString path)
         code.seek(0);
 
         // set here once so that it doesn't change in the middle of a file send
-        bool aggressive = useAggressivePreload;
+        bool aggressive = controlParams.useAggressivePreload;
         if (aggressive)
             sendCount.clear();
 
@@ -918,7 +962,7 @@ void GCode::sendFile(QString path)
 
             emit setVisCurrLine(currLine + 1);
 
-            if (filterFileCommands)
+            if (controlParams.filterFileCommands)
             {
                 trimToEnd(strline, '(');
                 trimToEnd(strline, ';');
@@ -931,7 +975,7 @@ void GCode::sendFile(QString path)
             {}//ignore comments
             else
             {
-                if (filterFileCommands)
+                if (controlParams.filterFileCommands)
                 {
                     strline = strline.toUpper();
                     strline.replace(QRegExp("([A-Z])"), " \\1");
@@ -940,9 +984,14 @@ void GCode::sendFile(QString path)
 
                 if (strline.size() != 0)
                 {
+                    if (controlParams.reducePrecision)
+                    {
+                        strline = reducePrecision(strline);
+                    }
+
                     QString rateLimitMsg;
                     QStringList outputList;
-                    if (zRateLimit)
+                    if (controlParams.zRateLimit)
                     {
                         outputList = doZRateLimit(strline, rateLimitMsg, xyRateSet);
                     }
@@ -954,13 +1003,13 @@ void GCode::sendFile(QString path)
                     bool ret = false;
                     if (outputList.size() == 1)
                     {
-                        ret = sendGcodeLocal(outputList.at(0), false, -1, aggressive);
+                        ret = sendGcodeLocal(outputList.at(0), false, -1, aggressive, currLine + 1);
                     }
                     else
                     {
                         foreach (QString outputLine, outputList)
                         {
-                            ret = sendGcodeLocal(outputLine, false, -1, aggressive);
+                            ret = sendGcodeLocal(outputLine, false, -1, aggressive, currLine + 1);
 
                             if (!ret)
                                 break;
@@ -1000,17 +1049,25 @@ void GCode::sendFile(QString path)
 
         if (aggressive)
         {
-            int limitCount = 0;
-            while (sendCount.size() > 0 && limitCount < 5000)
+            int limitCount = 5000;
+            while (sendCount.size() > 0 && limitCount)
             {
                 QString result;
-                waitForOk(result, waitTime, false, false, aggressive);
+                waitForOk(result, controlParams.waitTime, false, false, aggressive);
                 SLEEP(100);
 
                 if (shutdownState.get())
                     return;
 
-                limitCount++;
+                if (abortState.get())
+                    break;
+
+                limitCount--;
+            }
+
+            if (!limitCount)
+            {
+                err("Gave up waiting for OK\n");
             }
         }
 
@@ -1028,17 +1085,43 @@ void GCode::sendFile(QString path)
         {
             setProgress(100);
             if (errorCount > 0)
-                msg = QString("Code sent successfully with %1 error(s)").arg(QString::number(errorCount));
+            {
+                msg = QString("Code sent successfully with %1 error(s):").arg(QString::number(errorCount));
+                emit sendMsg(msg);
+                emit addList(msg);
+
+                foreach(QString errItem, grblCmdErrors)
+                {
+                    emit sendMsg(errItem);
+                }
+                emit addListFull(grblCmdErrors);
+            }
             else
+            {
                 msg = "Code sent successfully with no errors.";
+                emit sendMsg(msg);
+                emit addList(msg);
+            }
+
+            if (grblFilteredCmds.size() > 0)
+            {
+                msg = QString("Filtered %1 commands:").arg(QString::number(grblFilteredCmds.size()));
+                emit sendMsg(msg);
+                emit addList(msg);
+
+                foreach(QString errItem, grblFilteredCmds)
+                {
+                    emit sendMsg(errItem);
+                }
+                emit addListFull(grblFilteredCmds);
+            }
         }
         else
         {
             msg = "Process interrupted.";
+            emit sendMsg(msg);
+            emit addList(msg);
         }
-
-        emit sendMsg(msg);
-        emit addList(msg);
     }
 
     pollPosWaitForIdle(true);
@@ -1070,8 +1153,9 @@ QString GCode::removeUnsupportedCommands(QString line)
                 tmp.append(s).append(" ");
             else
             {
-                QString msg(QString("Removing unsupported G command '%1'").arg(s));
+                QString msg(QString("Removed unsupported G command '%1'").arg(s));
                 warn("%s", msg.toLocal8Bit().constData());
+                grblFilteredCmds.append(msg);
                 emit addList(msg);
             }
         }
@@ -1082,8 +1166,9 @@ QString GCode::removeUnsupportedCommands(QString line)
                 tmp.append(s).append(" ");
             else
             {
-                QString msg(QString("Removing unsupported M command '%1'").arg(s));
+                QString msg(QString("Removed unsupported M command '%1'").arg(s));
                 warn("%s", msg.toLocal8Bit().constData());
+                grblFilteredCmds.append(msg);
                 emit addList(msg);
             }
         }
@@ -1099,13 +1184,153 @@ QString GCode::removeUnsupportedCommands(QString line)
         }
         else
         {
-            QString msg(QString("Removing unsupported command '%1'").arg(s));
+            QString msg(QString("Removed unsupported command '%1'").arg(s));
             warn("%s", msg.toLocal8Bit().constData());
+            grblFilteredCmds.append(msg);
             emit addList(msg);
         }
     }
 
     return tmp.trimmed();
+}
+
+QString GCode::reducePrecision(QString line)
+{
+    // first remove all spaces to determine what are line length is
+    QStringList components = line.split(" ", QString::SkipEmptyParts);
+    QString result;
+    foreach(QString token, components)
+    {
+        result.append(token);
+    }
+
+    if (result.length() == 0)
+        return line;// nothing to do
+
+    if (!result.at(0).isLetter())
+        return line;// leave as-is if not a command
+
+    // find first comment and eliminate
+    int pos = result.indexOf('(');
+    if (pos >= 0)
+        result = result.left(pos);
+
+    int charsToRemove = result.length() - controlParams.grblLineBufferLen;
+
+    if (charsToRemove > 0)
+    {
+        // ok need to do something with precision
+        // split apart based on letter
+        pos = 0;
+        components.clear();
+        int i;
+        for (i = 1; i < result.length(); i++)
+        {
+            if (result.at(i).isLetter())
+            {
+                components.append(result.mid(pos, i - pos));
+                pos = i;
+            }
+        }
+
+        if (pos == 0)
+        {
+            // we get here if only one command
+            components.append(result);
+        }
+        else
+        {
+            // add last item
+            components.append(result.mid(pos, i));
+        }
+
+        QList<DecimalFilter> items;
+        foreach (QString tmp, components)
+        {
+            items.append(DecimalFilter(tmp));
+        }
+
+        int totalDecCount = 0;
+        int eligibleArgumentCount = 0;
+        int largestDecCount = 0;
+        for (int j = 0; j < items.size(); j++)
+        {
+            DecimalFilter& item = items[j];
+            pos = item.token.indexOf('.');
+            if ((item.token.at(1).isDigit() || item.token.at(1) == '-' || item.token.at(1) == '.') && pos >= 0)
+            {
+                // candidate to modify
+                // count number of decimal places
+                int decPlaceCount = 0;
+                for (i = pos + 1; i < item.token.length(); i++, decPlaceCount++)
+                {
+                    if (!item.token.at(i).isDigit())
+                        break;
+                }
+
+                // skip commands that have a single decimal place
+                if (decPlaceCount > 1)
+                {
+                    item.decimals = decPlaceCount;
+                    totalDecCount += decPlaceCount - 1;// leave at least the last decimal place
+                    eligibleArgumentCount++;
+                    if (decPlaceCount > largestDecCount)
+                        largestDecCount = decPlaceCount;
+                }
+            }
+        }
+
+        bool failRemoveSufficientDecimals = false;
+        if (totalDecCount < charsToRemove)
+        {
+            // remove as many as possible, then grbl will truncate
+            charsToRemove = totalDecCount;
+            failRemoveSufficientDecimals = true;
+        }
+
+        if (eligibleArgumentCount > 0)
+        {
+            for (int k = largestDecCount; k > 1 && charsToRemove > 0; k--)
+            {
+                for (int j = 0; j < items.size() && charsToRemove > 0; j++)
+                {
+                    DecimalFilter& item = items[j];
+                    if (item.decimals == k)
+                    {
+                        item.token.chop(1);
+                        item.decimals--;
+                        charsToRemove--;
+                    }
+                }
+            }
+
+            //chk.clear();
+            //chk.append("CORRECTED:");
+            result.clear();
+            foreach (DecimalFilter item, items)
+            {
+                result.append(item.token);
+
+                //chk.append("[");
+                //chk.append(item.token);
+                //chk.append("]");
+            }
+            //diag(chk.toLocal8Bit().constData());
+
+            err("Unable to remove enough decimal places for command (will be truncated): %s", line.toLocal8Bit().constData());
+
+            QString msg;
+            if (failRemoveSufficientDecimals)
+                msg = QString("Error, insufficent reduction '%1'").arg(result);
+            else
+                msg = QString("Precision reduced '%1'").arg(result);
+
+            emit addList(msg);
+            emit sendMsg(msg);
+        }
+    }
+
+    return result;
 }
 
 bool GCode::isGCommandValid(float value)
@@ -1178,7 +1403,7 @@ QStringList GCode::doZRateLimit(QString inputLine, QString& msg, bool& xyRateSet
                 f = s;
 
                 double value = s.mid(1,-1).toDouble();
-                if (value > zRateLimitAmount)
+                if (value > controlParams.zRateLimitAmount)
                     inLimit = true;
             }
             else if (s.at(0) == 'X')
@@ -1213,9 +1438,9 @@ QStringList GCode::doZRateLimit(QString inputLine, QString& msg, bool& xyRateSet
                 else if (s.at(0) == 'F')
                 {
                     double value = s.mid(1,-1).toDouble();
-                    if (value > zRateLimitAmount)
+                    if (value > controlParams.zRateLimitAmount)
                     {
-                        line1.append("F").append(QString::number(zRateLimitAmount));
+                        line1.append("F").append(QString::number(controlParams.zRateLimitAmount));
                         didLimit = true;
                     }
                     else
@@ -1248,9 +1473,9 @@ QStringList GCode::doZRateLimit(QString inputLine, QString& msg, bool& xyRateSet
                 else if (s.at(0) == 'F')
                 {
                     double value = s.mid(1,-1).toDouble();
-                    if (value > zRateLimitAmount)
+                    if (value > controlParams.zRateLimitAmount)
                     {
-                        line1.append("F").append(QString::number(zRateLimitAmount));
+                        line1.append("F").append(QString::number(controlParams.zRateLimitAmount));
                         didLimit = true;
                     }
                     else
@@ -1273,7 +1498,7 @@ QStringList GCode::doZRateLimit(QString inputLine, QString& msg, bool& xyRateSet
 
         if (!foundFeed)
         {
-            line1.append("F").append(QString::number(zRateLimitAmount));
+            line1.append("F").append(QString::number(controlParams.zRateLimitAmount));
             didLimit = true;
         }
 
@@ -1290,7 +1515,7 @@ QStringList GCode::doZRateLimit(QString inputLine, QString& msg, bool& xyRateSet
             else
             {
                 msg = QString("Z-Rate Limit: [%1]=>[%2,%3]").arg(inputLine).arg(line1).arg(line2);
-                line2.append(QString(" F").append(QString::number(xyRateAmount)));
+                line2.append(QString(" F").append(QString::number(controlParams.xyRateAmount)));
             }
         }
 
@@ -1332,7 +1557,7 @@ QStringList GCode::doZRateLimit(QString inputLine, QString& msg, bool& xyRateSet
             if (!gotF)
             {
                 QString line = inputLine;
-                line.append(QString(" F").append(QString::number(xyRateAmount)));
+                line.append(QString(" F").append(QString::number(controlParams.xyRateAmount)));
                 msg = QString("XY-Rate Limit FIX: [%1]=>[%2]").arg(inputLine).arg(line);
                 list.append(line);
             }
@@ -1410,7 +1635,7 @@ QString GCode::getMoveAmountFromString(QString prefix, QString item)
     return "";
 }
 
-void GCode::axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj)
+void GCode::axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj, int sZC)
 {
     if (inv)
     {
@@ -1422,10 +1647,13 @@ void GCode::axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj)
 
     if (axis == 'Z')
     {
-        cmd.append(" F").append(QString::number(zJogRate));
+        cmd.append(" F").append(QString::number(controlParams.zJogRate));
     }
 
     SendJog(cmd, absoluteAfterAxisAdj);
+
+    if (axis == 'Z')
+        sliderZCount = sZC;
 
     emit adjustedAxis();
 }
@@ -1451,19 +1679,17 @@ bool GCode::SendJog(QString cmd, bool absoluteAfterAxisAdj)
 }
 
 // settings change calls here
-void GCode::setResponseWait(int wt, double zj, bool useMm, bool zRL, double zRLAmount, double xyRAmount, bool useAggr, bool ffCommands)
+void GCode::setResponseWait(ControlParams controlParamsIn)
 {
-    waitTime = wt;
-    zJogRate = zj;
-    zRateLimit = zRL;
-    zRateLimitAmount = zRLAmount;
-    xyRateAmount = xyRAmount;
-    useAggressivePreload = useAggr;
-    filterFileCommands = ffCommands;
+    bool oldMm = controlParams.useMm;
 
-    if ((userSetMmMode != useMm) && isPortOpen() && doubleDollarFormat)
+    controlParams = controlParamsIn;
+
+    controlParams.useMm = oldMm;
+
+    if ((oldMm != controlParamsIn.useMm) && isPortOpen() && doubleDollarFormat)
     {
-        if (useMm)
+        if (controlParamsIn.useMm)
         {
             setConfigureMmMode(true);
         }
@@ -1473,9 +1699,9 @@ void GCode::setResponseWait(int wt, double zj, bool useMm, bool zRL, double zRLA
         }
     }
 
-    userSetMmMode = useMm;
+    controlParams.useMm = controlParamsIn.useMm;
 
-    setUnitsTypeDisplay(useMm);
+    setUnitsTypeDisplay(controlParams.useMm);
 }
 
 int GCode::getSettingsItemCount()
@@ -1490,7 +1716,7 @@ void GCode::checkAndSetCorrectMeasurementUnits()
 
     if (incorrectMeasurementUnits)
     {
-        if (userSetMmMode)
+        if (controlParams.useMm)
         {
             emit addList("Options specify use mm but Grbl parser set for inches. Fixing.");
             setConfigureMmMode(true);
@@ -1509,7 +1735,7 @@ void GCode::checkAndSetCorrectMeasurementUnits()
 
         if (incorrectLcdDisplayUnits)
         {
-            if (userSetMmMode)
+            if (controlParams.useMm)
             {
                 emit addList("Options specify use mm but Grbl reporting set for inches. Fixing.");
                 setConfigureMmMode(false);
@@ -1526,7 +1752,7 @@ void GCode::checkAndSetCorrectMeasurementUnits()
 
 void GCode::setOldFormatMeasurementUnitControl()
 {
-    if (userSetMmMode)
+    if (controlParams.useMm)
         sendGcodeLocal("G21");
     else
         sendGcodeLocal("G20");

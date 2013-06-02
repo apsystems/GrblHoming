@@ -30,13 +30,18 @@
 #define SETTINGS_Z_RATE_LIMIT               "zRateLimit"
 #define SETTINGS_Z_RATE_LIMIT_AMOUNT        "zRateLimitAmount"
 #define SETTINGS_XY_RATE_AMOUNT             "xyRateAmount"
-#define SETTINGS_FILTER_FILE_COMMANDS       "filterFileCommands"
 
 #define SETTINGS_FILE_OPEN_DIALOG_STATE     "fileopendialogstate"
 #define SETTINGS_NAME_FILTER                "namefilter"
 #define SETTINGS_DIRECTORY                  "directory"
 #define SETTINGS_PORT                       "port"
+#define SETTINGS_BAUD                       "baud"
 
+#define SETTINGS_PROMPTED_AGGR_PRELOAD      "promptedAggrPreload"
+
+#define SETTINGS_FILTER_FILE_COMMANDS       "filterFileCommands"
+#define SETTINGS_REDUCE_PREC_FOR_LONG_LINES "reducePrecisionForLongLines"
+#define SETTINGS_GRBL_LINE_BUFFER_LEN       "grblLineBufferLen"
 
 
 namespace Ui {

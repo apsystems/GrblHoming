@@ -29,7 +29,8 @@ SOURCES += main.cpp\
     lineitem.cpp \
     itemtobase.cpp \
     arcitem.cpp \
-    pointitem.cpp
+    pointitem.cpp \
+    controlparams.cpp
 
 HEADERS  += mainwindow.h \
     rs232.h \
@@ -50,7 +51,8 @@ HEADERS  += mainwindow.h \
     itemtobase.h \
     arcitem.h \
     pointitem.h \
-    termiosext.h
+    termiosext.h \
+    controlparams.h
 
 FORMS    += mainwindow.ui \
     options.ui \

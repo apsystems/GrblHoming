@@ -20,6 +20,40 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.4
+Enhancements
+- Z-axis slider now allows rapid control of Z-axis positioning. This feature is still
+  being evaluated for proper behavior due to some user-interface issues.
+  If you run into trouble, please report a bug.
+- All axis control buttons have been permanently enabled regardless of whether or not an
+  axis command is in progress - this allows more rapid updating. Note - there is no error
+  checking for the case of entering too many commands for the Grbl buffer. This is unlikely
+  but possible.
+- Now supports setting of baud rates from 9600 to 115200
+- Aggressive preload enabled is now the default. If the user upgraded from an older 
+  Grbl Controller and had it disabled, a popup will warn them that it is being enabled. 
+  They still have the option to disable, if desired
+- Logging is turned on by default (only for new installs)
+- All detected errors are collected and displayed after a file is run in the status view
+- If filtering unsupported commands, all commands filtered out are listed after the file
+  is run.
+- Logging now gives the line number of each command sent from the file and the corresponding
+  ok or error also contains the line number.
+- An option has been provided to reduce the precision of lines that exceed Grbl's line buffer,
+  which by default is 50 characters. The code removes the arguments with the greatest precision
+  first and ending with at least one decimal place of precision. Errors are generated if it 
+  cannot remove sufficient precision for the available buffer space. The buffer size on Grbl
+  is configurable in the options, as older Grbls have 50 characters and newer have 70.
+
+Bug Fixes
+- If Grbl stops responding (waiting for an ok), Soft Reset Grbl now functions correctly 
+  (so you can soft reset without having to restart Grbl Controller). This affects aggressive
+  preload mode only.
+- Commands to start/stop coolant coupled with dwell commands and aggressive preload cause
+  Grbl's modal logic to stop sending OK responses (on purpose). This was solved by waiting
+  for the OK of the coolant off before sending additional commands. It is not clear whether
+  this fixes all possible such modal problems, so use carefully and report any anomalies.
+
 V3.3.9
 Enhancement
 - We now are able to remember and restore ports that are not visible to QextSerialEnumerator

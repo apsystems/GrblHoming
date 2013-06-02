@@ -14,12 +14,36 @@ RS232::RS232()
 {
 }
 
-bool RS232::OpenComport(QString commPortStr)
+bool RS232::OpenComport(QString commPortStr, QString baudRate)
 {
     if (port != NULL)
         CloseComport();
 
-    PortSettings settings = {BAUD9600, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
+    bool ok;
+    BaudRateType baud = (BaudRateType)baudRate.toInt(&ok);
+    if (!ok)
+    {
+        baud = BAUD9600;
+    }
+    else
+    {
+        int possibleBaudRates[] = {BAUD110,BAUD300,BAUD600,BAUD1200,BAUD2400,BAUD4800,BAUD9600,BAUD19200,BAUD38400,BAUD57600,BAUD115200};
+        int pbrCount = sizeof possibleBaudRates / sizeof possibleBaudRates[0];
+
+        bool found = false;
+        for (int i = 0; i < pbrCount; i++)
+        {
+            if (baud == possibleBaudRates[i])
+            {
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            baud = BAUD9600;
+    }
+
+    PortSettings settings = {baud, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
 
     port = new QextSerialPort(commPortStr, settings, QextSerialPort::Polling);
 
