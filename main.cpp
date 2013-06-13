@@ -6,9 +6,13 @@
  * GPL License (see LICENSE file)
  * Software is provided AS-IS
  ****************************************************************/
-
-#include <QtGui/QApplication>
 #include "mainwindow.h"
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
+#include <QtGui/QApplication>
+#else
+#include <QtWidgets/QApplication>
+#endif
+
 
 enum GC_LOG_TYPES
 {

@@ -28,7 +28,11 @@ GrblDialog::GrblDialog(QWidget *parent, GCode *gc) :
     QStringList labels;
     labels << tr("Value") << tr("Item");
     ui->table->setHorizontalHeaderLabels(labels);
+#if QT_VERSION < QT_VERSION_CHECK(5, 0, 0)
     ui->table->horizontalHeader()->setResizeMode(0, QHeaderView::Stretch);
+#else
+    ui->table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+#endif
     ui->table->verticalHeader()->hide();
     ui->table->setSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding);
     ui->table->setShowGrid(true);
