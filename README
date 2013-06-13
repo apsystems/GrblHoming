@@ -20,6 +20,12 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.4.1
+Code sync
+- Fixes to code now allows code to compile under Qt5 without error and also resolves 
+  some localization issues. Continues to properly compile under Qt4 also. No normally 
+  noticable functional differences.
+
 V3.4
 Enhancements
 - Z-axis slider now allows rapid control of Z-axis positioning. This feature is still
