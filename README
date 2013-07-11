@@ -20,6 +20,12 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.4.2
+Bug fix
+- If a gcode command line is an arc with X,Y,Z and z-rate limiting enabled, fixed to
+  properly split the z rate to not use the G2 command and use G1 instead as grbl
+  was generating an error with the G2.
+
 V3.4.1
 Code sync
 - Fixes to code now allows code to compile under Qt5 without error and also resolves 

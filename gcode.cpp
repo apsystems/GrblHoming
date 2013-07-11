@@ -1463,7 +1463,7 @@ QStringList GCode::doZRateLimit(QString inputLine, QString& msg, bool& xyRateSet
                 if (s.at(0) == 'G')
                 {
                     int value = s.mid(1,-1).toInt();
-                    if (value == 0)
+                    if (value != 1)
                         line1.append("G1").append(" ");
                     else
                         line1.append(s).append(" ");

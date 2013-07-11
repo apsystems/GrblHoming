@@ -1,9 +1,8 @@
 This file contains enhancements the developer and user community would like to see:
 
 
-Planned for 3.4.1:
-- Qt5 builds
-
+Planned for 3.4.x
+- Bug fixes
 Planned for 3.5:
 - (What is the problem here? Run is shown, then Idle when stopped) Detect machine state at end of run and display it properly (i.e. "transitioning" when it is still moving)
 - Every second or so, if not scrolled to bottom, scroll to bottom of status
