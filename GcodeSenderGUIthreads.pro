@@ -52,7 +52,8 @@ HEADERS  += mainwindow.h \
     arcitem.h \
     pointitem.h \
     termiosext.h \
-    controlparams.h
+    controlparams.h \
+    version.h
 
 FORMS    += mainwindow.ui \
     options.ui \

@@ -20,6 +20,15 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.4.3
+Bug fix
+- Unsupported G43/G44 commands include following Z command which causes problems when 
+  left standalone. The entire line must be removed.
+- Now treat M2 and M30 as unsupported as they cause grbl lockup when using aggressive
+  preloading.
+- Moved program version define into its own header file so fewer files need recompiling
+  with a version change.  
+  
 V3.4.2
 Bug fix
 - If a gcode command line is an arc with X,Y,Z and z-rate limiting enabled, fixed to

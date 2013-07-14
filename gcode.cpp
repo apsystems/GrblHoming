@@ -1144,15 +1144,28 @@ QString GCode::removeUnsupportedCommands(QString line)
     QStringList components = line.split(" ", QString::SkipEmptyParts);
     QString tmp;
     QString s;
+    QString following;
+    bool toEndOfLine = false;
     foreach (s, components)
     {
+        if (toEndOfLine)
+        {
+            QString msg(QString("Removed unsupported command '%1' part of '%2'").arg(s).arg(following));
+            warn("%s", msg.toLocal8Bit().constData());
+            grblFilteredCmds.append(msg);
+            emit addList(msg);
+            continue;
+        }
+
         if (s.at(0) == 'G')
         {
             float value = s.mid(1,-1).toFloat();
-            if (isGCommandValid(value))
+            if (isGCommandValid(value, toEndOfLine))
                 tmp.append(s).append(" ");
             else
             {
+                if (toEndOfLine)
+                    following = s;
                 QString msg(QString("Removed unsupported G command '%1'").arg(s));
                 warn("%s", msg.toLocal8Bit().constData());
                 grblFilteredCmds.append(msg);
@@ -1333,8 +1346,9 @@ QString GCode::reducePrecision(QString line)
     return result;
 }
 
-bool GCode::isGCommandValid(float value)
+bool GCode::isGCommandValid(float value, bool& toEndOfLine)
 {
+    toEndOfLine = false;
     // supported values obtained from https://github.com/grbl/grbl/wiki
     const static float supported[] =
     {
@@ -1350,15 +1364,24 @@ bool GCode::isGCommandValid(float value)
         if (value == supported[i])
             return true;
     }
+
+    if (value == 43 || value == 44)
+    {
+        toEndOfLine = true;
+    }
     return false;
 }
 
 bool GCode::isMCommandValid(float value)
 {
     // supported values obtained from https://github.com/grbl/grbl/wiki
+
+    // NOTE: M2 and M30 are supported but they cause occasional grbl lockups
+    // and thus have been removed from the supported list. No harm is caused
+    // by their removal.
     const static float supported[] =
     {
-        0,    2,    3,    4,    5,    8,    9,    30
+        0,    3,    4,    5,    8,    9
     };
 
     int len = sizeof(supported) / sizeof(float);

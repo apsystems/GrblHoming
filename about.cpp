@@ -8,6 +8,7 @@
  ****************************************************************/
 
 #include "about.h"
+#include "version.h"
 #include "ui_about.h"
 
 About::About(QWidget *parent) :

@@ -8,6 +8,7 @@
  ****************************************************************/
 
 #include "mainwindow.h"
+#include "version.h"
 #include "ui_mainwindow.h"
 
 extern Log4Qt::FileAppender *p_fappender;

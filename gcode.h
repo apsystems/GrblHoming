@@ -118,7 +118,7 @@ private:
     bool sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec, bool aggressive, int currLine = 0);
     QString removeUnsupportedCommands(QString line);
     QString reducePrecision(QString line);
-    bool isGCommandValid(float value);
+    bool isGCommandValid(float value, bool& toEndOfLine);
     bool isMCommandValid(float value);
     bool isPortOpen();
     QString getMoveAmountFromString(QString prefix, QString item);
