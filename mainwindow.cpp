@@ -19,7 +19,7 @@ MainWindow::MainWindow(QWidget *parent) :
     absoluteAfterAxisAdj(false),
     checkLogWrite(false),
     sliderPressed(false),
-    sliderTo(0),
+    sliderTo(0.0),
     sliderZCount(0)
 {
     // Setup our application information to be used by QSettings
@@ -256,21 +256,33 @@ void MainWindow::begin()
 {
     //receiveList("Starting File Send.");
     resetProgress();
-
-    ui->tabAxisVisualizer->setEnabled(false);
-    ui->groupBoxManualGCode->setEnabled(false);
-
-    ui->Begin->setEnabled(false);
-    ui->Stop->setEnabled(true);
-    ui->progressFileSend->setEnabled(true);
-    ui->outputRuntime->setEnabled(true);
-    ui->labelRuntime->setEnabled(true);
-    ui->openFile->setEnabled(false);
-    ui->btnGRBL->setEnabled(false);
-    ui->btnUnlockGrbl->setEnabled(false);
-    ui->btnSetHome->setEnabled(false);
-    ui->btnGoHomeSafe->setEnabled(false);
-    emit sendFile(ui->filePath->text());
+    int ret = QMessageBox::No;
+    if((ui->lcdWorkNumberX->value()!=0)||(ui->lcdWorkNumberY->value()!=0)||(ui->lcdWorkNumberZ->value()!=0))
+    {
+        QMessageBox msgBox;
+        msgBox.setText("Wish to \"zero position\" before beginning?");
+        msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No | QMessageBox::Cancel);
+        msgBox.setDefaultButton(QMessageBox::Yes);
+        ret = msgBox.exec();
+        if(ret ==QMessageBox::Yes)
+            setHome();
+    }
+    if(ret!=QMessageBox::Cancel)
+    {
+        ui->tabAxisVisualizer->setEnabled(false);
+        ui->groupBoxManualGCode->setEnabled(false);
+        ui->Begin->setEnabled(false);
+        ui->Stop->setEnabled(true);
+        ui->progressFileSend->setEnabled(true);
+        ui->outputRuntime->setEnabled(true);
+        ui->labelRuntime->setEnabled(true);
+        ui->openFile->setEnabled(false);
+        ui->btnGRBL->setEnabled(false);
+        ui->btnUnlockGrbl->setEnabled(false);
+        ui->btnSetHome->setEnabled(false);
+        ui->btnGoHomeSafe->setEnabled(false);
+        emit sendFile(ui->filePath->text());
+    }
 }
 
 void MainWindow::stop()
@@ -838,6 +850,7 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
     QString sinvX = settings.value(SETTINGS_INVERSE_X, "false").value<QString>();
     QString sinvY = settings.value(SETTINGS_INVERSE_Y, "false").value<QString>();
     QString sinvZ = settings.value(SETTINGS_INVERSE_Z, "false").value<QString>();
+    //QString smm = settings.value(SETTINGS_USE_MM_FOR_MANUAL_CMDS,"false").value<QString>();
 
     QString sdbgLog = settings.value(SETTINGS_ENABLE_DEBUG_LOG, "true").value<QString>();
     g_enableDebugLog.set(sdbgLog == "true");
@@ -1103,29 +1116,48 @@ void MainWindow::zJogSliderDisplay(int pos)
     pos -= CENTER_POS;
 
     if (pos > 0)
-        str.sprintf("+%d", pos);
+        if(controlParams.useMm)
+            str.sprintf("+%d", pos);
+        else
+            str.sprintf("+%.1f",(double)pos/10);
     else if (pos < 0)
-        str.sprintf("%d", pos);
+        if(controlParams.useMm)
+            str.sprintf("%d", pos);
+        else
+            str.sprintf("%.1f", (double)pos/10);
     else
         str = "0";
 
     ui->currentZJogSliderDelta->setText(str);
 
-    int newPos = pos + sliderTo;
-
+    double newPos;
     QString to;
-    to.sprintf("%d", newPos);
+    if(controlParams.useMm)
+        newPos = pos + sliderTo;
+    else
+        newPos = (double)pos/10+sliderTo;
+
+    if(controlParams.useMm)
+        to.sprintf("%d", newPos);
+    else
+        to.sprintf("%.1f", newPos);
 
     if (sliderPressed)
     {
         ui->resultingZJogSliderPosition->setText(to);
-        info("Usr chg: pos=%d new=%d\n", pos, newPos);
+        if(controlParams.useMm)
+            info("Usr chg: pos=%d new=%d\n", pos, newPos);
+        else
+            info("Usr chg: pos=%.1f new=%.1f\n", (double)pos/10, newPos);
     }
     else
     {
         ui->verticalSliderZJog->setSliderPosition(CENTER_POS);
         ui->currentZJogSliderDelta->setText("0");
-        info("Usr chg no slider: %d\n", pos);
+        if(controlParams.useMm)
+            info("Usr chg no slider: %d\n", pos);
+        else
+            info("Usr chg no slider: %.1f\n", (double) pos/10);
     }
 }
 
@@ -1158,9 +1190,15 @@ void MainWindow::zJogSliderReleased()
 
         if (value != 0)
         {
-            sliderTo += value;
+            if(controlParams.useMm)
+                sliderTo += value;
+            else
+                sliderTo += (double)value/10;
             float setTo = value;
-            emit axisAdj('Z', setTo, invZ, absoluteAfterAxisAdj, sliderZCount++);
+            if(controlParams.useMm)
+                emit axisAdj('Z', setTo, invZ, absoluteAfterAxisAdj, sliderZCount++);
+            else
+                emit axisAdj('Z', setTo/10, invZ, absoluteAfterAxisAdj, sliderZCount++);
         }
     }
 

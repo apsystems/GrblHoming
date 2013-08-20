@@ -9,6 +9,6 @@
 #ifndef VERSION_H
 #define VERSION_H
 
-#define GRBL_CONTROLLER_NAME_AND_VERSION    "Grbl Controller 3.4.3"
+#define GRBL_CONTROLLER_NAME_AND_VERSION    "Grbl Controller 3.4.4"
 
 #endif // VERSION_H

@@ -178,6 +178,7 @@ private:
     bool invX;
     bool invY;
     bool invZ;
+    bool mm;
     QString styleSheet;
     QString directory;
     QString nameFilter;
@@ -191,7 +192,7 @@ private:
     QTime scrollStatusTimer;
     QList<PosItem> posList;
     bool sliderPressed;
-    int sliderTo;
+    double sliderTo;
     int sliderZCount;
     bool promptedAggrPreload;
     ControlParams controlParams;
