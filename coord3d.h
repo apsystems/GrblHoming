@@ -13,6 +13,7 @@ public:
     float x;
     float y;
     float z;
+	float c;
     bool stoppedZ;
     int sliderZIndex;
 };

@@ -5,6 +5,10 @@ ItemToBase::ItemToBase(int index1)
 {
 }
 
+ItemToBase::~ItemToBase()
+{
+}
+
 void ItemToBase::setParams(double scale1, double height1, double offsetx1, double offsety1)
 {
     scale = scale1;

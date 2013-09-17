@@ -8,6 +8,7 @@ class ItemToBase
 {
 public:
     ItemToBase(int index);
+	virtual ~ItemToBase()  ;
 
     virtual void moveToFirst(QPainterPath& path) = 0;
     virtual void addToPath(QPainterPath& path) = 0;

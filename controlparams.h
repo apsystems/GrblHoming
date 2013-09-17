@@ -22,6 +22,7 @@ public:
     bool filterFileCommands;
     bool reducePrecision;
     int grblLineBufferLen;
+    bool useFourAxis;
 };
 
 #endif // CONTROLPARAMS_H

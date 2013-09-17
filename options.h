@@ -18,6 +18,7 @@
 
 #include "definitions.h"
 
+#define SETTINGS_INVERSE_C                  "inverse.c"
 #define SETTINGS_INVERSE_X                  "inverse.x"
 #define SETTINGS_INVERSE_Y                  "inverse.y"
 #define SETTINGS_INVERSE_Z                  "inverse.z"
@@ -30,6 +31,7 @@
 #define SETTINGS_Z_RATE_LIMIT               "zRateLimit"
 #define SETTINGS_Z_RATE_LIMIT_AMOUNT        "zRateLimitAmount"
 #define SETTINGS_XY_RATE_AMOUNT             "xyRateAmount"
+#define SETTINGS_FOUR_AXIS                  "fourAxis"
 
 #define SETTINGS_FILE_OPEN_DIALOG_STATE     "fileopendialogstate"
 #define SETTINGS_NAME_FILTER                "namefilter"
@@ -51,7 +53,7 @@ class Options;
 class Options : public QDialog
 {
     Q_OBJECT
-    
+
 public:
     explicit Options(QWidget *parent = 0);
     ~Options();
@@ -63,6 +65,7 @@ signals:
 private slots:
     void toggleUseMm(bool useMm);
     void toggleLimitZRate(bool limitZ);
+    void toggleFourAxis(bool four);
 
 private:
     Ui::Options *ui;

@@ -80,7 +80,7 @@ class MainWindow;
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
-    
+
 public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
@@ -96,7 +96,7 @@ signals:
     void shutdown();
     void sendGcode(QString line, bool recordResponseOnFail = false, int waitCount = SHORT_WAIT_SEC);
     void sendFile(QString path);
-    void gotoXYZ(QString line);
+    void gotoXYZC(QString line);
     void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj, int sliderZCount);
     void setResponseWait(ControlParams controlParams);
     void setProgress(int percent);
@@ -115,12 +115,14 @@ private slots:
     void decX();
     void decY();
     void decZ();
+	void decC();
+	void incC();
     void incX();
     void incY();
     void incZ();
     void setHome();
         //manual
-    void gotoXYZ();
+    void gotoXYZC();
         //send Gcode
     void begin();
     void openFile();
@@ -178,6 +180,10 @@ private:
     bool invX;
     bool invY;
     bool invZ;
+	bool invC;
+	/// for translation
+	QString open_button_text ;
+	QString close_button_text ;
     bool mm;
     QString styleSheet;
     QString directory;

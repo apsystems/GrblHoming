@@ -70,6 +70,7 @@ public:
     void setReset();
     void setShutdown();
     int getSettingsItemCount();
+	int getNumaxis();
 
     static void trimToEnd(QString& strline, QChar);
 
@@ -100,7 +101,7 @@ public slots:
     void sendGcode(QString line);
     void sendGcodeAndGetResult(int id, QString line);
     void sendFile(QString path);
-    void gotoXYZ(QString line);
+    void gotoXYZC(QString line);
     void axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj, int sliderZCount);
     void setResponseWait(ControlParams controlParams);
     void grblSetHome();
@@ -160,6 +161,7 @@ private:
 
     int sentI;
     int rcvdI;
+    int numaxis;
 };
 
 #endif // GCODE_H
