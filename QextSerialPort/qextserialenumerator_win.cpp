@@ -255,7 +255,9 @@ bool QextSerialEnumeratorPrivate::setUpNotifications_sys(bool setup)
     dbh.dbcc_size = sizeof(dbh);
     dbh.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
     // dbh.dbcc_classguid = GUID_DEVCLASS_PORTS; //Ignored in such case
-    DWORD flags = DEVICE_NOTIFY_WINDOW_HANDLE|DEVICE_NOTIFY_ALL_INTERFACE_CLASSES;
+    // zapmaker - mingw fails to compile this line!
+    //DWORD flags = DEVICE_NOTIFY_WINDOW_HANDLE|DEVICE_NOTIFY_ALL_INTERFACE_CLASSES;
+    DWORD flags = DEVICE_NOTIFY_WINDOW_HANDLE;
     if (::RegisterDeviceNotification((HWND)notificationWidget->winId(), &dbh, flags) == NULL) {
         QESP_WARNING() << "RegisterDeviceNotification failed:" << GetLastError();
         return false;
