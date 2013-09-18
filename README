@@ -20,6 +20,15 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.4.5
+Bug fix
+- When modifying the ui files for auto widget rescaling, broke a number of programmatically
+  greyed out widgets, mainly, you couldn't reopen the port after closing it. Now those are fixed.
+
+Enhancement
+- Incorporated LETARTARE's localization file for French so that it is possible to see
+  locale-specific text in the installed version of Grbl Controller (see trlocale subdir)
+
 V3.4.4
 Bug fix
 - Incorporated LETARTARE's 4-axis (C-axis) implementation - thanks! (Issues #29 and #34)
