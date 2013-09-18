@@ -62,12 +62,26 @@ int main(int argc, char *argv[])
 
     QApplication a(argc, argv);
 
-	QString locale = QLocale::system().name().section('_', 0, 0);
+    QString locale = QLocale::system().name().section('_', 0, 0);
+    //QString locale = "fr";
+    QString dir = QDir::currentPath() + "/../GrblHoming/trlocale";
+    QString file = QString("GrblController_") + locale;
 	QTranslator translator;
-    translator.load(QString("controleurcnc4_") + locale );
+    bool r = translator.load(file, dir);
+    if (!r)
+    {
+        dir = QDir::currentPath() + "/trlocale";
+        r = translator.load(file, dir);
+    }
+
     a.installTranslator(&translator);
 
+    QString xlatpath = QLibraryInfo::location(QLibraryInfo::TranslationsPath);
+    QTranslator qtTranslator;
+    r = qtTranslator.load("qt_" + locale + ".qm", xlatpath);
+    a.installTranslator(&qtTranslator);
     MainWindow w;
+
     w.show();
 
     int result = a.exec();

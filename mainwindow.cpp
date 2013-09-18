@@ -82,7 +82,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	connect(ui->DecCBtn,SIGNAL(clicked()),this,SLOT(decC()));
     connect(ui->IncCBtn,SIGNAL(clicked()),this,SLOT(incC()));
     connect(ui->btnSetHome,SIGNAL(clicked()),this,SLOT(setHome()));
-    connect(ui->Command->lineEdit(),SIGNAL(editingFinished()),this,SLOT(gotoXYZC()));
+    connect(ui->comboCommand->lineEdit(),SIGNAL(editingFinished()),this,SLOT(gotoXYZC()));
     connect(ui->Begin,SIGNAL(clicked()),this,SLOT(begin()));
     connect(ui->openFile,SIGNAL(clicked()),this,SLOT(openFile()));
     connect(ui->Stop,SIGNAL(clicked()),this,SLOT(stop()));
@@ -122,7 +122,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&gcode, SIGNAL(addListFull(QStringList)),this,SLOT(receiveListFull(QStringList)));
     connect(&gcode, SIGNAL(addListOut(QString)),this,SLOT(receiveListOut(QString)));
     connect(&gcode, SIGNAL(stopSending()), this, SLOT(stopSending()));
-   connect(&gcode, SIGNAL(setCommandText(QString)), ui->Command->lineEdit(), SLOT(setText(QString)));
+    connect(&gcode, SIGNAL(setCommandText(QString)), ui->comboCommand->lineEdit(), SLOT(setText(QString)));
     connect(&gcode, SIGNAL(setProgress(int)), ui->progressFileSend, SLOT(setValue(int)));
     connect(&gcode, SIGNAL(adjustedAxis()), this, SLOT(adjustedAxis()));
     connect(&gcode, SIGNAL(resetTimer(bool)), &timer, SLOT(resetTimer(bool)));
@@ -215,7 +215,8 @@ MainWindow::MainWindow(QWidget *parent) :
         ui->lblCJog->setEnabled(false);
     }
     ui->groupBoxSendFile->setEnabled(true);
-    ui->groupBoxManualGCode->setEnabled(false);
+    ui->comboCommand->setEnabled(false);
+    ui->labelCommand->setEnabled(false);
     ui->Begin->setEnabled(false);
     ui->Stop->setEnabled(false);
     ui->progressFileSend->setEnabled(false);
@@ -302,7 +303,8 @@ void MainWindow::begin()
     if(ret!=QMessageBox::Cancel)
     {
         ui->tabAxisVisualizer->setEnabled(false);
-        ui->groupBoxManualGCode->setEnabled(false);
+        ui->comboCommand->setEnabled(false);
+        ui->labelCommand->setEnabled(false);
         ui->Begin->setEnabled(false);
         ui->Stop->setEnabled(true);
         ui->progressFileSend->setEnabled(true);
@@ -357,7 +359,8 @@ void MainWindow::stopSending()
     ui->IncCBtn->setEnabled(controlParams.useFourAxis);
     ui->DecCBtn->setEnabled(controlParams.useFourAxis);
     ui->lblCJog->setEnabled(controlParams.useFourAxis);
-    ui->groupBoxManualGCode->setEnabled(true);
+    ui->comboCommand->setEnabled(true);
+    ui->labelCommand->setEnabled(true);
     ui->Begin->setEnabled(true);
     ui->Stop->setEnabled(false);
     ui->progressFileSend->setEnabled(false);
@@ -428,15 +431,16 @@ void MainWindow::openPortCtl(bool reopen)
         ui->progressFileSend->setEnabled(false);
         ui->outputRuntime->setEnabled(false);
         ui->labelRuntime->setEnabled(false);
-        ui->btnOpenPort->setEnabled(false);
+        //ui->btnOpenPort->setEnabled(false);
         ui->openFile->setEnabled(false);
 
         ui->tabAxisVisualizer->setEnabled(false);
         ui->groupBoxSendFile->setEnabled(false);
-        ui->groupBoxManualGCode->setEnabled(false);
-        ui->cmbPort->setEnabled(false);
-        ui->comboBoxBaudRate->setEnabled(false);
-        ui->btnOpenPort->setEnabled(false);
+        ui->comboCommand->setEnabled(false);
+        ui->labelCommand->setEnabled(false);
+        //ui->cmbPort->setEnabled(false);
+        //ui->comboBoxBaudRate->setEnabled(false);
+        //ui->btnOpenPort->setEnabled(false);
         ui->btnGRBL->setEnabled(false);
 
         // Send event to close the port
@@ -453,7 +457,8 @@ void MainWindow::portIsClosed(bool reopen)
 
     ui->tabAxisVisualizer->setEnabled(false);
     ui->groupBoxSendFile->setEnabled(false);
-    ui->groupBoxManualGCode->setEnabled(false);
+    ui->comboCommand->setEnabled(false);
+    ui->labelCommand->setEnabled(false);
     ui->cmbPort->setEnabled(true);
     ui->comboBoxBaudRate->setEnabled(true);
     ui->btnOpenPort->setEnabled(true);
@@ -483,7 +488,8 @@ void MainWindow::portIsOpen(bool sendCode)
 void MainWindow::adjustedAxis()
 {
     ui->tabAxisVisualizer->setEnabled(true);
-    ui->groupBoxManualGCode->setEnabled(true);
+    ui->comboCommand->setEnabled(true);
+    ui->labelCommand->setEnabled(true);
 
     if (ui->filePath->text().length() > 0)
         ui->Begin->setEnabled(true);
@@ -505,7 +511,8 @@ void MainWindow::adjustedAxis()
 void MainWindow::disableAllButtons()
 {
     //ui->tabAxisVisualizer->setEnabled(false);
-    ui->groupBoxManualGCode->setEnabled(false);
+    ui->comboCommand->setEnabled(false);
+    ui->labelCommand->setEnabled(false);
     ui->Begin->setEnabled(false);
     ui->Stop->setEnabled(false);
     ui->progressFileSend->setEnabled(false);
@@ -534,7 +541,8 @@ void MainWindow::enableGrblDialogButton()
     ui->DecCBtn->setEnabled(controlParams.useFourAxis);
     ui->lblCJog->setEnabled(controlParams.useFourAxis);
     ui->groupBoxSendFile->setEnabled(true);
-    ui->groupBoxManualGCode->setEnabled(true);
+    ui->comboCommand->setEnabled(true);
+    ui->labelCommand->setEnabled(true);
     ui->btnSetHome->setEnabled(true);
     ui->btnResetGrbl->setEnabled(true);
     ui->btnUnlockGrbl->setEnabled(true);
@@ -623,10 +631,10 @@ void MainWindow::getOptions()
 
 void MainWindow::gotoXYZC()
 {
-    if (ui->Command->lineEdit()->text().length() == 0)
+    if (ui->comboCommand->lineEdit()->text().length() == 0)
         return;
 
-    QString line = ui->Command->lineEdit()->text().append("\r");
+    QString line = ui->comboCommand->lineEdit()->text().append("\r");
 
     emit gotoXYZC(line);
 }
