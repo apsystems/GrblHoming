@@ -100,6 +100,6 @@ OTHER_FILES += \
     android/src/org/kde/necessitas/origo/QtApplication.java \
     android/version.xml
 
-# LETARTARE
 # Translations
-	TRANSLATIONS +=  trlocale/controleurcnc4_fr.ts
+	TRANSLATIONS += trlocale/GrblController_xx.ts
+	TRANSLATIONS += trlocale/GrblController_fr.ts

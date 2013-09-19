@@ -1120,7 +1120,7 @@
          </sizepolicy>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>2</number>
         </property>
         <widget class="QWidget" name="tabAxis">
          <attribute name="title">
@@ -1630,9 +1630,9 @@
           <property name="geometry">
            <rect>
             <x>170</x>
-            <y>20</y>
-            <width>111</width>
-            <height>25</height>
+            <y>30</y>
+            <width>131</width>
+            <height>41</height>
            </rect>
           </property>
           <property name="sizePolicy">

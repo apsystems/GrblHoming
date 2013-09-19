@@ -16,8 +16,10 @@ extern Log4Qt::FileAppender *p_fappender;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    open_button_text(tr(OPEN_BUTTON_TEXT)),
-    close_button_text(tr(CLOSE_BUTTON_TEXT)),
+   // open_button_text(tr(OPEN_BUTTON_TEXT)),
+   // close_button_text(tr(CLOSE_BUTTON_TEXT)),
+    open_button_text(tr("Open")),
+    close_button_text(tr("Close / Reset")),
     absoluteAfterAxisAdj(false),
     checkLogWrite(false),
     sliderPressed(false),
