@@ -16,7 +16,7 @@ GCode::GCode()
       incorrectMeasurementUnits(false), incorrectLcdDisplayUnits(false),
       maxZ(0), motionOccurred(false),
       sliderZCount(0),
-      numaxis(3)
+      numaxis(DEFAULT_AXIS_COUNT)
 {
     // use base class's timer - use it to capture random text from the controller
     startTimer(1000);
@@ -24,6 +24,8 @@ GCode::GCode()
 
 void GCode::openPort(QString commPortStr, QString baudRate)
 {
+    numaxis = controlParams.useFourAxis ? MAX_AXIS_COUNT : DEFAULT_AXIS_COUNT;
+
     clearToHome();
 
     currComPort = commPortStr;
@@ -101,7 +103,7 @@ void GCode::grblSetHome()
 {
     clearToHome();
 
-	if (numaxis == 4)
+    if (numaxis == MAX_AXIS_COUNT)
 		gotoXYZC("G92 x0 y0 z0 c0");
 	else
 		gotoXYZC("G92 x0 y0 z0");
@@ -128,7 +130,7 @@ void GCode::goToHome()
 
     gotoXYZC(QString("G0 z").append(zpos));
 
-	if (numaxis == 4)
+    if (numaxis == MAX_AXIS_COUNT)
 		gotoXYZC("G1 x0 y0 z0 c0");
 	else
 		gotoXYZC("G1 x0 y0 z0");
@@ -295,7 +297,7 @@ bool GCode::checkGrbl(const QString& result)
             {
                 int majorVer = list.at(1).toInt();
                 int minorVer = list.at(2).toInt();
-                char letter = 'a';
+                char letter = ' ';
                 if (list.size() == 4 && list.at(3).size() > 0)
                 {
                     letter = list.at(3).toLatin1().at(0);
@@ -669,7 +671,7 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
     QStringList listToSend;
     for (int i = 0; i < list.size(); i++)
     {
-        if (list.at(i).length() > 0 && list.at(i) != RESPONSE_OK && !sentReqForLocation)
+        if (list.at(i).length() > 0 && list.at(i) != RESPONSE_OK && !sentReqForLocation && !list.at(i).startsWith("MPos:["))
             listToSend.append(list.at(i));
     }
 
@@ -726,6 +728,7 @@ bool GCode::waitForStartupBanner(QString& result, int waitSec, bool failOnNoFoun
 
                         closePort(false);
                     }
+                    status = false;
                 }
                 else
                 {
@@ -824,8 +827,8 @@ void GCode::parseCoordinates(const QString& received, bool aggressive)
 	QRegExp rxWPos;
 	/// 3 axis
 	QString format("(-*\\d+\\.\\d+),(-*\\d+\\.\\d+)") ;
-	int maxaxis = 4, naxis ;
-	for (naxis = 3; naxis <= maxaxis; naxis++) {
+    int maxaxis = MAX_AXIS_COUNT, naxis ;
+    for (naxis = DEFAULT_AXIS_COUNT; naxis <= maxaxis; naxis++) {
 		if (!doubleDollarFormat)
 			captureCount = naxis ;
 		else
@@ -845,6 +848,25 @@ void GCode::parseCoordinates(const QString& received, bool aggressive)
 			break;
 	}
 	if (good) {  /// naxis contains number axis
+        if (numaxis <= DEFAULT_AXIS_COUNT)
+        {
+            if (naxis > DEFAULT_AXIS_COUNT)
+            {
+                QString msg = tr("Incorrect - extra axis present in hardware but options set for only 3 axes. Please fix options.");
+                emit addList(msg);
+                emit sendMsg(msg);
+            }
+        }
+        else
+        {
+            if (naxis <= DEFAULT_AXIS_COUNT)
+            {
+                QString msg = tr("Incorrect - extra axis not present in hardware but options set for > 3 axes. Please fix options.");
+                emit addList(msg);
+                emit sendMsg(msg);
+            }
+        }
+
 		numaxis = naxis;
 		QStringList list = rxStateMPos.capturedTexts();
 		int index = 1;
@@ -855,13 +877,13 @@ void GCode::parseCoordinates(const QString& received, bool aggressive)
 		machineCoord.x = list.at(index++).toFloat();
 		machineCoord.y = list.at(index++).toFloat();
 		machineCoord.z = list.at(index++).toFloat();
-		if (numaxis == 4)
+        if (numaxis == MAX_AXIS_COUNT)
 			machineCoord.c = list.at(index++).toFloat();
 		list = rxWPos.capturedTexts();
 		workCoord.x = list.at(1).toFloat();
 		workCoord.y = list.at(2).toFloat();
 		workCoord.z = list.at(3).toFloat();
-		if (numaxis == 4)
+        if (numaxis == MAX_AXIS_COUNT)
 			workCoord.c = list.at(4).toFloat();
 		if (state != "Run")
 			workCoord.stoppedZ = true;
@@ -869,14 +891,13 @@ void GCode::parseCoordinates(const QString& received, bool aggressive)
 			workCoord.stoppedZ = false;
 
 		workCoord.sliderZIndex = sliderZCount;
-		if (numaxis ==3 )
+        if (numaxis == DEFAULT_AXIS_COUNT)
 			diag(qPrintable(tr("Decoded: State:%s MPos: %f,%f,%f WPos: %f,%f,%f\n")),
 				 qPrintable(state),
 				 machineCoord.x, machineCoord.y, machineCoord.z,
 				 workCoord.x, workCoord.y, workCoord.z
 				 );
-		else
-		if (numaxis == 4)
+        else if (numaxis == MAX_AXIS_COUNT)
 			diag(qPrintable(tr("Decoded: State:%s MPos: %f,%f,%f,%f WPos: %f,%f,%f,%f\n")),
 				 qPrintable(state),
 				 machineCoord.x, machineCoord.y, machineCoord.z, machineCoord.c,
@@ -1228,6 +1249,7 @@ QString GCode::removeUnsupportedCommands(QString line)
             // skip line numbers
         }
         else if (s.at(0) == 'X' || s.at(0) == 'Y' || s.at(0) == 'Z'
+                 || s.at(0) == 'A' || s.at(0) == 'B' || s.at(0) == 'C'
                  || s.at(0) == 'I' || s.at(0) == 'J' || s.at(0) == 'K'
                  || s.at(0) == 'F' || s.at(0) == 'L' || s.at(0) == 'S')
         {
@@ -1660,7 +1682,7 @@ void GCode::gotoXYZC(QString line)
 
             item = getMoveAmountFromString("Z", list.at(i));
             moveDetected = item.length() > 0 ;
-			if (numaxis == 4)  {
+            if (numaxis == MAX_AXIS_COUNT)  {
 				item = getMoveAmountFromString("C", list.at(i));
 				moveDetected = item.length() > 0;
 			}
@@ -1758,7 +1780,7 @@ void GCode::setResponseWait(ControlParams controlParamsIn)
     }
 
     controlParams.useMm = controlParamsIn.useMm;
-    numaxis = controlParams.useFourAxis ? 4 : 3;
+    numaxis = controlParams.useFourAxis ? MAX_AXIS_COUNT : DEFAULT_AXIS_COUNT;
 
     setUnitsTypeDisplay(controlParams.useMm);
 }

@@ -156,6 +156,7 @@ private slots:
     void zJogSliderDisplay(int pos);
     void zJogSliderPressed();
     void zJogSliderReleased();
+    void doScroll();
 
 private:
     // enums
@@ -173,8 +174,9 @@ private:
     //QThread fileSenderThread;
     GCode gcode;
     QThread gcodeThread;
-    Timer timer;
-    QThread timerThread;
+
+    Timer runtimeTimer;
+    QThread runtimeTimerThread;
 
     //variables
     bool invX;
@@ -215,7 +217,6 @@ private:
     void refreshLcd();
     void lcdDisplay(char axis, bool workCoord, float value);
     void updateSettingsFromOptionDlg(QSettings& settings);
-    void doScroll();
     int computeListViewMinimumWidth(QAbstractItemView* view);
     void preProcessFile(QString filepath);
     bool processGCode(QString inputLine, double& x, double& y, double& i, double& j, bool& arc, bool& cw, bool& mm, int& g);

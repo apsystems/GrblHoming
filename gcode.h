@@ -31,6 +31,9 @@
 
 #define CTRL_X '\x18'
 
+#define DEFAULT_AXIS_COUNT      3
+#define MAX_AXIS_COUNT          4
+
 class CmdResponse
 {
 public:

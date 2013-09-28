@@ -48,7 +48,7 @@ MainWindow::MainWindow(QWidget *parent) :
     // you should NOT subclass from QThread and override run(), rather,
     // attach your QOBJECT to a thread and use events (signals/slots) to communicate.
     gcode.moveToThread(&gcodeThread);
-    timer.moveToThread(&timerThread);
+    runtimeTimer.moveToThread(&runtimeTimerThread);
 
     ui->lcdWorkNumberX->setDigitCount(8);
     ui->lcdMachNumberX->setDigitCount(8);
@@ -108,7 +108,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(axisAdj(char, float, bool, bool, int)), &gcode, SLOT(axisAdj(char, float, bool, bool, int)));
     connect(this, SIGNAL(setResponseWait(ControlParams)), &gcode, SLOT(setResponseWait(ControlParams)));
     connect(this, SIGNAL(shutdown()), &gcodeThread, SLOT(quit()));
-    connect(this, SIGNAL(shutdown()), &timerThread, SLOT(quit()));
+    connect(this, SIGNAL(shutdown()), &runtimeTimerThread, SLOT(quit()));
     connect(this, SIGNAL(setProgress(int)), ui->progressFileSend, SLOT(setValue(int)));
     connect(this, SIGNAL(setRuntime(QString)), ui->outputRuntime, SLOT(setText(QString)));
     connect(this, SIGNAL(sendSetHome()), &gcode, SLOT(grblSetHome()));
@@ -127,7 +127,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&gcode, SIGNAL(setCommandText(QString)), ui->comboCommand->lineEdit(), SLOT(setText(QString)));
     connect(&gcode, SIGNAL(setProgress(int)), ui->progressFileSend, SLOT(setValue(int)));
     connect(&gcode, SIGNAL(adjustedAxis()), this, SLOT(adjustedAxis()));
-    connect(&gcode, SIGNAL(resetTimer(bool)), &timer, SLOT(resetTimer(bool)));
+    connect(&gcode, SIGNAL(resetTimer(bool)), &runtimeTimer, SLOT(resetTimer(bool)));
     connect(&gcode, SIGNAL(enableGrblDialogButton()), this, SLOT(enableGrblDialogButton()));
     connect(&gcode, SIGNAL(updateCoordinates(Coord3D,Coord3D)), this, SLOT(updateCoordinates(Coord3D,Coord3D)));
     connect(&gcode, SIGNAL(setLastState(QString)), ui->outputLastState, SLOT(setText(QString)));
@@ -136,9 +136,13 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&gcode, SIGNAL(setLivePoint(double, double, bool)), ui->wgtVisualizer, SLOT(setLivePoint(double, double, bool)));
     connect(&gcode, SIGNAL(setVisCurrLine(int)), ui->wgtVisualizer, SLOT(setVisCurrLine(int)));
 
-    connect(&timer, SIGNAL(setRuntime(QString)), ui->outputRuntime, SLOT(setText(QString)));
+    connect(&runtimeTimer, SIGNAL(setRuntime(QString)), ui->outputRuntime, SLOT(setText(QString)));
 
-    timerThread.start();
+    QTimer *scrollTimer = new QTimer(this);
+    connect(scrollTimer, SIGNAL(timeout()), this, SLOT(doScroll()));
+    scrollTimer->start(1000);
+
+    runtimeTimerThread.start();
     gcodeThread.start();
 
     ui->comboStep->addItem("0.01");
@@ -474,7 +478,7 @@ void MainWindow::portIsClosed(bool reopen)
 
     if (reopen)
     {
-        receiveList("Resetting port to restart controller");
+        receiveList(tr("Resetting port to restart controller"));
         openPortCtl(false);
     }
 }
@@ -1061,8 +1065,6 @@ void MainWindow::addToStatusList(bool in, QString msg)
     ui->statusList->addItem(nMsg);
 
     status("%s", nMsg.toLocal8Bit().constData());
-
-    doScroll();
 }
 
 void MainWindow::addToStatusList(QStringList& list)
@@ -1086,8 +1088,6 @@ void MainWindow::addToStatusList(QStringList& list)
         return;
 
     ui->statusList->addItems(cleanList);
-
-    doScroll();
 }
 
 void MainWindow::doScroll()
@@ -1159,12 +1159,12 @@ void MainWindow::toggleSpindle()
     if (ui->SpindleOn->QAbstractButton::isChecked())
     {
         sendGcode("M03\r");
-        receiveList("Spindle On.");
+        receiveList(tr("Spindle On."));
     }
     else
     {
         sendGcode("M05\r");
-        receiveList("Spindle Off.");
+        receiveList(tr("Spindle Off."));
     }
 }
 

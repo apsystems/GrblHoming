@@ -20,6 +20,16 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.4.6
+Bug fix
+- Scrolling of content now completes each time. Previously there were conditions where 
+  auto-scrolling would fail and you would have to manually scroll to see some lines
+- Fixes to support 4-axis Mega2560 (tested with actual Mega2560 running 0.81 c-axis).
+  Includes fix to command filter to support A/B/C axis commands
+- Fixed minor issue where connecting with wrong baud rate can cause long delay before
+  you can again control the Open/Close button
+- Incorporated more translations from LETARTARE
+
 V3.4.5
 Bug fix
 - When modifying the ui files for auto widget rescaling, broke a number of programmatically
