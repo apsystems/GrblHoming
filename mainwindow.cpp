@@ -138,9 +138,12 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(&runtimeTimer, SIGNAL(setRuntime(QString)), ui->outputRuntime, SLOT(setText(QString)));
 
+    connect(ui->statusList->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)), ui->statusList, SLOT(scrollToBottom()));
+    /*
     QTimer *scrollTimer = new QTimer(this);
     connect(scrollTimer, SIGNAL(timeout()), this, SLOT(doScroll()));
     scrollTimer->start(1000);
+    */
 
     runtimeTimerThread.start();
     gcodeThread.start();
@@ -292,6 +295,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
 
 void MainWindow::begin()
 {
+    if (ui->tabAxisVisualizer->currentIndex() != TAB_VISUALIZER_INDEX)
+    {
+        emit ui->tabAxisVisualizer->setCurrentIndex(TAB_VISUALIZER_INDEX);
+    }
+
     //receiveList("Starting File Send.");
     resetProgress();
     int ret = QMessageBox::No;

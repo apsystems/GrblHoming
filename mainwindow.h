@@ -34,6 +34,7 @@
 
 #define TAB_AXIS_INDEX          0
 #define TAB_VISUALIZER_INDEX    1
+#define TAB_ADVANCED_INDEX      2
 
 #define CENTER_POS              40
 
