@@ -17,6 +17,7 @@
 #include <QSettings>
 #include <QCloseEvent>
 #include <QItemDelegate>
+#include <QScrollBar>
 #include <QListView>
 #include "about.h"
 #include "definitions.h"
@@ -158,6 +159,8 @@ private slots:
     void zJogSliderPressed();
     void zJogSliderReleased();
     void doScroll();
+    void statusSliderPressed();
+    void statusSliderReleased();
 
 private:
     // enums
@@ -205,6 +208,9 @@ private:
     int sliderZCount;
     bool promptedAggrPreload;
     ControlParams controlParams;
+    QTimer *scrollTimer;
+    bool scrollRequireMove;
+    bool scrollPressed;
 
     //methods
     int SendJog(QString strline);

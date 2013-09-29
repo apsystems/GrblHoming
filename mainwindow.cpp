@@ -24,7 +24,8 @@ MainWindow::MainWindow(QWidget *parent) :
     checkLogWrite(false),
     sliderPressed(false),
     sliderTo(0.0),
-    sliderZCount(0)
+    sliderZCount(0),
+    scrollRequireMove(true), scrollPressed(false)
 {
     // Setup our application information to be used by QSettings
     QCoreApplication::setOrganizationName(COMPANY_NAME);
@@ -138,12 +139,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(&runtimeTimer, SIGNAL(setRuntime(QString)), ui->outputRuntime, SLOT(setText(QString)));
 
-    connect(ui->statusList->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)), ui->statusList, SLOT(scrollToBottom()));
-    /*
-    QTimer *scrollTimer = new QTimer(this);
+	// This code generates too many messages and chokes operation on raspberry pi. Do not use.
+    //connect(ui->statusList->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)), ui->statusList, SLOT(scrollToBottom()));
+
+	// instead, use this one second timer-based approach
+    scrollTimer = new QTimer(this);
     connect(scrollTimer, SIGNAL(timeout()), this, SLOT(doScroll()));
     scrollTimer->start(1000);
-    */
+    connect(ui->statusList->verticalScrollBar(), SIGNAL(sliderPressed()), this, SLOT(statusSliderPressed()));
+    connect(ui->statusList->verticalScrollBar(), SIGNAL(sliderReleased()), this, SLOT(statusSliderReleased()));
 
     runtimeTimerThread.start();
     gcodeThread.start();
@@ -1073,6 +1077,7 @@ void MainWindow::addToStatusList(bool in, QString msg)
     ui->statusList->addItem(nMsg);
 
     status("%s", nMsg.toLocal8Bit().constData());
+    scrollRequireMove = true;
 }
 
 void MainWindow::addToStatusList(QStringList& list)
@@ -1096,16 +1101,28 @@ void MainWindow::addToStatusList(QStringList& list)
         return;
 
     ui->statusList->addItems(cleanList);
+    scrollRequireMove = true;
 }
 
 void MainWindow::doScroll()
 {
-    if (scrollStatusTimer.elapsed() > 1000)
+    if (!scrollPressed && scrollRequireMove && scrollStatusTimer.elapsed() > 1000)
     {
         ui->statusList->scrollToBottom();
         QApplication::processEvents();
         scrollStatusTimer.restart();
+        scrollRequireMove = false;
     }
+}
+
+void MainWindow::statusSliderPressed()
+{
+    scrollPressed = true;
+}
+
+void MainWindow::statusSliderReleased()
+{
+    scrollPressed = false;
 }
 
 /* testing optimizing scrollbar, doesn't work
