@@ -176,6 +176,30 @@ int RS232::SendBuf(const char *buf, int size)
 
     port->waitForBytesWritten(-1);// this usually doesn't do anything, but let's put it here in case
 
+#if 1
+    // On very fast PCs running Windows we have to slow down the sending of bytes to grbl
+    // because grbl loses bytes due to its interrupt service routine (ISR) taking too many clock
+    // cycles away from serial handling.
+    int result = 0;
+    for (int i = 0; i < size; i++)
+    {
+        result = port->write(&buf[i], 1);
+        if (result == 0)
+        {
+            err("Unable to write bytes to port probably due to outgoing queue full. Write data lost!");
+            break;
+        }
+        else if (result == -1)
+        {
+            err("Error writing to port. Write data lost!");
+            result = 0;
+            break;
+        }
+        SLEEP(10);
+    }
+
+#else
+    // DO NOT RUN THIS CODE
     int result = port->write(buf, size);
     if (result == 0)
     {
@@ -202,6 +226,7 @@ int RS232::SendBuf(const char *buf, int size)
         err("Error writing to port. Write data lost!");
         result = 0;
     }
+#endif
     return result;
 }
 

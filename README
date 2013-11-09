@@ -20,6 +20,16 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.5
+Bug fix
+- For very fast computers, they send characters with virtually no delay between which 
+  requires grbl to process the serial port as fast as it can. The problem is that 
+  grbl has an interrupt service routine that can slow down the processing it does
+  of incoming characters on its serial port. This causes lost characters in its input
+  buffer, which results in hung gcode file processing or errors. To fix, I have added
+  a slight delay (10ms) after sending every character. This has been confirmed to 
+  solve the lost character problem on grbl.
+  
 V3.4.6
 Bug fix
 - Scrolling of content now completes each time. Previously there were conditions where 

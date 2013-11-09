@@ -769,7 +769,7 @@ GRBL</translation>
         <translation>Fermer / Raz</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="250"/>
+        <location filename="../mainwindow.cpp" line="257"/>
         <source>You appear to have upgraded to the latest version of Grbl Controller. Please be aware that as of version 3.4 the default behavior of sending commands to Grbl has been changed to send them as fast as possible (Aggressive preload mode).
 
 Your settings have been changed to enable this mode. Why? Because it provides the most optimal use of Grbl and greatly reduces the time to finish a typical job.
@@ -784,37 +784,37 @@ Vos paramètres ont été modifiés pour permettre ce mode. Pourquoi? Parce qu&a
         <translation type="obsolete">Voulez-vous allez en postion zéro avant de démarrer ?</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="387"/>
+        <location filename="../mainwindow.cpp" line="399"/>
         <source>User clicked Port Open/Close</source>
         <translation>L&apos;utilisateur a cliqué Ouverture/Fermeture du port</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="481"/>
+        <location filename="../mainwindow.cpp" line="493"/>
         <source>Resetting port to restart controller</source>
         <translation>L&apos;initilisation du port initialise le contrôleur</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="302"/>
+        <location filename="../mainwindow.cpp" line="314"/>
         <source>Do you want to zero the displayed position before proceeding?</source>
         <translation>Voulez-vous afficher la postion zéro avant de démarrer ?</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="650"/>
+        <location filename="../mainwindow.cpp" line="662"/>
         <source>Open File</source>
         <translation>Charger un fichier</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="652"/>
+        <location filename="../mainwindow.cpp" line="664"/>
         <source>NC (*.nc);;All Files (*.*)</source>
         <translation>NC (*.nc);;Tous fichiers (*.*)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1162"/>
+        <location filename="../mainwindow.cpp" line="1187"/>
         <source>Spindle On.</source>
         <translation>Marche broche</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1167"/>
+        <location filename="../mainwindow.cpp" line="1192"/>
         <source>Spindle Off.</source>
         <translation>Arrêt broche</translation>
     </message>
