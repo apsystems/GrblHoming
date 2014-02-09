@@ -44,6 +44,7 @@
 #define SETTINGS_FILTER_FILE_COMMANDS       "filterFileCommands"
 #define SETTINGS_REDUCE_PREC_FOR_LONG_LINES "reducePrecisionForLongLines"
 #define SETTINGS_GRBL_LINE_BUFFER_LEN       "grblLineBufferLen"
+#define SETTINGS_CHAR_SEND_DELAY_MS         "charSendDelayMs"
 
 
 namespace Ui {

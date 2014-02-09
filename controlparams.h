@@ -23,6 +23,7 @@ public:
     bool reducePrecision;
     int grblLineBufferLen;
     bool useFourAxis;
+    int charSendDelayMs;
 };
 
 #endif // CONTROLPARAMS_H

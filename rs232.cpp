@@ -11,7 +11,7 @@
 #include <QObject>
 
 RS232::RS232()
-    : port(NULL), detectedEOL(0)
+    : port(NULL), detectedEOL(0), charSendDelayMs(DEFAULT_CHAR_SEND_DELAY_MS)
 {
 }
 
@@ -195,7 +195,11 @@ int RS232::SendBuf(const char *buf, int size)
             result = 0;
             break;
         }
-        SLEEP(10);
+
+        if (charSendDelayMs > 0)
+        {
+            SLEEP(charSendDelayMs);
+        }
     }
 
 #else
@@ -273,4 +277,9 @@ int RS232::bytesAvailable()
 {
     int n = port->bytesAvailable();
     return n;
+}
+
+void RS232::setCharSendDelayMs(int csd)
+{
+    charSendDelayMs = csd;
 }

@@ -25,7 +25,8 @@ MainWindow::MainWindow(QWidget *parent) :
     sliderPressed(false),
     sliderTo(0.0),
     sliderZCount(0),
-    scrollRequireMove(true), scrollPressed(false)
+    scrollRequireMove(true), scrollPressed(false),
+    queuedCommandsStarved(false), lastQueueCount(0), queuedCommandState(QCS_OK)
 {
     // Setup our application information to be used by QSettings
     QCoreApplication::setOrganizationName(COMPANY_NAME);
@@ -117,7 +118,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(this, SIGNAL(sendGrblUnlock()), &gcode, SLOT(sendGrblUnlock()));
     connect(this, SIGNAL(goToHome()), &gcode, SLOT(goToHome()));
     connect(this, SIGNAL(setItems(QList<PosItem>)), ui->wgtVisualizer, SLOT(setItems(QList<PosItem>)));
-
+    
     connect(&gcode, SIGNAL(sendMsg(QString)),this,SLOT(receiveMsg(QString)));
     connect(&gcode, SIGNAL(portIsClosed(bool)), this, SLOT(portIsClosed(bool)));
     connect(&gcode, SIGNAL(portIsOpen(bool)), this, SLOT(portIsOpen(bool)));
@@ -127,6 +128,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(&gcode, SIGNAL(stopSending()), this, SLOT(stopSending()));
     connect(&gcode, SIGNAL(setCommandText(QString)), ui->comboCommand->lineEdit(), SLOT(setText(QString)));
     connect(&gcode, SIGNAL(setProgress(int)), ui->progressFileSend, SLOT(setValue(int)));
+    connect(&gcode, SIGNAL(setQueuedCommands(int, bool)), this, SLOT(setQueuedCommands(int, bool)));
     connect(&gcode, SIGNAL(adjustedAxis()), this, SLOT(adjustedAxis()));
     connect(&gcode, SIGNAL(resetTimer(bool)), &runtimeTimer, SLOT(resetTimer(bool)));
     connect(&gcode, SIGNAL(enableGrblDialogButton()), this, SLOT(enableGrblDialogButton()));
@@ -139,7 +141,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(&runtimeTimer, SIGNAL(setRuntime(QString)), ui->outputRuntime, SLOT(setText(QString)));
 
-	// This code generates too many messages and chokes operation on raspberry pi. Do not use.
+    // This code generates too many messages and chokes operation on raspberry pi. Do not use.
     //connect(ui->statusList->model(), SIGNAL(rowsInserted(const QModelIndex&, int, int)), ui->statusList, SLOT(scrollToBottom()));
 
 	// instead, use this one second timer-based approach
@@ -168,6 +170,8 @@ MainWindow::MainWindow(QWidget *parent) :
     //ui->statusList->setItemDelegate(scrollDelegate);
 
     scrollStatusTimer.start();
+    queuedCommandsEmptyTimer.start();
+    queuedCommandsRefreshTimer.start();
 
     // Cool utility class off Google code that enumerates COM ports in platform-independent manner
     QList<QextPortInfo> ports = QextSerialEnumerator::getPorts();
@@ -232,7 +236,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->labelCommand->setEnabled(false);
     ui->Begin->setEnabled(false);
     ui->Stop->setEnabled(false);
+
     ui->progressFileSend->setEnabled(false);
+    ui->progressQueuedCommands->setEnabled(false);
+    ui->labelFileSendProgress->setEnabled(false);
+    ui->labelQueuedCommands->setEnabled(false);
+
     ui->outputRuntime->setEnabled(false);
     ui->labelRuntime->setEnabled(false);
     ui->btnGRBL->setEnabled(false);
@@ -326,6 +335,9 @@ void MainWindow::begin()
         ui->Begin->setEnabled(false);
         ui->Stop->setEnabled(true);
         ui->progressFileSend->setEnabled(true);
+        ui->progressQueuedCommands->setEnabled(true);
+        ui->labelFileSendProgress->setEnabled(true);
+        ui->labelQueuedCommands->setEnabled(true);
         ui->outputRuntime->setEnabled(true);
         ui->labelRuntime->setEnabled(true);
         ui->openFile->setEnabled(false);
@@ -382,6 +394,9 @@ void MainWindow::stopSending()
     ui->Begin->setEnabled(true);
     ui->Stop->setEnabled(false);
     ui->progressFileSend->setEnabled(false);
+    ui->progressQueuedCommands->setEnabled(false);
+    ui->labelFileSendProgress->setEnabled(false);
+    ui->labelQueuedCommands->setEnabled(false);
     ui->outputRuntime->setEnabled(false);
     ui->labelRuntime->setEnabled(false);
     ui->btnOpenPort->setEnabled(true);
@@ -412,6 +427,7 @@ void MainWindow::setHome()
 void MainWindow::resetProgress()
 {
     setProgress(0);
+    setQueuedCommands(0, false);
     setRuntime("");
 }
 
@@ -447,6 +463,9 @@ void MainWindow::openPortCtl(bool reopen)
         ui->Begin->setEnabled(false);
         ui->Stop->setEnabled(false);
         ui->progressFileSend->setEnabled(false);
+        ui->progressQueuedCommands->setEnabled(false);
+        ui->labelFileSendProgress->setEnabled(false);
+        ui->labelQueuedCommands->setEnabled(false);
         ui->outputRuntime->setEnabled(false);
         ui->labelRuntime->setEnabled(false);
         //ui->btnOpenPort->setEnabled(false);
@@ -514,6 +533,9 @@ void MainWindow::adjustedAxis()
 
     ui->Stop->setEnabled(false);
     ui->progressFileSend->setEnabled(false);
+    ui->progressQueuedCommands->setEnabled(false);
+    ui->labelFileSendProgress->setEnabled(false);
+    ui->labelQueuedCommands->setEnabled(false);
     ui->outputRuntime->setEnabled(false);
     ui->labelRuntime->setEnabled(false);
 
@@ -534,6 +556,9 @@ void MainWindow::disableAllButtons()
     ui->Begin->setEnabled(false);
     ui->Stop->setEnabled(false);
     ui->progressFileSend->setEnabled(false);
+    ui->progressQueuedCommands->setEnabled(false);
+    ui->labelFileSendProgress->setEnabled(false);
+    ui->labelQueuedCommands->setEnabled(false);
     ui->outputRuntime->setEnabled(false);
     ui->labelRuntime->setEnabled(false);
     ui->openFile->setEnabled(false);
@@ -571,6 +596,9 @@ void MainWindow::enableGrblDialogButton()
         ui->Begin->setEnabled(true);
         ui->Stop->setEnabled(false);
         ui->progressFileSend->setEnabled(false);
+        ui->progressQueuedCommands->setEnabled(false);
+        ui->labelFileSendProgress->setEnabled(false);
+        ui->labelQueuedCommands->setEnabled(false);
         ui->outputRuntime->setEnabled(false);
         ui->labelRuntime->setEnabled(false);
     }
@@ -579,6 +607,9 @@ void MainWindow::enableGrblDialogButton()
         ui->Begin->setEnabled(false);
         ui->Stop->setEnabled(false);
         ui->progressFileSend->setEnabled(false);
+        ui->progressQueuedCommands->setEnabled(false);
+        ui->labelFileSendProgress->setEnabled(false);
+        ui->labelQueuedCommands->setEnabled(false);
         ui->outputRuntime->setEnabled(false);
         ui->labelRuntime->setEnabled(false);
     }
@@ -704,6 +735,9 @@ void MainWindow::openFile()
         ui->Begin->setEnabled(true);
         ui->Stop->setEnabled(false);
         ui->progressFileSend->setEnabled(false);
+        ui->progressQueuedCommands->setEnabled(false);
+        ui->labelFileSendProgress->setEnabled(false);
+        ui->labelQueuedCommands->setEnabled(false);
         ui->outputRuntime->setEnabled(false);
         ui->labelRuntime->setEnabled(false);
     }
@@ -712,6 +746,9 @@ void MainWindow::openFile()
         ui->Begin->setEnabled(false);
         ui->Stop->setEnabled(false);
         ui->progressFileSend->setEnabled(false);
+        ui->progressQueuedCommands->setEnabled(false);
+        ui->labelFileSendProgress->setEnabled(false);
+        ui->labelQueuedCommands->setEnabled(false);
         ui->outputRuntime->setEnabled(false);
         ui->labelRuntime->setEnabled(false);
     }
@@ -1013,6 +1050,7 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
     QString rPrecision = settings.value(SETTINGS_REDUCE_PREC_FOR_LONG_LINES, "false").value<QString>();
     controlParams.reducePrecision = rPrecision == "true";
     controlParams.grblLineBufferLen = settings.value(SETTINGS_GRBL_LINE_BUFFER_LEN, DEFAULT_GRBL_LINE_BUFFER_LEN).value<int>();
+    controlParams.charSendDelayMs = settings.value(SETTINGS_CHAR_SEND_DELAY_MS, DEFAULT_CHAR_SEND_DELAY_MS).value<int>();
 
     controlParams.zRateLimitAmount = settings.value(SETTINGS_Z_RATE_LIMIT_AMOUNT, DEFAULT_Z_LIMIT_RATE).value<double>();
     controlParams.xyRateAmount = settings.value(SETTINGS_XY_RATE_AMOUNT, DEFAULT_XY_RATE).value<double>();
@@ -1074,9 +1112,21 @@ void MainWindow::addToStatusList(bool in, QString msg)
     QString nMsg(msg);
     if (!in)
         nMsg = "> " + msg;
+
+    fullStatus.append(msg);
     ui->statusList->addItem(nMsg);
 
     status("%s", nMsg.toLocal8Bit().constData());
+
+    if (ui->statusList->count() > MAX_STATUS_LINES_WHEN_ACTIVE)
+    {
+        int count = ui->statusList->count() - MAX_STATUS_LINES_WHEN_ACTIVE;
+        for (int i = 0; i < count; i++)
+        {
+            ui->statusList->takeItem(0);
+        }
+    }
+
     scrollRequireMove = true;
 }
 
@@ -1094,6 +1144,8 @@ void MainWindow::addToStatusList(QStringList& list)
 
         cleanList.append(msg);
 
+        fullStatus.append(msg);
+
         status("%s", msg.toLocal8Bit().constData());
     }
 
@@ -1101,12 +1153,22 @@ void MainWindow::addToStatusList(QStringList& list)
         return;
 
     ui->statusList->addItems(cleanList);
+
+    if (ui->statusList->count() > MAX_STATUS_LINES_WHEN_ACTIVE)
+    {
+        int count = ui->statusList->count() - MAX_STATUS_LINES_WHEN_ACTIVE;
+        for (int i = 0; i < count; i++)
+        {
+            ui->statusList->takeItem(0);
+        }
+    }
+
     scrollRequireMove = true;
 }
 
 void MainWindow::doScroll()
 {
-    if (!scrollPressed && scrollRequireMove && scrollStatusTimer.elapsed() > 1000)
+    if (!scrollPressed && scrollRequireMove)// && scrollStatusTimer.elapsed() > 1000)
     {
         ui->statusList->scrollToBottom();
         QApplication::processEvents();
@@ -1118,6 +1180,12 @@ void MainWindow::doScroll()
 void MainWindow::statusSliderPressed()
 {
     scrollPressed = true;
+
+    if (scrollStatusTimer.elapsed() > 3000)
+    {
+        ui->statusList->clear();
+        ui->statusList->addItems(fullStatus);
+    }
 }
 
 void MainWindow::statusSliderReleased()
@@ -1366,4 +1434,66 @@ void MainWindow::zJogSliderReleased()
 
 
     //ui->resultingZJogSliderPosition->setText("0");
+}
+
+void MainWindow::setQueuedCommands(int commandCount, bool running)
+{
+    if (running)
+    {
+        switch (queuedCommandState)
+        {
+            case QCS_OK:
+                if (lastQueueCount == 0)
+                {
+                    if (queuedCommandsEmptyTimer.elapsed() > 2000)
+                    {
+                        if (!queuedCommandsStarved)
+                        {
+                            //diag("DG >>>>Switch to red\n");
+
+                            queuedCommandsStarved = true;
+
+                            ui->labelQueuedCommands->setStyleSheet("QLabel { background-color : rgb(255,0,0); color : white; }");
+
+                            queuedCommandState = QCS_WAITING_FOR_ITEMS;
+                        }
+                    }
+                }
+                break;
+             case QCS_WAITING_FOR_ITEMS:
+                if (commandCount > 0)
+                {
+                    if (queuedCommandsEmptyTimer.elapsed() > 3000)
+                    {
+                        if (queuedCommandsStarved)
+                        {
+                            //diag("DG >>>>Switch to green\n");
+
+                            queuedCommandsStarved = false;
+
+                            ui->labelQueuedCommands->setStyleSheet("");
+                        }
+
+                        queuedCommandsEmptyTimer.restart();
+
+                        queuedCommandState = QCS_OK;
+                    }
+                }
+                break;
+        }
+
+        if (queuedCommandsRefreshTimer.elapsed() > 1000)
+        {
+            ui->progressQueuedCommands->setValue(commandCount);
+            queuedCommandsRefreshTimer.restart();
+        }
+    }
+    else
+    {
+        queuedCommandsEmptyTimer.restart();
+        queuedCommandState = QCS_OK;
+        ui->progressQueuedCommands->setValue(commandCount);
+    }
+
+    lastQueueCount = commandCount;
 }

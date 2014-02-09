@@ -89,6 +89,7 @@ signals:
     void adjustedAxis();
     void gcodeResult(int id, QString result);
     void setProgress(int);
+    void setQueuedCommands(int, bool);
     void resetTimer(bool timeIt);
     void enableGrblDialogButton();
     void updateCoordinates(Coord3D machineCoord, Coord3D workCoord);
@@ -117,7 +118,7 @@ protected:
 
 private:
     bool sendGcodeLocal(QString line, bool recordResponseOnFail = false, int waitSec = -1, bool aggressive = false, int currLine = 0);
-    bool waitForOk(QString& result, int waitCount, bool sentReqForLocation, bool sentReqForParserState, bool aggressive);
+    bool waitForOk(QString& result, int waitCount, bool sentReqForLocation, bool sentReqForParserState, bool aggressive, bool finalize);
     bool waitForStartupBanner(QString& result, int waitSec, bool failOnNoFound);
     bool sendGcodeInternal(QString line, QString& result, bool recordResponseOnFail, int waitSec, bool aggressive, int currLine = 0);
     QString removeUnsupportedCommands(QString line);

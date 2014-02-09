@@ -30,6 +30,8 @@ void GCode::openPort(QString commPortStr, QString baudRate)
 
     currComPort = commPortStr;
 
+    port.setCharSendDelayMs(controlParams.charSendDelayMs);
+
     if (port.OpenComport(commPortStr, baudRate))
     {
         emit portIsOpen(true);
@@ -395,7 +397,11 @@ bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponse
         else
             sendCount.append(CmdResponse(buf, line.length(), currLine));
 
-        waitForOk(result, waitSecActual, false, false, aggressive);
+        //diag("DG Buffer Add %d", sendCount.size());
+
+        emit setQueuedCommands(sendCount.size(), true);
+
+        waitForOk(result, waitSecActual, false, false, aggressive, false);
 
         if (shutdownState.get())
             return false;
@@ -412,7 +418,7 @@ bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponse
     else
     {
         sentI++;
-        if (!waitForOk(result, waitSecActual, sentReqForLocation, sentReqForParserState, aggressive))
+        if (!waitForOk(result, waitSecActual, sentReqForLocation, sentReqForParserState, aggressive, false))
         {
             diag(qPrintable(tr("WAITFOROK FAILED\n")));
             if (shutdownState.get())
@@ -464,11 +470,14 @@ bool GCode::sendGcodeInternal(QString line, QString& result, bool recordResponse
     return true;
 }
 
-bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, bool sentReqForParserState, bool aggressive)
+bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, bool sentReqForParserState, bool aggressive, bool finalize)
 {
+    int okcount = 0;
+
     if (aggressive)
     {
-        if (!port.bytesAvailable())
+        //if (!port.bytesAvailable()) //more conservative code
+        if (!finalize || !port.bytesAvailable())
         {
             int total = 0;
             bool haveWait = false;
@@ -509,8 +518,8 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
             count++;
             SLEEP(100);
         }
-        else
-		if (n < 0)      {
+        else if (n < 0)
+        {
 			QString Mes(tr("Error reading data from COM port\n"))  ;
             err(qPrintable(Mes));
 
@@ -539,8 +548,13 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
                     {
                         CmdResponse cmdResp = sendCount.takeFirst();
                         diag(qPrintable(tr("GOT[%d]:%s for %s\n")), cmdResp.line, tmpTrim.toLocal8Bit().constData(), cmdResp.cmd.toLocal8Bit().constData());
+                        
+						//diag("DG Buffer %d", sendCount.size());
+                        
+						emit setQueuedCommands(sendCount.size(), true);
                     }
                     rcvdI++;
+                    okcount++;
                 }
                 else if (received.contains(RESPONSE_ERROR))
                 {
@@ -552,6 +566,10 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
                         CmdResponse cmdResp = sendCount.takeFirst();
                         orig = cmdResp.cmd;
                         diag(qPrintable(tr("GOT[%d]:%s for %s\n")), cmdResp.line, tmpTrim.toLocal8Bit().constData(), orig.toLocal8Bit().constData());
+                        
+						//diag("DG Buffer %d", sendCount.size());
+                        
+                        emit setQueuedCommands(sendCount.size(), true);
                     }
                     errorCount++;
                     QString result;
@@ -575,8 +593,21 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
                 //printf("Total out (b): %d (%d)\n", total, sendCount.size());
                 //printf("SENT:%d RCVD:%d\n", sentI, rcvdI);
 
-                if (port.bytesAvailable() || total >= (GRBL_RX_BUFFER_SIZE - 1))
+                if (total >= (GRBL_RX_BUFFER_SIZE - 1))
                 {
+                    //diag("DG Loop again\n");
+                    result.clear();
+                    continue;
+                }
+                else if (port.bytesAvailable())
+                {
+                    // comment out this block for more conservative approach
+                    if (!finalize && okcount > 0)
+                    {
+                        //diag("DG Leave early\n");
+                        return true;
+                    }
+
                     result.clear();
                     continue;
                 }
@@ -979,6 +1010,7 @@ void GCode::sendFile(QString path)
     //sendGcodeLocal("", true, SHORT_WAIT_SEC);
 
     setProgress(0);
+    emit setQueuedCommands(0, false);
     grblCmdErrors.clear();
     grblFilteredCmds.clear();
     errorCount = 0;
@@ -1001,7 +1033,15 @@ void GCode::sendFile(QString path)
         // set here once so that it doesn't change in the middle of a file send
         bool aggressive = controlParams.useAggressivePreload;
         if (aggressive)
+        {
             sendCount.clear();
+            //if (sendCount.size() == 0)
+            //{
+            //    diag("DG Buffer 0 at start\n"));
+            //}
+
+            emit setQueuedCommands(sendCount.size(), true);
+        }
 
         sentI = 0;
         rcvdI = 0;
@@ -1112,7 +1152,7 @@ void GCode::sendFile(QString path)
             while (sendCount.size() > 0 && limitCount)
             {
                 QString result;
-                waitForOk(result, controlParams.waitTime, false, false, aggressive);
+                waitForOk(result, controlParams.waitTime, false, false, aggressive, true);
                 SLEEP(100);
 
                 if (shutdownState.get())
@@ -1189,6 +1229,8 @@ void GCode::sendFile(QString path)
     {
         emit stopSending();
     }
+
+    emit setQueuedCommands(0, false);
 }
 
 void GCode::trimToEnd(QString& strline, QChar ch)
@@ -1766,6 +1808,8 @@ void GCode::setResponseWait(ControlParams controlParamsIn)
     controlParams = controlParamsIn;
 
     controlParams.useMm = oldMm;
+
+    port.setCharSendDelayMs(controlParams.charSendDelayMs);
 
     if ((oldMm != controlParamsIn.useMm) && isPortOpen() && doubleDollarFormat)
     {

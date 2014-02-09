@@ -22,276 +22,276 @@
 <context>
     <name>GCode</name>
     <message>
-        <location filename="../gcode.cpp" line="40"/>
+        <location filename="../gcode.cpp" line="42"/>
         <source>Can&apos;t open COM port </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="45"/>
+        <location filename="../gcode.cpp" line="47"/>
         <source>-Is hardware connected to USB?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="46"/>
+        <location filename="../gcode.cpp" line="48"/>
         <source>-Is correct port chosen?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="47"/>
+        <location filename="../gcode.cpp" line="49"/>
         <source>-Does current user have sufficient permissions?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="167"/>
+        <location filename="../gcode.cpp" line="169"/>
         <source>SENDING: 0x%02X (CTRL-X) to check presence of Grbl
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="170"/>
-        <location filename="../gcode.cpp" line="406"/>
+        <location filename="../gcode.cpp" line="172"/>
+        <location filename="../gcode.cpp" line="412"/>
         <source>Sending to port failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="311"/>
+        <location filename="../gcode.cpp" line="313"/>
         <source>Got Grbl Version (Parsed:) %d.%d%c ($$=%d)
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="328"/>
+        <location filename="../gcode.cpp" line="330"/>
         <source>Port not available yet</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="375"/>
+        <location filename="../gcode.cpp" line="377"/>
         <source>Buffer size too small</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="385"/>
+        <location filename="../gcode.cpp" line="387"/>
         <source>SENDING[%d]: 0x%02X (CTRL-X)
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="387"/>
+        <location filename="../gcode.cpp" line="389"/>
         <source>SENDING[%d]: %s
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="417"/>
+        <location filename="../gcode.cpp" line="423"/>
         <source>WAITFOROK FAILED
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="423"/>
+        <location filename="../gcode.cpp" line="429"/>
         <source>Wait for ok failed</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="514"/>
-        <location filename="../gcode.cpp" line="706"/>
+        <location filename="../gcode.cpp" line="523"/>
+        <location filename="../gcode.cpp" line="737"/>
         <source>Error reading data from COM port
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="536"/>
+        <location filename="../gcode.cpp" line="545"/>
         <source>Unexpected: list is empty (o)!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="541"/>
-        <location filename="../gcode.cpp" line="554"/>
+        <location filename="../gcode.cpp" line="550"/>
+        <location filename="../gcode.cpp" line="568"/>
         <source>GOT[%d]:%s for %s
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="547"/>
+        <location filename="../gcode.cpp" line="561"/>
         <source>Error?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="549"/>
+        <location filename="../gcode.cpp" line="563"/>
         <source>Unexpected: list is empty (e)!</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="565"/>
-        <location filename="../gcode.cpp" line="590"/>
-        <location filename="../gcode.cpp" line="717"/>
+        <location filename="../gcode.cpp" line="583"/>
+        <location filename="../gcode.cpp" line="621"/>
+        <location filename="../gcode.cpp" line="748"/>
         <source>GOT:%s
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="657"/>
+        <location filename="../gcode.cpp" line="688"/>
         <source>Wait interrupted by user</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="725"/>
+        <location filename="../gcode.cpp" line="756"/>
         <source>Expecting Grbl version string. Unable to parse response.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="749"/>
+        <location filename="../gcode.cpp" line="780"/>
         <source>No data from COM port after connect. Expecting Grbl version string.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="770"/>
+        <location filename="../gcode.cpp" line="801"/>
         <source>Wait interrupted by user (startup)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="855"/>
+        <location filename="../gcode.cpp" line="886"/>
         <source>Incorrect - extra axis present in hardware but options set for only 3 axes. Please fix options.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="864"/>
+        <location filename="../gcode.cpp" line="895"/>
         <source>Incorrect - extra axis not present in hardware but options set for &gt; 3 axes. Please fix options.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="895"/>
+        <location filename="../gcode.cpp" line="926"/>
         <source>Decoded: State:%s MPos: %f,%f,%f WPos: %f,%f,%f
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="901"/>
+        <location filename="../gcode.cpp" line="932"/>
         <source>Decoded: State:%s MPos: %f,%f,%f,%f WPos: %f,%f,%f,%f
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="953"/>
+        <location filename="../gcode.cpp" line="984"/>
         <source>GOT-TE:%s
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="976"/>
+        <location filename="../gcode.cpp" line="1007"/>
         <source>Sending file &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1129"/>
+        <location filename="../gcode.cpp" line="1169"/>
         <source>Gave up waiting for OK
 </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1148"/>
+        <location filename="../gcode.cpp" line="1188"/>
         <source>Code sent successfully with %1 error(s):</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1160"/>
+        <location filename="../gcode.cpp" line="1200"/>
         <source>Code sent successfully with no errors.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1167"/>
+        <location filename="../gcode.cpp" line="1207"/>
         <source>Filtered %1 commands:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1180"/>
+        <location filename="../gcode.cpp" line="1220"/>
         <source>Process interrupted.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1212"/>
+        <location filename="../gcode.cpp" line="1254"/>
         <source>Removed unsupported command &apos;%1&apos; part of &apos;%2&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1228"/>
+        <location filename="../gcode.cpp" line="1270"/>
         <source>Removed unsupported G command &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1241"/>
+        <location filename="../gcode.cpp" line="1283"/>
         <source>Removed unsupported M command &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1260"/>
+        <location filename="../gcode.cpp" line="1302"/>
         <source>Removed unsupported command &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1393"/>
+        <location filename="../gcode.cpp" line="1435"/>
         <source>Unable to remove enough decimal places for command (will be truncated): %s</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1397"/>
+        <location filename="../gcode.cpp" line="1439"/>
         <source>Error, insufficent reduction &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1399"/>
+        <location filename="../gcode.cpp" line="1441"/>
         <source>Precision reduced &apos;%1&apos;</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1595"/>
+        <location filename="../gcode.cpp" line="1637"/>
         <source>Z-Rate Limit: [%1]=&gt;[%2]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1600"/>
+        <location filename="../gcode.cpp" line="1642"/>
         <source>Z-Rate Limit: [%1]=&gt;[%2,%3]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1645"/>
+        <location filename="../gcode.cpp" line="1687"/>
         <source>XY-Rate Limit FIX: [%1]=&gt;[%2]</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1700"/>
+        <location filename="../gcode.cpp" line="1742"/>
         <source>Bad command: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1802"/>
+        <location filename="../gcode.cpp" line="1846"/>
         <source>Options specify use mm but Grbl parser set for inches. Fixing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1807"/>
+        <location filename="../gcode.cpp" line="1851"/>
         <source>Options specify use inches but Grbl parser set for mm. Fixing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1821"/>
+        <location filename="../gcode.cpp" line="1865"/>
         <source>Options specify use mm but Grbl reporting set for inches. Fixing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1826"/>
+        <location filename="../gcode.cpp" line="1870"/>
         <source>Options specify use inches but Grbl reporting set for mm. Fixing.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1862"/>
-        <location filename="../gcode.cpp" line="1863"/>
+        <location filename="../gcode.cpp" line="1906"/>
+        <location filename="../gcode.cpp" line="1907"/>
         <source>(mm)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gcode.cpp" line="1867"/>
-        <location filename="../gcode.cpp" line="1868"/>
+        <location filename="../gcode.cpp" line="1911"/>
+        <location filename="../gcode.cpp" line="1912"/>
         <source>(in)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -531,22 +531,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="378"/>
+        <location filename="../mainwindow.ui" line="427"/>
         <source>X</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="573"/>
+        <location filename="../mainwindow.ui" line="622"/>
         <source>Y</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="898"/>
+        <location filename="../mainwindow.ui" line="947"/>
         <source>Z</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="931"/>
+        <location filename="../mainwindow.ui" line="980"/>
         <source>C</source>
         <translation type="unfinished"></translation>
     </message>
@@ -556,22 +556,22 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="188"/>
+        <location filename="../mainwindow.ui" line="212"/>
         <source>Begin</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="195"/>
+        <location filename="../mainwindow.ui" line="185"/>
         <source>Stop</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="215"/>
+        <location filename="../mainwindow.ui" line="205"/>
         <source>Choose file</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="242"/>
+        <location filename="../mainwindow.ui" line="291"/>
         <source>Runtime:</source>
         <translation type="unfinished"></translation>
     </message>
@@ -587,27 +587,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1594"/>
+        <location filename="../mainwindow.ui" line="1643"/>
         <source>Reset Control</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1608"/>
+        <location filename="../mainwindow.ui" line="1657"/>
         <source>Soft Reset Grbl</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1621"/>
+        <location filename="../mainwindow.ui" line="1670"/>
         <source>Unlock Grbl</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1093"/>
+        <location filename="../mainwindow.ui" line="1142"/>
         <source>Machine Coordinates</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="468"/>
+        <location filename="../mainwindow.ui" line="517"/>
         <source>Work Coordinates</source>
         <translation type="unfinished"></translation>
     </message>
@@ -617,53 +617,53 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1675"/>
+        <location filename="../mainwindow.ui" line="1724"/>
         <source>Zero Position</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1688"/>
+        <location filename="../mainwindow.ui" line="1737"/>
         <source>Go Home</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1127"/>
+        <location filename="../mainwindow.ui" line="1176"/>
         <source>Axis Control</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1381"/>
+        <location filename="../mainwindow.ui" line="1430"/>
         <source>Z Jog</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1467"/>
+        <location filename="../mainwindow.ui" line="1516"/>
         <source>Step Size           </source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1422"/>
+        <location filename="../mainwindow.ui" line="1471"/>
         <source>Absolute coordinates after adjust</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1435"/>
+        <location filename="../mainwindow.ui" line="1484"/>
         <source>Spindle On</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1333"/>
-        <location filename="../mainwindow.ui" line="1343"/>
+        <location filename="../mainwindow.ui" line="1382"/>
+        <location filename="../mainwindow.ui" line="1392"/>
         <source>0</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1233"/>
+        <location filename="../mainwindow.ui" line="1282"/>
         <source>C Jog</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1489"/>
+        <location filename="../mainwindow.ui" line="1538"/>
         <source>Visualizer</source>
         <translation type="unfinished"></translation>
     </message>
@@ -673,52 +673,67 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="266"/>
+        <location filename="../mainwindow.ui" line="251"/>
+        <source>%v</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="264"/>
+        <source>File progress</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="277"/>
+        <source>Queued Commands</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.ui" line="315"/>
         <source>Command</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1582"/>
+        <location filename="../mainwindow.ui" line="1631"/>
         <source>Advanced</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1650"/>
+        <location filename="../mainwindow.ui" line="1699"/>
         <source>GRBL Settings</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1722"/>
+        <location filename="../mainwindow.ui" line="1771"/>
         <source>&amp;Help</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1728"/>
+        <location filename="../mainwindow.ui" line="1777"/>
         <source>&amp;Tools</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1734"/>
+        <location filename="../mainwindow.ui" line="1783"/>
         <source>&amp;File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1745"/>
+        <location filename="../mainwindow.ui" line="1794"/>
         <source>&amp;About</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1750"/>
+        <location filename="../mainwindow.ui" line="1799"/>
         <source>&amp;Options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.ui" line="1755"/>
+        <location filename="../mainwindow.ui" line="1804"/>
         <source>E&amp;xit</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="257"/>
+        <location filename="../mainwindow.cpp" line="266"/>
         <source>You appear to have upgraded to the latest version of Grbl Controller. Please be aware that as of version 3.4 the default behavior of sending commands to Grbl has been changed to send them as fast as possible (Aggressive preload mode).
 
 Your settings have been changed to enable this mode. Why? Because it provides the most optimal use of Grbl and greatly reduces the time to finish a typical job.
@@ -727,12 +742,12 @@ What does this mean to you? Arc commands will now run smoother and faster than b
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="399"/>
+        <location filename="../mainwindow.cpp" line="414"/>
         <source>User clicked Port Open/Close</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="314"/>
+        <location filename="../mainwindow.cpp" line="323"/>
         <source>Do you want to zero the displayed position before proceeding?</source>
         <translation type="unfinished"></translation>
     </message>
@@ -742,27 +757,27 @@ What does this mean to you? Arc commands will now run smoother and faster than b
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="493"/>
+        <location filename="../mainwindow.cpp" line="512"/>
         <source>Resetting port to restart controller</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="662"/>
+        <location filename="../mainwindow.cpp" line="693"/>
         <source>Open File</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="664"/>
+        <location filename="../mainwindow.cpp" line="695"/>
         <source>NC (*.nc);;All Files (*.*)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1187"/>
+        <location filename="../mainwindow.cpp" line="1255"/>
         <source>Spindle On.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1192"/>
+        <location filename="../mainwindow.cpp" line="1260"/>
         <source>Spindle Off.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -800,12 +815,12 @@ What does this mean to you? Arc commands will now run smoother and faster than b
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../options.ui" line="329"/>
+        <location filename="../options.ui" line="290"/>
         <source>Seconds to Wait for Response</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../options.ui" line="322"/>
+        <location filename="../options.ui" line="283"/>
         <source>Z-Jog Rate (inches or mm/min)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -865,7 +880,12 @@ What does this mean to you? Arc commands will now run smoother and faster than b
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../options.ui" line="282"/>
+        <location filename="../options.ui" line="347"/>
+        <source>Character send delay ms</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../options.ui" line="389"/>
         <source>Grbl Line Buffer Size</source>
         <translation type="unfinished"></translation>
     </message>

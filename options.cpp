@@ -80,6 +80,7 @@ Options::Options(QWidget *parent) :
     QString rPrecision = settings.value(SETTINGS_REDUCE_PREC_FOR_LONG_LINES, "false").value<QString>();
     ui->checkBoxReducePrecForLongLines->setChecked(rPrecision == "true");
     ui->spinBoxGrblLineBufferSize->setValue(settings.value(SETTINGS_GRBL_LINE_BUFFER_LEN, DEFAULT_GRBL_LINE_BUFFER_LEN).value<int>());
+    ui->spinBoxCharSendDelay->setValue(settings.value(SETTINGS_CHAR_SEND_DELAY_MS, DEFAULT_CHAR_SEND_DELAY_MS).value<int>());
 }
 
 Options::~Options()
@@ -110,6 +111,7 @@ void Options::accept()
     settings.setValue(SETTINGS_FILTER_FILE_COMMANDS, ui->chkFilterFileCommands->isChecked());
     settings.setValue(SETTINGS_REDUCE_PREC_FOR_LONG_LINES, ui->checkBoxReducePrecForLongLines->isChecked());
     settings.setValue(SETTINGS_GRBL_LINE_BUFFER_LEN, ui->spinBoxGrblLineBufferSize->value());
+    settings.setValue(SETTINGS_CHAR_SEND_DELAY_MS, ui->spinBoxCharSendDelay->value());
 
     connect(this, SIGNAL(setSettings()), parentWidget(), SLOT(setSettings()));
 

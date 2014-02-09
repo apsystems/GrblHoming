@@ -62,11 +62,13 @@ public:
     bool isPortOpen();
     QString getDetectedLineFeed();
     int bytesAvailable();
+    void setCharSendDelayMs(int charSendDelayMs);
 
 private:
     QextSerialPort *port;
     char detectedEOL;
     QString detectedLineFeed;
+    int charSendDelayMs;
 
 };
 

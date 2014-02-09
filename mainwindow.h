@@ -39,6 +39,8 @@
 
 #define CENTER_POS              40
 
+#define MAX_STATUS_LINES_WHEN_ACTIVE        200
+
 /* testing optimizing scrollbar, doesn't work right
 class MyItemDelegate : public QItemDelegate
 {
@@ -161,6 +163,7 @@ private slots:
     void doScroll();
     void statusSliderPressed();
     void statusSliderReleased();
+    void setQueuedCommands(int commandCount, bool running);
 
 private:
     // enums
@@ -171,6 +174,11 @@ private:
         Y_ITEM,
         I_ITEM,
         J_ITEM,
+    };
+    enum
+    {
+        QCS_OK = 0,
+        QCS_WAITING_FOR_ITEMS
     };
     //objects
     Ui::MainWindow *ui;
@@ -202,6 +210,8 @@ private:
     bool absoluteAfterAxisAdj;
     bool checkLogWrite;
     QTime scrollStatusTimer;
+    QTime queuedCommandsEmptyTimer;
+    QTime queuedCommandsRefreshTimer;
     QList<PosItem> posList;
     bool sliderPressed;
     double sliderTo;
@@ -211,6 +221,10 @@ private:
     QTimer *scrollTimer;
     bool scrollRequireMove;
     bool scrollPressed;
+    bool queuedCommandsStarved;
+    int lastQueueCount;
+    int queuedCommandState;
+    QStringList fullStatus;
 
     //methods
     int SendJog(QString strline);

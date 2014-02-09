@@ -22,6 +22,7 @@
 #define DEFAULT_XY_RATE         2000.0
 
 #define DEFAULT_GRBL_LINE_BUFFER_LEN    50
+#define DEFAULT_CHAR_SEND_DELAY_MS      0
 
 #define MM_IN_AN_INCH           25.4
 #define PRE_HOME_Z_ADJ_MM       5.0

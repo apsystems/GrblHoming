@@ -20,6 +20,29 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.5.1
+Enhancements
+- Made subtle modifications to the command preload when sending a file so that the
+  command queue on grbl is as full as possible. Previously we were depleting the
+  queue and then filling it again. This has possible negative performance implications,
+  although testing shows them to be negligible, probably because we immediately send 
+  a command after the last ok is received.
+- The status list view now supports only a maximum of 200 items when active. This was
+  done for the slower processors like the raspberry pi to prevent excessive CPU usage
+  when many commands lines exist in a file. When the user grabs the scrollbar, all 
+  items are restored back into the view. 
+- A new progress bar has been added showing the current items in the grbl queue during
+  a file send. If the number of items for some reason drops to 0 the label text will
+  flash red. For this 0 count to occur is a very rare event.
+- Added the ability to set the delay between sending of characters to grbl. The theory
+  is that grbl can drop characters if the sending computer is very fast. There is still
+  some debate on whether this is happening, so I provided the ability to set this value
+  in the options from 0 to 20 ms. Note: The default of 0 ms delay is back, like in 3.4.6
+  and unlike in 3.5 which has a hardcoded 10 ms delay.
+Bug fix
+- Modified the status window redraw to always ensure items show on the bottom when the
+  redraw timer expires.
+  
 V3.5
 Bug fix
 - For very fast computers, they send characters with virtually no delay between which 
