@@ -23,11 +23,11 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>2</number>
+    <number>0</number>
    </property>
-   <widget class="QWidget" name="tab_main">
+   <widget class="QWidget" name="tab_general">
     <attribute name="title">
-     <string>Main</string>
+     <string>General</string>
     </attribute>
     <widget class="QWidget" name="gridLayoutWidget_2">
      <property name="geometry">
