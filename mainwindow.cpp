@@ -163,7 +163,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->comboStep->addItem("1");
     ui->comboStep->addItem("10");
 	ui->comboStep->addItem("100");
-    ui->comboStep->setCurrentIndex(3);
+    ui->comboStep->setCurrentText(jogStepStr);
 
 	// Don't use - it will not show horizontal scrollbar for small app size
     //ui->statusList->setUniformItemSizes(true);
@@ -631,56 +631,49 @@ void MainWindow::enableGrblDialogButton()
 
 void MainWindow::incX()
 {
-    float coord = ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('X', coord, invX, absoluteAfterAxisAdj, 0);
+    emit axisAdj('X', jogStep, invX, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::incY()
 {
-    float coord = ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('Y', coord, invY, absoluteAfterAxisAdj, 0);
+    emit axisAdj('Y', jogStep, invY, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::incZ()
 {
-    float coord = ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('Z', coord, invZ, absoluteAfterAxisAdj, sliderZCount++);
+    emit axisAdj('Z', jogStep, invZ, absoluteAfterAxisAdj, sliderZCount++);
 }
 
 void MainWindow::decX()
 {
-    float coord = -ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('X', coord, invX, absoluteAfterAxisAdj, 0);
+    emit axisAdj('X', jogStep, invX, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::decY()
 {
-    float coord = -ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('Y', coord, invY, absoluteAfterAxisAdj, 0);
+    emit axisAdj('Y', jogStep, invY, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::decZ()
 {
-    float coord = -ui->comboStep->currentText().toFloat();
     disableAllButtons();
-    emit axisAdj('Z', coord, invZ, absoluteAfterAxisAdj, sliderZCount++);
+    emit axisAdj('Z', jogStep, invZ, absoluteAfterAxisAdj, sliderZCount++);
 }
 
 void MainWindow::decFourth()
 {
-	float coord = ui->comboStep->currentText().toFloat() ;
 /// LETARTARE 25-04-2014
 	char four = controlParams.fourthAxisType;
 	if (four == FOURTH_AXIS_A || four == FOURTH_AXIS_B || four == FOURTH_AXIS_C) {
 		float actual_position = ui->lcdWorkNumberFourth->value() ;
-		if (actual_position >= -360.0 + coord ) {
+		if (actual_position >= -360.0 + jogStep ) {
 			disableAllButtons();
-			emit axisAdj(controlParams.fourthAxisType, -coord, invFourth, absoluteAfterAxisAdj, 0);
+			emit axisAdj(controlParams.fourthAxisType, -jogStep, invFourth, absoluteAfterAxisAdj, 0);
 		}
 		else  {
 			ui->DecFourthBtn->setEnabled(false) ;
@@ -689,21 +682,20 @@ void MainWindow::decFourth()
 	}
 /// <--
 	else  {
-    disableAllButtons();
-		emit axisAdj(controlParams.fourthAxisType, -coord, invFourth, absoluteAfterAxisAdj, 0);
+		disableAllButtons();
+		emit axisAdj(controlParams.fourthAxisType, -jogStep, invFourth, absoluteAfterAxisAdj, 0);
 	}
 
 }
 void MainWindow::incFourth()
 {
-    float coord = ui->comboStep->currentText().toFloat();
 /// LETARTARE 25-04-2014
 	char four = controlParams.fourthAxisType;
 	if (four == FOURTH_AXIS_A || four == FOURTH_AXIS_B || four == FOURTH_AXIS_C) {
 		float actual_position = ui->lcdWorkNumberFourth->value() ;
-		if (actual_position <= 360.0 - coord ) {
+		if (actual_position <= 360.0 - jogStep ) {
 			disableAllButtons();
-			emit axisAdj(controlParams.fourthAxisType, coord, invFourth, absoluteAfterAxisAdj, 0);
+			emit axisAdj(controlParams.fourthAxisType, jogStep, invFourth, absoluteAfterAxisAdj, 0);
 		}
 		else {
 			ui->DecFourthBtn->setEnabled(true) ;
@@ -712,9 +704,9 @@ void MainWindow::incFourth()
 	}
 /// <-
 	else  {
-    disableAllButtons();
-    emit axisAdj(controlParams.fourthAxisType, coord, invFourth, absoluteAfterAxisAdj, 0);
-}
+		disableAllButtons();
+		emit axisAdj(controlParams.fourthAxisType, jogStep, invFourth, absoluteAfterAxisAdj, 0);
+	}
 }
 
 void MainWindow::getOptions()
@@ -995,6 +987,13 @@ void MainWindow::readSettings()
 
     promptedAggrPreload = settings.value(SETTINGS_PROMPTED_AGGR_PRELOAD, false).value<bool>();
 
+    QString absAfterAdj = settings.value(SETTINGS_ABSOLUTE_AFTER_AXIS_ADJ, "false").value<QString>();
+    absoluteAfterAxisAdj = (absAfterAdj == "true");
+    ui->chkRestoreAbsolute->setChecked(absoluteAfterAxisAdj);
+
+    jogStepStr = settings.value(SETTINGS_JOG_STEP, "1").value<QString>();
+    jogStep = jogStepStr.toFloat();
+
     settings.beginGroup( "mainwindow" );
 
     restoreGeometry(settings.value( "geometry", saveGeometry() ).toByteArray());
@@ -1099,10 +1098,6 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
         ui->lblFourthJog->setText(QString(controlParams.fourthAxisType));
     }
 
-    QString absAfterAdj = settings.value(SETTINGS_ABSOLUTE_AFTER_AXIS_ADJ, "false").value<QString>();
-    absoluteAfterAxisAdj = absAfterAdj == "true";
-    ui->chkRestoreAbsolute->setChecked(absoluteAfterAxisAdj);
-
     QString zRateLimit = settings.value(SETTINGS_Z_RATE_LIMIT, "false").value<QString>();
     controlParams.zRateLimit = zRateLimit == "true";
 
@@ -1137,8 +1132,8 @@ void MainWindow::writeSettings()
     settings.setValue(SETTINGS_BAUD, ui->comboBoxBaudRate->currentText());
 
     settings.setValue(SETTINGS_PROMPTED_AGGR_PRELOAD, promptedAggrPreload);
-
     settings.setValue(SETTINGS_ABSOLUTE_AFTER_AXIS_ADJ, ui->chkRestoreAbsolute->isChecked());
+    settings.setValue(SETTINGS_JOG_STEP, ui->comboStep->currentText());
 
     // From http://stackoverflow.com/questions/74690/how-do-i-store-the-window-size-between-sessions-in-qt
     settings.beginGroup("mainwindow");

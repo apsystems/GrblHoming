@@ -228,6 +228,8 @@ private:
     int queuedCommandState;
     QStringList fullStatus;
     bool lastLcdStateValid;
+    float jogStep;
+    QString jogStepStr;
 
     //methods
     int SendJog(QString strline);

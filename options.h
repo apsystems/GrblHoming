@@ -47,6 +47,7 @@
 #define SETTINGS_REDUCE_PREC_FOR_LONG_LINES "reducePrecisionForLongLines"
 #define SETTINGS_GRBL_LINE_BUFFER_LEN       "grblLineBufferLen"
 #define SETTINGS_CHAR_SEND_DELAY_MS         "charSendDelayMs"
+#define SETTINGS_JOG_STEP                   "jogStep"
 
 #define SETTINGS_ENABLE_POS_REQ             "positionRequest"
 #define SETTINGS_TYPE_POS_REQ               "posRequestType"
