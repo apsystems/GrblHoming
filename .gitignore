@@ -11,3 +11,9 @@ settings
 ui_*.h
 Output/
 android/
+GrblController
+*.o
+moc_*.cpp
+qrc_*.cpp
+*.stash
+GrblController-local.iss
