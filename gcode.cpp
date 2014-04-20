@@ -1330,7 +1330,7 @@ QString GCode::reducePrecision(QString line)
     if (pos >= 0)
         result = result.left(pos);
 
-    int charsToRemove = result.length() - controlParams.grblLineBufferLen;
+    int charsToRemove = result.length() - (controlParams.grblLineBufferLen - 1);// subtract 1 to account for linefeed sent with command later
 
     if (charsToRemove > 0)
     {
