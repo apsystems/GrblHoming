@@ -50,9 +50,15 @@
 // probably a better way to do this
 // http://mingw-users.1079350.n2.nabble.com/DEV-BROADCAST-DEVICEINTERFACE-was-not-declared-in-this-scope-td3552762.html
 #  ifdef  __MINGW32__
+#    ifndef _WIN32_WINNT
 #    define _WIN32_WINNT 0x0500
+#    endif
+#    ifndef _WIN32_WINDOWS
 #    define _WIN32_WINDOWS 0x0500
+#    endif
+#    ifndef WINVER
 #    define WINVER 0x0500
+#  endif
 #  endif
 #  include <QtCore/qt_windows.h>
 #endif /*Q_OS_WIN*/
