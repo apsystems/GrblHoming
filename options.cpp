@@ -65,6 +65,17 @@ Options::Options(QWidget *parent) :
             case FOURTH_AXIS_C:
                 ui->radioButtonFourthAxisC->setChecked(true);
                 break;
+/// LETARTARE
+			case FOURTH_AXIS_U:
+				ui->radioButtonFourthAxisU->setChecked(true);
+                break;
+            case FOURTH_AXIS_V:
+                ui->radioButtonFourthAxisV->setChecked(true);
+                break;
+            case FOURTH_AXIS_W:
+                ui->radioButtonFourthAxisW->setChecked(true);
+                break;
+/// <--
         }
     }
 
@@ -189,13 +200,31 @@ char Options::getFourthAxisType()
     {
         type = FOURTH_AXIS_A;
     }
-    else if (ui->radioButtonFourthAxisB->isChecked())
+    else
+	if (ui->radioButtonFourthAxisB->isChecked())
     {
         type = FOURTH_AXIS_B;
     }
-    else if (ui->radioButtonFourthAxisC->isChecked())
+    else
+    if (ui->radioButtonFourthAxisC->isChecked())
     {
         type = FOURTH_AXIS_C;
     }
+/// LETATARE
+    if (ui->radioButtonFourthAxisU->isChecked())
+    {
+        type = FOURTH_AXIS_U;
+    }
+    else
+	if (ui->radioButtonFourthAxisV->isChecked())
+    {
+        type = FOURTH_AXIS_V;
+    }
+    else
+    if (ui->radioButtonFourthAxisW->isChecked())
+    {
+        type = FOURTH_AXIS_W;
+    }
+/// <--
     return type;
 }

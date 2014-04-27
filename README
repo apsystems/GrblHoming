@@ -27,6 +27,7 @@ Enhancements
   please see https://github.com/zapmaker/GrblHoming/issues/56 and 
   https://github.com/LETARTARE/Grbl_with_Arduino/tree/master/Grbl84Mega2560
   which is the A axis grbl variant.
+- LETARTARE: Added UVW axes
 Bug fix
 - Fixed fourth axis adjust buttons and coordinate display greyed out when they shouldn't
   be (under specific operating circumstances).

@@ -661,15 +661,48 @@ void MainWindow::decZ()
 
 void MainWindow::decFourth()
 {
-    float coord = -ui->comboStep->currentText().toFloat();
+	float coord = ui->comboStep->currentText().toFloat() ;
+/// LETARTARE 25-04-2014
+	char four = controlParams.fourthAxisType;
+	if (four == FOURTH_AXIS_A || four == FOURTH_AXIS_B || four == FOURTH_AXIS_C) {
+		float actual_position = ui->lcdWorkNumberFourth->value() ;
+		if (actual_position >= -360.0 + coord ) {
+			disableAllButtons();
+			emit axisAdj(controlParams.fourthAxisType, -coord, invFourth, absoluteAfterAxisAdj, 0);
+		}
+		else  {
+			ui->DecFourthBtn->setEnabled(false) ;
+			ui->IncFourthBtn->setEnabled(true) ;
+		}
+	}
+/// <--
+	else  {
     disableAllButtons();
-    emit axisAdj(controlParams.fourthAxisType, coord, invFourth, absoluteAfterAxisAdj, 0);
+		emit axisAdj(controlParams.fourthAxisType, -coord, invFourth, absoluteAfterAxisAdj, 0);
+	}
+
 }
 void MainWindow::incFourth()
 {
     float coord = ui->comboStep->currentText().toFloat();
+/// LETARTARE 25-04-2014
+	char four = controlParams.fourthAxisType;
+	if (four == FOURTH_AXIS_A || four == FOURTH_AXIS_B || four == FOURTH_AXIS_C) {
+		float actual_position = ui->lcdWorkNumberFourth->value() ;
+		if (actual_position <= 360.0 - coord ) {
+			disableAllButtons();
+			emit axisAdj(controlParams.fourthAxisType, coord, invFourth, absoluteAfterAxisAdj, 0);
+		}
+		else {
+			ui->DecFourthBtn->setEnabled(true) ;
+			ui->IncFourthBtn->setEnabled(false) ;
+		}
+	}
+/// <-
+	else  {
     disableAllButtons();
     emit axisAdj(controlParams.fourthAxisType, coord, invFourth, absoluteAfterAxisAdj, 0);
+}
 }
 
 void MainWindow::getOptions()
@@ -1344,7 +1377,11 @@ void MainWindow::lcdDisplay(char axis, bool workCoord, float floatVal)
             ui->lcdMachNumberZ->display(value);
         break;
     default:
-        if (axis == FOURTH_AXIS_A || axis == FOURTH_AXIS_B || axis == FOURTH_AXIS_C)
+        if (axis == FOURTH_AXIS_A || axis == FOURTH_AXIS_B || axis == FOURTH_AXIS_C
+///  LETARTARE
+			|| axis == FOURTH_AXIS_U || axis == FOURTH_AXIS_V || axis == FOURTH_AXIS_W
+/// <-
+			)
         {
             if (workCoord)
                 ui->lcdWorkNumberFourth->display(value);
