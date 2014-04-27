@@ -1769,7 +1769,7 @@ void GCode::axisAdj(char axis, float coord, bool inv, bool absoluteAfterAxisAdj,
 {
     if (inv)
     {
-        coord =- coord;
+        coord = (-coord);
     }
 
     QString cmd = QString("G01 ").append(axis)
