@@ -566,8 +566,8 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
                     else
                     {
                         CmdResponse cmdResp = sendCount.takeFirst();
-                        diag(qPrintable(tr("GOT[%d]:%s for %s\n")), cmdResp.line, tmpTrim.toLocal8Bit().constData(), cmdResp.cmd.toLocal8Bit().constData());
-                        
+                        diag(qPrintable(tr("GOT[%d]: '%s' for '%s' (aggressive)\n")), cmdResp.line,
+                             tmpTrim.toLocal8Bit().constData(), cmdResp.cmd.trimmed().toLocal8Bit().constData());
 						//diag("DG Buffer %d", sendCount.size());
                         
 						emit setQueuedCommands(sendCount.size(), true);
@@ -584,8 +584,8 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
                     {
                         CmdResponse cmdResp = sendCount.takeFirst();
                         orig = cmdResp.cmd;
-                        diag(qPrintable(tr("GOT[%d]:%s for %s\n")), cmdResp.line, tmpTrim.toLocal8Bit().constData(), orig.toLocal8Bit().constData());
-                        
+                        diag(qPrintable(tr("GOT[%d]: '%s' for '%s' (aggressive)\n")), cmdResp.line,
+                             tmpTrim.toLocal8Bit().constData(), cmdResp.cmd.trimmed().toLocal8Bit().constData());
 						//diag("DG Buffer %d", sendCount.size());
                         
                         emit setQueuedCommands(sendCount.size(), true);
@@ -599,7 +599,7 @@ bool GCode::waitForOk(QString& result, int waitSec, bool sentReqForLocation, boo
                 }
                 else
                 {
-                    diag(qPrintable(tr("GOT:%s\n")), tmpTrim.toLocal8Bit().constData());
+                    diag(qPrintable(tr("GOT: '%s' (aggressive)\n")), tmpTrim.trimmed().toLocal8Bit().constData());
                     parseCoordinates(received, aggressive);
                 }
 
