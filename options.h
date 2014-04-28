@@ -47,6 +47,11 @@
 #define SETTINGS_GRBL_LINE_BUFFER_LEN       "grblLineBufferLen"
 #define SETTINGS_CHAR_SEND_DELAY_MS         "charSendDelayMs"
 
+#define SETTINGS_ENABLE_POS_REQ             "positionRequest"
+#define SETTINGS_TYPE_POS_REQ               "posRequestType"
+#define SETTINGS_POS_REQ_FREQ_SEC           "posReqFreqSec"
+
+
 namespace Ui {
 class Options;
 }
@@ -67,10 +72,11 @@ private slots:
     void toggleUseMm(bool useMm);
     void toggleLimitZRate(bool limitZ);
     void toggleFourAxis(bool four);
+    void togglePosReporting(bool usePosReporting);
 
 private:
     char getFourthAxisType();
-
+    QString getPosReqType();
 private:
     Ui::Options *ui;
     //variables

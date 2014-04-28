@@ -7,6 +7,7 @@ ControlParams::ControlParams()
             useAggressivePreload(false), filterFileCommands(false),
             reducePrecision(false), grblLineBufferLen(DEFAULT_GRBL_LINE_BUFFER_LEN),
             useFourAxis(false), charSendDelayMs(DEFAULT_CHAR_SEND_DELAY_MS),
-            fourthAxisType(FOURTH_AXIS_A)
+            fourthAxisType(FOURTH_AXIS_A), usePositionRequest(true),
+            alwaysRequestPosition(false), postionRequestTimeMilliSec(DEFAULT_POS_REQ_FREQ_MSEC)
 {
 }

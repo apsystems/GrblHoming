@@ -19,6 +19,7 @@ Options::Options(QWidget *parent) :
     connect(ui->checkBoxUseMmManualCmds,SIGNAL(toggled(bool)),this,SLOT(toggleUseMm(bool)));
     connect(ui->chkLimitZRate,SIGNAL(toggled(bool)),this,SLOT(toggleLimitZRate(bool)));
     connect(ui->checkBoxFourAxis,SIGNAL(toggled(bool)),this,SLOT(toggleFourAxis(bool)));
+    connect(ui->checkBoxPositionReportEnabled,SIGNAL(toggled(bool)),this,SLOT(togglePosReporting(bool)));
 
     QSettings settings;
 
@@ -110,6 +111,28 @@ Options::Options(QWidget *parent) :
     ui->checkBoxReducePrecForLongLines->setChecked(rPrecision == "true");
     ui->spinBoxGrblLineBufferSize->setValue(settings.value(SETTINGS_GRBL_LINE_BUFFER_LEN, DEFAULT_GRBL_LINE_BUFFER_LEN).value<int>());
     ui->spinBoxCharSendDelay->setValue(settings.value(SETTINGS_CHAR_SEND_DELAY_MS, DEFAULT_CHAR_SEND_DELAY_MS).value<int>());
+
+    QString enPosReq = settings.value(SETTINGS_ENABLE_POS_REQ, "true").value<QString>();
+    QString posReqType = settings.value(SETTINGS_TYPE_POS_REQ, PREQ_NOT_WHEN_MANUAL).value<QString>();
+    double posRateFreqSec = settings.value(SETTINGS_POS_REQ_FREQ_SEC, DEFAULT_POS_REQ_FREQ_SEC).value<double>();
+
+    ui->checkBoxPositionReportEnabled->setChecked(enPosReq == "true");
+    ui->doubleSpinBoxPosRequestFreqSec->setValue(posRateFreqSec);
+    if (posReqType == PREQ_NOT_WHEN_MANUAL)
+    {
+        ui->radioButton_ReqNotDuringManual->setChecked(true);
+    }
+    else if (posReqType == PREQ_ALWAYS)
+    {
+        ui->radioButton_ReqAlways->setChecked(true);
+    }
+    else
+    {
+        ui->radioButton_ReqNotDuringManual->setChecked(true);
+    }
+
+    togglePosReporting(enPosReq == "true");
+
 }
 
 Options::~Options()
@@ -142,6 +165,10 @@ void Options::accept()
     settings.setValue(SETTINGS_REDUCE_PREC_FOR_LONG_LINES, ui->checkBoxReducePrecForLongLines->isChecked());
     settings.setValue(SETTINGS_GRBL_LINE_BUFFER_LEN, ui->spinBoxGrblLineBufferSize->value());
     settings.setValue(SETTINGS_CHAR_SEND_DELAY_MS, ui->spinBoxCharSendDelay->value());
+
+    settings.setValue(SETTINGS_ENABLE_POS_REQ, ui->checkBoxPositionReportEnabled->isChecked());
+    settings.setValue(SETTINGS_TYPE_POS_REQ, getPosReqType());
+    settings.setValue(SETTINGS_POS_REQ_FREQ_SEC, ui->doubleSpinBoxPosRequestFreqSec->value());
 
     connect(this, SIGNAL(setSettings()), parentWidget(), SLOT(setSettings()));
 
@@ -192,6 +219,18 @@ void Options::toggleFourAxis(bool four)
 
 }
 
+void Options::togglePosReporting(bool usePosReporting)
+{
+    if (usePosReporting)
+    {
+        ui->groupBox_ReqPos->setEnabled(true);
+    }
+    else
+    {
+        ui->groupBox_ReqPos->setEnabled(false);
+    }
+}
+
 char Options::getFourthAxisType()
 {
     char type = FOURTH_AXIS_A;
@@ -227,4 +266,17 @@ char Options::getFourthAxisType()
     }
 /// <--
     return type;
+}
+
+QString Options::getPosReqType()
+{
+    if (ui->radioButton_ReqAlways->isChecked())
+    {
+        return PREQ_ALWAYS;
+    }
+    else if (ui->radioButton_ReqNotDuringManual->isChecked())
+    {
+        return PREQ_NOT_WHEN_MANUAL;
+    }
+    return PREQ_NOT_WHEN_MANUAL;
 }

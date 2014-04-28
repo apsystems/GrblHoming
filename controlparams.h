@@ -25,6 +25,9 @@ public:
     bool useFourAxis;
     int charSendDelayMs;
     char fourthAxisType;
+    bool usePositionRequest;
+    bool alwaysRequestPosition;
+    int postionRequestTimeMilliSec;
 };
 
 #endif // CONTROLPARAMS_H
