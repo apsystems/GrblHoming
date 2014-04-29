@@ -50,8 +50,9 @@
 #define FOURTH_AXIS_B   'B'
 #define FOURTH_AXIS_C   'C'
 
-#define PREQ_ALWAYS           "always"
-#define PREQ_NOT_WHEN_MANUAL  "notWhenManual"
+#define PREQ_ALWAYS                 "always"
+#define PREQ_ALWAYS_NO_IDLE_CHK     "alwaysWithoutIdleChk"
+#define PREQ_NOT_WHEN_MANUAL        "notWhenManual"
 
 #define DEFAULT_POS_REQ_FREQ_SEC    1.0
 #define DEFAULT_POS_REQ_FREQ_MSEC   1000

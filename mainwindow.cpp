@@ -1053,8 +1053,11 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
     controlParams.zJogRate = settings.value(SETTINGS_Z_JOG_RATE, DEFAULT_Z_JOG_RATE).value<double>();
     QString useMmManualCmds = settings.value(SETTINGS_USE_MM_FOR_MANUAL_CMDS, "true").value<QString>();
     controlParams.useMm = useMmManualCmds == "true";
-    QString useAggrPreload = settings.value(SETTINGS_USE_AGGRESSIVE_PRELOAD, "false").value<QString>();
+    QString useAggrPreload = settings.value(SETTINGS_USE_AGGRESSIVE_PRELOAD, "true").value<QString>();
     controlParams.useAggressivePreload = useAggrPreload == "true";
+    QString waitForJogToComplete = settings.value(SETTINGS_WAIT_FOR_JOG_TO_COMPLETE, "true").value<QString>();
+    controlParams.waitForJogToComplete = waitForJogToComplete == "true";
+
     QString useFourAxis = settings.value(SETTINGS_FOUR_AXIS_USE, "false").value<QString>();
     controlParams.useFourAxis = useFourAxis == "true";
     if (controlParams.useFourAxis)
@@ -1115,8 +1118,7 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
 
     QString enPosReq = settings.value(SETTINGS_ENABLE_POS_REQ, "true").value<QString>();
     controlParams.usePositionRequest = enPosReq == "true";
-    QString posReqType = settings.value(SETTINGS_TYPE_POS_REQ, PREQ_NOT_WHEN_MANUAL).value<QString>();
-    controlParams.alwaysRequestPosition = posReqType == PREQ_ALWAYS;
+    controlParams.positionRequestType = settings.value(SETTINGS_TYPE_POS_REQ, PREQ_ALWAYS_NO_IDLE_CHK).value<QString>();
     double posReqFreq = settings.value(SETTINGS_POS_REQ_FREQ_SEC, DEFAULT_POS_REQ_FREQ_SEC).value<double>();
     controlParams.postionRequestTimeMilliSec = static_cast<int>(posReqFreq) * 1000;
 

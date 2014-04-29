@@ -37,6 +37,7 @@ Options::Options(QWidget *parent) :
     QString enDebugLog = settings.value(SETTINGS_ENABLE_DEBUG_LOG, "true").value<QString>();
     // default aggressive preload behavior to 'true'!
     QString enAggressivePreload = settings.value(SETTINGS_USE_AGGRESSIVE_PRELOAD, "true").value<QString>();
+    QString waitForJogToComplete = settings.value(SETTINGS_WAIT_FOR_JOG_TO_COMPLETE, "true").value<QString>();
     QString useMmManualCmds = settings.value(SETTINGS_USE_MM_FOR_MANUAL_CMDS, "true").value<QString>();
     QString enFourAxis = settings.value(SETTINGS_FOUR_AXIS_USE, "false").value<QString>();
     char fourthAxisType = settings.value(SETTINGS_FOUR_AXIS_TYPE, FOURTH_AXIS_A).value<char>();
@@ -82,6 +83,7 @@ Options::Options(QWidget *parent) :
 
     ui->checkBoxEnableDebugLog->setChecked(enDebugLog == "true");
     ui->chkAggressivePreload->setChecked(enAggressivePreload == "true");
+    ui->checkBoxWaitForJogToComplete->setChecked(waitForJogToComplete == "true");
     ui->checkBoxUseMmManualCmds->setChecked(useMmManualCmds == "true");
     ui->checkBoxFourAxis->setChecked(enFourAxis == "true");
 
@@ -128,7 +130,7 @@ Options::Options(QWidget *parent) :
     }
     else
     {
-        ui->radioButton_ReqNotDuringManual->setChecked(true);
+        ui->radioButton_ReqAlwaysNoIdleCheck->setChecked(true);
     }
 
     togglePosReporting(enPosReq == "true");
@@ -150,6 +152,7 @@ void Options::accept()
     settings.setValue(SETTINGS_INVERSE_FOURTH, ui->chkInvFourth->isChecked());
     settings.setValue(SETTINGS_ENABLE_DEBUG_LOG, ui->checkBoxEnableDebugLog->isChecked());
     settings.setValue(SETTINGS_USE_AGGRESSIVE_PRELOAD, ui->chkAggressivePreload->isChecked());
+    settings.setValue(SETTINGS_WAIT_FOR_JOG_TO_COMPLETE, ui->checkBoxWaitForJogToComplete->isChecked());
     settings.setValue(SETTINGS_USE_MM_FOR_MANUAL_CMDS, ui->checkBoxUseMmManualCmds->isChecked());
     settings.setValue(SETTINGS_FOUR_AXIS_USE, ui->checkBoxFourAxis->isChecked());
     settings.setValue(SETTINGS_FOUR_AXIS_TYPE, getFourthAxisType());
@@ -278,5 +281,5 @@ QString Options::getPosReqType()
     {
         return PREQ_NOT_WHEN_MANUAL;
     }
-    return PREQ_NOT_WHEN_MANUAL;
+    return PREQ_ALWAYS_NO_IDLE_CHK;
 }

@@ -26,6 +26,7 @@
 #define SETTINGS_Z_JOG_RATE                 "zJogRate"
 #define SETTINGS_ENABLE_DEBUG_LOG           "debugLog"
 #define SETTINGS_USE_AGGRESSIVE_PRELOAD     "aggressivePreload"
+#define SETTINGS_WAIT_FOR_JOG_TO_COMPLETE   "waitForJogToComplete"
 #define SETTINGS_USE_MM_FOR_MANUAL_CMDS     "useMMForManualCommands"
 #define SETTINGS_ABSOLUTE_AFTER_AXIS_ADJ    "absCoordForManualAfterAxisAdj"
 #define SETTINGS_Z_RATE_LIMIT               "zRateLimit"

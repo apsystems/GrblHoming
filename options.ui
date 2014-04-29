@@ -33,9 +33,9 @@
      <property name="geometry">
       <rect>
        <x>10</x>
-       <y>120</y>
+       <y>146</y>
        <width>451</width>
-       <height>97</height>
+       <height>71</height>
       </rect>
      </property>
      <layout class="QGridLayout" name="gridLayout" columnstretch="2,1">
@@ -99,7 +99,7 @@
        <x>10</x>
        <y>10</y>
        <width>451</width>
-       <height>91</height>
+       <height>121</height>
       </rect>
      </property>
      <layout class="QVBoxLayout" name="verticalLayoutExtras">
@@ -114,6 +114,16 @@
        <widget class="QCheckBox" name="chkAggressivePreload">
         <property name="text">
          <string>Use aggressive preload strategy for Grbl</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QCheckBox" name="checkBoxWaitForJogToComplete">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Wait for each jog/manual command to complete (future feature)</string>
         </property>
        </widget>
       </item>
@@ -550,7 +560,7 @@
       <rect>
        <x>10</x>
        <y>10</y>
-       <width>461</width>
+       <width>481</width>
        <height>141</height>
       </rect>
      </property>
@@ -572,22 +582,29 @@
           <rect>
            <x>10</x>
            <y>20</y>
-           <width>441</width>
-           <height>80</height>
+           <width>461</width>
+           <height>93</height>
           </rect>
          </property>
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
            <widget class="QRadioButton" name="radioButton_ReqAlways">
             <property name="text">
-             <string>Always Request</string>
+             <string>Always Request (most reliable/slightly slower jogging)</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="radioButton_ReqAlwaysNoIdleCheck">
+            <property name="text">
+             <string>Always Request but without Idle Check (fast jog/manual operations)</string>
             </property>
            </widget>
           </item>
           <item>
            <widget class="QRadioButton" name="radioButton_ReqNotDuringManual">
             <property name="text">
-             <string>Not during manual control</string>
+             <string>Not during manual control (no position update during jog/manual)</string>
             </property>
            </widget>
           </item>

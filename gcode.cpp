@@ -199,7 +199,9 @@ void GCode::sendGcode(QString line)
 void GCode::pollPosWaitForIdle(bool checkMeasurementUnits)
 {
     if (controlParams.usePositionRequest
-            && (controlParams.alwaysRequestPosition || checkMeasurementUnits))
+            && (controlParams.positionRequestType == PREQ_ALWAYS_NO_IDLE_CHK
+                    || controlParams.positionRequestType == PREQ_ALWAYS
+                    || checkMeasurementUnits))
     {
         bool immediateQuit = false;
         for (int i = 0; i < 10000; i++)
@@ -1708,7 +1710,8 @@ QStringList GCode::doZRateLimit(QString inputLine, QString& msg, bool& xyRateSet
 void GCode::gotoXYZFourth(QString line)
 {
     bool queryPos = checkForGetPosStr(line);
-    if (!queryPos)
+    if (!queryPos && controlParams.usePositionRequest
+            && controlParams.positionRequestType == PREQ_ALWAYS)
         pollPosWaitForIdle(false);
 
     if (sendGcodeLocal(line))

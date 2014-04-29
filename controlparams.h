@@ -26,8 +26,9 @@ public:
     int charSendDelayMs;
     char fourthAxisType;
     bool usePositionRequest;
-    bool alwaysRequestPosition;
+    QString positionRequestType;
     int postionRequestTimeMilliSec;
+    bool waitForJogToComplete;
 };
 
 #endif // CONTROLPARAMS_H
