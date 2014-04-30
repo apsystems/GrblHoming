@@ -83,7 +83,8 @@ Options::Options(QWidget *parent) :
 
     ui->checkBoxEnableDebugLog->setChecked(enDebugLog == "true");
     ui->chkAggressivePreload->setChecked(enAggressivePreload == "true");
-    ui->checkBoxWaitForJogToComplete->setChecked(waitForJogToComplete == "true");
+    //ui->checkBoxWaitForJogToComplete->setChecked(waitForJogToComplete == "true");
+    ui->checkBoxWaitForJogToComplete->hide();
     ui->checkBoxUseMmManualCmds->setChecked(useMmManualCmds == "true");
     ui->checkBoxFourAxis->setChecked(enFourAxis == "true");
 
