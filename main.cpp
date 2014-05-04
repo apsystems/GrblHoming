@@ -142,7 +142,6 @@ void info(const char *str, ...)
     va_end(args);
 }
 
-#pragma GCC diagnostic ignored "-Wunused-parameter" push
 void diag(const char *str, ...)
 {
 #ifndef QT_DEBUG
@@ -157,7 +156,6 @@ void diag(const char *str, ...)
     }
 #endif
 }
-#pragma GCC diagnostic ignored "-Wunused-parameter" pop
 
 void logit(GC_LOG_TYPES type, const char *str, va_list args)
 {

@@ -127,16 +127,16 @@ void GrblDialog::Cancel()
     this->close();
 }
 
-#pragma GCC diagnostic ignored "-Wunused-parameter" push
 void GrblDialog::changeValues(int row, int col)
 {
+    Q_UNUSED(col);
+
     if ((ui->table->item(row,0)->text() != originalValues.at(row))
         && ui->table->item(row,0)->text().length() > 0)
     {
         changeFlags.replace(row, true);
     }
 }
-#pragma GCC diagnostic ignored "-Wunused-parameter" pop
 
 void GrblDialog::Ok()
 {

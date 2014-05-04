@@ -984,9 +984,10 @@ void GCode::sendStatusList(QStringList& listToSend)
 }
 
 // called once a second to capture any random strings that come from the controller
-#pragma GCC diagnostic ignored "-Wunused-parameter" push
 void GCode::timerEvent(QTimerEvent *event)
 {
+    Q_UNUSED(event);
+
     if (port.isPortOpen())
     {
         char tmp[BUF_SIZE + 1] = {0};
@@ -1019,7 +1020,6 @@ void GCode::timerEvent(QTimerEvent *event)
         sendStatusList(listToSend);
     }
 }
-#pragma GCC diagnostic ignored "-Wunused-parameter" pop
 
 void GCode::sendFile(QString path)
 {
