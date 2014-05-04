@@ -75,6 +75,7 @@ namespace Log4Qt
 	    mThreshold(Level::NULL_INT),
 	    mpRootLogger(logger(QString()))
 	{
+        Q_UNUSED(mHandleQtMessages);
 	    // Store root logger to allow rootLogger() to be const
 	}
 

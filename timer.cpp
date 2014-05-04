@@ -20,9 +20,10 @@ void Timer::resetTimer(bool timeIt)
         timer.start();
 }
 
-#pragma GCC diagnostic ignored "-Wunused-parameter" push
 void Timer::timerEvent(QTimerEvent *event)
 {
+    Q_UNUSED(event);
+
     if (timing)
     {
         int secs = timer.elapsed() / 1000;
@@ -32,4 +33,3 @@ void Timer::timerEvent(QTimerEvent *event)
         emit setRuntime(QString("%1:%2:%3").arg(hours, 2, 10, QLatin1Char('0')).arg(mins, 2, 10, QLatin1Char('0')).arg(secs, 2, 10, QLatin1Char('0')));
     }
 }
-#pragma GCC diagnostic ignored "-Wunused-parameter" pop

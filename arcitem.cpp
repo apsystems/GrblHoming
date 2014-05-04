@@ -88,12 +88,11 @@ void ArcItem::addToPath(QPainterPath& path)
     path.moveTo(screenX(ex), screenY(ey));
 }
 
-#pragma GCC diagnostic ignored "-Wunused-parameter" push
 void ArcItem::moveToFirst(QPainterPath& path)
 {
     // not applicable! generate error!
+    Q_UNUSED(path);
 }
-#pragma GCC diagnostic ignored "-Wunused-parameter" pop
 
 double ArcItem::getXScr()
 {

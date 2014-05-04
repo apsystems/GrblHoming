@@ -5,17 +5,15 @@ PointItem::PointItem(double x1, double y1)
 {
 }
 
-#pragma GCC diagnostic ignored "-Wunused-parameter" push
 void PointItem::moveToFirst(QPainterPath& path)
 {
+    Q_UNUSED(path);
 }
-#pragma GCC diagnostic ignored "-Wunused-parameter" pop
 
-#pragma GCC diagnostic ignored "-Wunused-parameter" push
 void PointItem::addToPath(QPainterPath& path)
 {
+    Q_UNUSED(path);
 }
-#pragma GCC diagnostic ignored "-Wunused-parameter" pop
 
 PosItem PointItem::computeExtents()
 {
