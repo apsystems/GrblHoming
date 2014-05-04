@@ -455,8 +455,8 @@ namespace Log4Qt
 		State state = LITERAL_STATE;
 		FormattingInfo formatting_info;
 		QString literal;
-		int converter_start;
-		int option_start;
+        int converter_start = 0;
+        int option_start = 0;
 		while (i < mPattern.length())
 		{
 	        // i points to the current character

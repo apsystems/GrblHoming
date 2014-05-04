@@ -186,8 +186,8 @@ namespace Log4Qt
 		QString key;
 		QString value;
 		QString *p_string = &key;
-		uint ucs;
-		int ucs_digits;
+        uint ucs = 0;
+        int ucs_digits = 0;
 		while (i < rProperty.length())
 		{
 	        // i points to the current character. 

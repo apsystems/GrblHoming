@@ -1171,7 +1171,7 @@ void MainWindow::receiveListOut(QString msg)
 
 void MainWindow::addToStatusList(bool in, QString msg)
 {
-    msg.trimmed();
+    msg = msg.trimmed();
     msg.remove('\r');
     msg.remove('\n');
 
@@ -1204,7 +1204,7 @@ void MainWindow::addToStatusList(QStringList& list)
     QStringList cleanList;
     foreach (QString msg, list)
     {
-        msg.trimmed();
+        msg = msg.trimmed();
         msg.remove('\r');
         msg.remove('\n');
 
