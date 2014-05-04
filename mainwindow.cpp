@@ -158,12 +158,15 @@ MainWindow::MainWindow(QWidget *parent) :
     runtimeTimerThread.start();
     gcodeThread.start();
 
-    ui->comboStep->addItem("0.01");
-    ui->comboStep->addItem("0.1");
-    ui->comboStep->addItem("1");
-    ui->comboStep->addItem("10");
-	ui->comboStep->addItem("100");
-    ui->comboStep->setCurrentText(jogStepStr);
+    int indexDesired = 0;
+    QString steps[] = { "0.01", "0.1", "1", "10", "100" };
+    for (unsigned int i = 0; i < (sizeof (steps) / sizeof (steps[0])); i++) {
+        ui->comboStep->addItem(steps[i]);
+        if (jogStepStr == steps[i]) {
+            indexDesired = i;
+        }
+    }
+    ui->comboStep->setCurrentIndex(indexDesired);
 
 	// Don't use - it will not show horizontal scrollbar for small app size
     //ui->statusList->setUniformItemSizes(true);
@@ -1095,7 +1098,7 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
         ui->lblFourth->show();
         ui->lblFourth->setAttribute(Qt::WA_DontShowOnScreen, false);
         ui->lblFourth->setText(QString(controlParams.fourthAxisType));
-        ui->lblFourthJog->setText(QString(controlParams.fourthAxisType));
+        ui->lblFourthJog->setText(QString(controlParams.fourthAxisType) + " " + tr("Jog"));
     }
 
     QString zRateLimit = settings.value(SETTINGS_Z_RATE_LIMIT, "false").value<QString>();
