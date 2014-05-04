@@ -103,6 +103,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->verticalSliderZJog,SIGNAL(sliderPressed()),this,SLOT(zJogSliderPressed()));
     connect(ui->verticalSliderZJog,SIGNAL(sliderReleased()),this,SLOT(zJogSliderReleased()));
     connect(ui->pushButtonRefreshPos,SIGNAL(clicked()),this,SLOT(refreshPosition()));
+    connect(ui->comboStep,SIGNAL(currentIndexChanged(QString)),this,SLOT(comboStepChanged(QString)));
 
     connect(this, SIGNAL(sendFile(QString)), &gcode, SLOT(sendFile(QString)));
     connect(this, SIGNAL(openPort(QString,QString)), &gcode, SLOT(openPort(QString,QString)));
@@ -157,16 +158,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
     runtimeTimerThread.start();
     gcodeThread.start();
-
-    int indexDesired = 0;
-    QString steps[] = { "0.01", "0.1", "1", "10", "100" };
-    for (unsigned int i = 0; i < (sizeof (steps) / sizeof (steps[0])); i++) {
-        ui->comboStep->addItem(steps[i]);
-        if (jogStepStr == steps[i]) {
-            indexDesired = i;
-        }
-    }
-    ui->comboStep->setCurrentIndex(indexDesired);
 
 	// Don't use - it will not show horizontal scrollbar for small app size
     //ui->statusList->setUniformItemSizes(true);
@@ -997,6 +988,16 @@ void MainWindow::readSettings()
     jogStepStr = settings.value(SETTINGS_JOG_STEP, "1").value<QString>();
     jogStep = jogStepStr.toFloat();
 
+    int indexDesired = 0;
+    QString steps[] = { "0.01", "0.1", "1", "10", "100" };
+    for (unsigned int i = 0; i < (sizeof (steps) / sizeof (steps[0])); i++) {
+        ui->comboStep->addItem(steps[i]);
+        if (jogStepStr == steps[i]) {
+            indexDesired = i;
+        }
+    }
+    ui->comboStep->setCurrentIndex(indexDesired);
+
     settings.beginGroup( "mainwindow" );
 
     restoreGeometry(settings.value( "geometry", saveGeometry() ).toByteArray());
@@ -1601,4 +1602,10 @@ void MainWindow::setLcdState(bool valid)
 void MainWindow::refreshPosition()
 {
     gotoXYZFourth(REQUEST_CURRENT_POS);
+}
+
+void MainWindow::comboStepChanged(const QString& text)
+{
+    jogStepStr = text;
+    jogStep = jogStepStr.toFloat();
 }

@@ -166,6 +166,7 @@ private slots:
     void setQueuedCommands(int commandCount, bool running);
     void setLcdState(bool valid);
     void refreshPosition();
+    void comboStepChanged(const QString& text);
 
 private:
     // enums
