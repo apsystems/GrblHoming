@@ -847,27 +847,27 @@ Vos paramètres ont été modifiés pour permettre ce mode. Pourquoi? Parce qu&a
     <message>
         <location filename="../mainwindow.cpp" line="1106"/>
         <source>A Jog</source>
-        <translation type="unfinished"></translation>
+        <translation>pilote A</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1108"/>
         <source>B Jog</source>
-        <translation type="unfinished"></translation>
+        <translation>pilote B</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1112"/>
         <source>U Jog</source>
-        <translation type="unfinished"></translation>
+        <translation>pilote U</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1114"/>
         <source>V Jog</source>
-        <translation type="unfinished"></translation>
+        <translation>pilote V</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1116"/>
         <source>W Jog</source>
-        <translation type="unfinished"></translation>
+        <translation>pilote W</translation>
     </message>
     <message>
         <location filename="../mainwindow.cpp" line="1339"/>
