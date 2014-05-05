@@ -697,6 +697,7 @@ GRBL</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1430"/>
+        <location filename="../mainwindow.cpp" line="1103"/>
         <source>Z Jog</source>
         <translation>pilote Z</translation>
     </message>
@@ -723,6 +724,7 @@ GRBL</translation>
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1282"/>
+        <location filename="../mainwindow.cpp" line="1110"/>
         <source>C Jog</source>
         <translation>pilote C</translation>
     </message>
@@ -843,17 +845,37 @@ Vos paramètres ont été modifiés pour permettre ce mode. Pourquoi? Parce qu&a
         <translation>NC (*.nc);;Tous fichiers (*.*)</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1102"/>
-        <source>Jog</source>
-        <translation>pilote</translation>
+        <location filename="../mainwindow.cpp" line="1106"/>
+        <source>A Jog</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1323"/>
+        <location filename="../mainwindow.cpp" line="1108"/>
+        <source>B Jog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1112"/>
+        <source>U Jog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1114"/>
+        <source>V Jog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1116"/>
+        <source>W Jog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1339"/>
         <source>Spindle On.</source>
         <translation>Marche broche</translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1328"/>
+        <location filename="../mainwindow.cpp" line="1344"/>
         <source>Spindle Off.</source>
         <translation>Arrêt broche</translation>
     </message>

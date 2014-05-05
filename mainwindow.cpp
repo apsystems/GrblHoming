@@ -1099,7 +1099,23 @@ void MainWindow::updateSettingsFromOptionDlg(QSettings& settings)
         ui->lblFourth->show();
         ui->lblFourth->setAttribute(Qt::WA_DontShowOnScreen, false);
         ui->lblFourth->setText(QString(controlParams.fourthAxisType));
-        ui->lblFourthJog->setText(QString(controlParams.fourthAxisType) + " " + tr("Jog"));
+
+        QString axisJog(tr("Z Jog"));// not correct, but a default placeholder we have a translation for already
+        char axis = controlParams.fourthAxisType;
+        if (axis == FOURTH_AXIS_A)
+            axisJog = tr("A Jog");
+        else if (axis == FOURTH_AXIS_B)
+            axisJog = tr("B Jog");
+        else if (axis == FOURTH_AXIS_C)
+            axisJog = tr("C Jog");
+        else if (axis == FOURTH_AXIS_U)
+            axisJog = tr("U Jog");
+        else if (axis == FOURTH_AXIS_V)
+            axisJog = tr("V Jog");
+        else if (axis == FOURTH_AXIS_W)
+            axisJog = tr("W Jog");
+
+        ui->lblFourthJog->setText(axisJog);
     }
 
     QString zRateLimit = settings.value(SETTINGS_Z_RATE_LIMIT, "false").value<QString>();

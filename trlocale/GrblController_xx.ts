@@ -638,6 +638,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1430"/>
+        <location filename="../mainwindow.cpp" line="1103"/>
         <source>Z Jog</source>
         <translation type="unfinished"></translation>
     </message>
@@ -664,6 +665,7 @@
     </message>
     <message>
         <location filename="../mainwindow.ui" line="1282"/>
+        <location filename="../mainwindow.cpp" line="1110"/>
         <source>C Jog</source>
         <translation type="unfinished"></translation>
     </message>
@@ -782,17 +784,37 @@ What does this mean to you? Arc commands will now run smoother and faster than b
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1102"/>
-        <source>Jog</source>
+        <location filename="../mainwindow.cpp" line="1106"/>
+        <source>A Jog</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1323"/>
+        <location filename="../mainwindow.cpp" line="1108"/>
+        <source>B Jog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1112"/>
+        <source>U Jog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1114"/>
+        <source>V Jog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1116"/>
+        <source>W Jog</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../mainwindow.cpp" line="1339"/>
         <source>Spindle On.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../mainwindow.cpp" line="1328"/>
+        <location filename="../mainwindow.cpp" line="1344"/>
         <source>Spindle Off.</source>
         <translation type="unfinished"></translation>
     </message>
