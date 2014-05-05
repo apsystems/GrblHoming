@@ -644,19 +644,19 @@ void MainWindow::incZ()
 void MainWindow::decX()
 {
     disableAllButtons();
-    emit axisAdj('X', jogStep, invX, absoluteAfterAxisAdj, 0);
+    emit axisAdj('X', -jogStep, invX, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::decY()
 {
     disableAllButtons();
-    emit axisAdj('Y', jogStep, invY, absoluteAfterAxisAdj, 0);
+    emit axisAdj('Y', -jogStep, invY, absoluteAfterAxisAdj, 0);
 }
 
 void MainWindow::decZ()
 {
     disableAllButtons();
-    emit axisAdj('Z', jogStep, invZ, absoluteAfterAxisAdj, sliderZCount++);
+    emit axisAdj('Z', -jogStep, invZ, absoluteAfterAxisAdj, sliderZCount++);
 }
 
 void MainWindow::decFourth()
