@@ -194,13 +194,13 @@
         <location filename="../gcode.cpp" line="587"/>
         <source>GOT[%d]: &apos;%s&apos; for &apos;%s&apos; (aggressive)
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Vous avez :[%d]: &apos;%s&apos; pour &apos;%s&apos; (aggressif)</translation>
     </message>
     <message>
         <location filename="../gcode.cpp" line="602"/>
         <source>GOT: &apos;%s&apos; (aggressive)
 </source>
-        <translation type="unfinished"></translation>
+        <translation>Vous avez : &apos;%s&apos; (aggressif)</translation>
     </message>
     <message>
         <location filename="../gcode.cpp" line="905"/>
