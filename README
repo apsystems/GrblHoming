@@ -20,6 +20,15 @@ build from source.
 Details on how to do this can be found here:
 http://zapmaker.org/
 
+V3.6.1
+Executable release rollup
+
+IMPORTANT: Manual/Jog control defaults to new mode which doesn't update the position.
+This was done to ensure that jog motions are as fast as possible. However, if you want
+to have the original 3.5.1 and earlier behavior, go to Tools | Options | Display
+and change radio button to "Always Request but without Idle Check". Sending files
+still updates position, it is only manual/jog that does not.
+
 V3.6
 Enhancements
 - Options dialog is now tabbed to better fit widgets
