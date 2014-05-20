@@ -662,6 +662,7 @@ void MainWindow::decZ()
 void MainWindow::decFourth()
 {
 /// LETARTARE 25-04-2014
+/*  May 20, 2014 : removing this absurd limit  !
 	char four = controlParams.fourthAxisType;
 	if (four == FOURTH_AXIS_A || four == FOURTH_AXIS_B || four == FOURTH_AXIS_C) {
 		float actual_position = ui->lcdWorkNumberFourth->value() ;
@@ -675,11 +676,10 @@ void MainWindow::decFourth()
 		}
 	}
 /// <--
-	else  {
+	else  
+*/
 		disableAllButtons();
-		emit axisAdj(controlParams.fourthAxisType, -jogStep, invFourth, absoluteAfterAxisAdj, 0);
-	}
-
+		emit axisAdj(controlParams.fourthAxisType, -jogStep, invFourth, absoluteAfterAxisAdj, 0);	
 }
 void MainWindow::incFourth()
 {
