@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package>
+    <DisplayName>Grbl Controller app</DisplayName>
+    <Description>You may need to run app as root to access serial port</Description>
+    <Version>3.6.1</Version>
+    <ReleaseDate>2014-06-08</ReleaseDate>
+    <Licenses>
+        <License name="License" file="license.txt" />
+    </Licenses>
+    <Default>true</Default>
+    
+</Package>
