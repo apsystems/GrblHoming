@@ -1,5 +1,17 @@
                         ---- GrblController ----
 
+********************************************************************************
+Since July 2014, we no longer have any news Zpamaker !!
+It was he who ensured the development for Linux, Mac OX, Win and the provision
+of various executables on his personal website.
+
+Pending his return, I can offer you experimental versions include a 3D viewer
+in the directory : https://github.com/zapmaker/GrblHoming/tree/Letartare
+I unfortunately only provides an executable for Win32.
+
+LETARTARE
+********************************************************************************
+
 GrblController is a gcode sender, monitor and homing tool for GRBL for 
 Mac, Windows and Linux systems written using the Qt Desktop Framework in C++.
 
