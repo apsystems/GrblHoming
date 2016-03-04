@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Installer>
+    <Name>Grbl Controller</Name>
+    <Version>3.6.1</Version>
+    <Title>Grbl Controller Installer</Title>
+    <Publisher>zapmaker</Publisher>
+    <ProductUrl>http://zapmaker.org</ProductUrl>
+    <StartMenuDir>Grbl Controller</StartMenuDir>
+    <TargetDir>@HomeDir@/GrblController</TargetDir>
+</Installer>

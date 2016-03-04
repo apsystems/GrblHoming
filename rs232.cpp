@@ -1,233 +1,285 @@
+/****************************************************************
+ * rs232.cpp
+ * GrblHoming - zapmaker fork on github
+ *
+ * 15 Nov 2012
+ * GPL License (see LICENSE file)
+ * Software is provided AS-IS
+ ****************************************************************/
+
 #include "rs232.h"
+#include <QObject>
 
 RS232::RS232()
+    : port(NULL), detectedEOL(0), charSendDelayMs(DEFAULT_CHAR_SEND_DELAY_MS)
 {
 }
-#ifdef Q_WS_X11
 
-int Cport[12],
-    error;
-
-struct termios new_port_settings,
-       old_port_settings[22];
-
-char comports[12][13]={"/dev/ttyUSB0","/dev/ttyUSB1","/dev/ttyUSB2","/dev/ttyUSB3","/dev/ttyUSB4",
-                       "/dev/ttyUSB5","/dev/ttyACM0","/dev/ttyACM1","/dev/ttyACM2","/dev/ttyACM3",
-                       "/dev/ttyACM4","/dev/ttyACM5"};
-
-
-int RS232::OpenComport(int comport_number)
+bool RS232::OpenComport(QString commPortStr, QString baudRate)
 {
-  int baudr= B9600;
-  if((comport_number>27)||(comport_number<0))
-  {
-    printf("illegal comport number\n");
-    return(1);
-  }
-  //baudr = B9600;
+    if (port != NULL)
+        CloseComport();
 
-  Cport[comport_number] = open(comports[comport_number], O_RDWR | O_NOCTTY | O_NDELAY);
-  if(Cport[comport_number]==-1)
-  {
-    perror("unable to open comport ");
-    return(1);
-  }
+    bool ok;
+    BaudRateType baud = (BaudRateType)baudRate.toInt(&ok);
+    if (!ok)
+    {
+        baud = BAUD9600;
+    }
+    else
+    {
+        int possibleBaudRates[] = {BAUD110,BAUD300,BAUD600,BAUD1200,BAUD2400,BAUD4800,BAUD9600,BAUD19200,BAUD38400,BAUD57600,BAUD115200};
+        int pbrCount = sizeof possibleBaudRates / sizeof possibleBaudRates[0];
 
-  error = tcgetattr(Cport[comport_number], old_port_settings + comport_number);
-  if(error==-1)
-  {
-    close(Cport[comport_number]);
-    perror("unable to read portsettings ");
-    return(1);
-  }
-  memset(&new_port_settings, 0, sizeof(new_port_settings));  /* clear the new struct */
+        bool found = false;
+        for (int i = 0; i < pbrCount; i++)
+        {
+            if (baud == possibleBaudRates[i])
+            {
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            baud = BAUD9600;
+    }
 
-  new_port_settings.c_cflag = baudr | CS8 | CLOCAL | CREAD;
-  new_port_settings.c_iflag = IGNPAR;
-  new_port_settings.c_oflag = 0;
-  new_port_settings.c_lflag = 0;
-  new_port_settings.c_cc[VMIN] = 0;      /* block untill n bytes are received */
-  new_port_settings.c_cc[VTIME] = 0;     /* block untill a timer expires (n * 100 mSec.) */
-  error = tcsetattr(Cport[comport_number], TCSANOW, &new_port_settings);
-  if(error==-1)
-  {
-    close(Cport[comport_number]);
-    perror("unable to adjust portsettings ");
-    return(1);
-  }
+    PortSettings settings = {baud, DATA_8, PAR_NONE, STOP_1, FLOW_OFF, 10};
 
-  return(0);
+    port = new QextSerialPort(commPortStr, settings, QextSerialPort::Polling);
+
+    port->open(QIODevice::ReadWrite);
+
+    return port->isOpen();
 }
 
 
-int RS232::PollComport(int comport_number, char *buf, int size)
+int RS232::PollComport(char *buf, int size)
 {
-  int n;
+    if (port == NULL || !port->isOpen())
+        return 0;
 
-#ifndef __STRICT_ANSI__                       /* __STRICT_ANSI__ is defined when the -ansi option is used for gcc */
-  if(size>SSIZE_MAX)  size = (int)SSIZE_MAX;  /* SSIZE_MAX is defined in limits.h */
-#else
-  if(size>4096)  size = 4096;
-#endif
+    int n = port->bytesAvailable();
+    if (!n)
+        return 0;
 
-  n = read(Cport[comport_number], buf, size);
-
-  return(n);
-}
-
-
-int RS232::SendBuf(int comport_number, char *buf, int size)
-{
-  return(write(Cport[comport_number], buf, size));
-}
-
-
-void RS232::CloseComport(int comport_number)
-{
-  close(Cport[comport_number]);
-  tcsetattr(Cport[comport_number], TCSANOW, old_port_settings + comport_number);
-}
-
-void RS232::Reset(int comport_number) //still to test
-{
-    //OpenComport(comport_number);
-    int mcr=!TIOCM_DTR;
-    ioctl(Cport[comport_number],TIOCMSET,&mcr);
-    //CloseComport(comport_number);
-}
-
-#else
-
-HANDLE Cport[16];
-
-char comports[16][10]={"\\\\.\\COM1",  "\\\\.\\COM2",  "\\\\.\\COM3",  "\\\\.\\COM4",
-                       "\\\\.\\COM5",  "\\\\.\\COM6",  "\\\\.\\COM7",  "\\\\.\\COM8",
-                       "\\\\.\\COM9",  "\\\\.\\COM10", "\\\\.\\COM11", "\\\\.\\COM12",
-                       "\\\\.\\COM13", "\\\\.\\COM14", "\\\\.\\COM15", "\\\\.\\COM16"};
-
-char baudr[64];
-
-int RS232::OpenComport(int comport_number)
-{
-  if((comport_number>15)||(comport_number<0))
-  {
-    printf("illegal comport number\n");
-    return(1);
-  }
-  strcpy_s(baudr, "baud=9600 data=8 parity=N stop=1");
-
-  Cport[comport_number] = CreateFileA(comports[comport_number],
-                      GENERIC_READ|GENERIC_WRITE,
-                      0,
-                      0,
-                      OPEN_EXISTING,
-                      FILE_ATTRIBUTE_NORMAL,
-                      0);
-
-  if(Cport[comport_number]==INVALID_HANDLE_VALUE)
-  {
-    printf("unable to open comport\n");
-    return(1);
-  }
-
-  DCB port_settings;
-  memset(&port_settings, 0, sizeof(port_settings));  /* clear the new struct  */
-  port_settings.DCBlength = sizeof(port_settings);
-
-  if (!GetCommState(Cport[comport_number], &port_settings))
-
-  {
-      printf("Error getting state\n");
-      CloseHandle(Cport[comport_number]);
-      return(1);
-  }
-
-  /*if(!BuildCommDCBA(baudr, &port_settings))
-  {
-    printf("unable to set comport dcb settings\n");
-    CloseHandle(Cport[comport_number]);
-    return(1);
-  }*/
-
-  port_settings.BaudRate=CBR_9600;
-  port_settings.ByteSize=8;
-  port_settings.StopBits=ONESTOPBIT;
-  port_settings.Parity=NOPARITY;
-  port_settings.fDtrControl=DTR_CONTROL_ENABLE;
-
-  if(!SetCommState(Cport[comport_number], &port_settings))
-  {
-    printf("unable to set comport cfg settings\n");
-    CloseHandle(Cport[comport_number]);
-    return(1);
-  }
-
-  COMMTIMEOUTS Cptimeouts={0};
-
-  Cptimeouts.ReadIntervalTimeout         = 250;
-  Cptimeouts.ReadTotalTimeoutMultiplier  = 0;
-  Cptimeouts.ReadTotalTimeoutConstant    = 250;
-  Cptimeouts.WriteTotalTimeoutMultiplier = 0;
-  Cptimeouts.WriteTotalTimeoutConstant   = 200;
-
-  if(!SetCommTimeouts(Cport[comport_number], &Cptimeouts))
-  {
-      QMessageBox(QMessageBox::Warning,"Error","Could not read port.",QMessageBox::Ok).exec();
-      printf("unable to set comport time-out settings\n");
-      CloseHandle(Cport[comport_number]);
-      return(1);
-  }
-
-  return(0);
-}
-
-int RS232::PollComport(int comport_number, char *buf, int size)
-{
-  DWORD n;
-  int b;
-
-  if(size>4096)  size = 4096;
-
-/* added the void pointer cast, otherwise gcc will complain about */
-/* "warning: dereferencing type-punned pointer will break strict aliasing rules" */
-
-  ReadFile(Cport[comport_number], buf, size, &n, NULL);
-  //ReadFile(Cport[comport_number], buf, size, &n, 0);
-  b=int(n);
-  return(b);
-}
-
-int RS232::SendBuf(int comport_number, char *buf, int size)
-{
-  int n;
-
-  if(WriteFile(Cport[comport_number], buf, size, (LPDWORD)((void *)&n), NULL))
-  {
+    n = port->read(buf, size);
     return(n);
-  }
-
-  return(-1);
 }
 
-void RS232::CloseComport(int comport_number)
+// This is different than QIoDevice.readline() - this method only returns data if it has a full line in the
+// input buffer by peeking at the buffer. It never removes items unless it can remove a full line.
+int RS232::PollComportLine(char *buf, int size)
 {
-  CloseHandle(Cport[comport_number]);
+    if (port == NULL || !port->isOpen())
+        return 0;
+
+    int n = port->bytesAvailable();
+    if (!n)
+        return 0;
+
+    n = port->peek(buf, size);
+    if (n <= 0)
+        return n;
+
+    //printf("PEEK: %d out of %d\n", n, size);
+    if (detectedEOL == 0)
+    {
+        // algorithm assumes we received both eol chars if there are two in this peek
+        int pos = 0;
+        char firstEOL = 0;
+        char secondEOL = 0;
+        for (int i = 0; i < n; i++)
+        {
+            char b = buf[i];
+            if (b == '\n' || b == '\r')
+            {
+                if (firstEOL == 0)
+                {
+                    firstEOL = b;
+                    pos = i;
+                }
+                else if ((pos + 1) == i)
+                {
+                    secondEOL = b;
+                    break;
+                }
+                else
+                    break;
+            }
+        }
+
+        if (firstEOL != 0)
+        {
+            if (secondEOL != 0)
+            {
+                detectedEOL = secondEOL;
+                detectedLineFeed = firstEOL;
+                detectedLineFeed += secondEOL;
+            }
+            else
+            {
+                detectedEOL = firstEOL;
+                detectedLineFeed = firstEOL;
+            }
+        }
+    }
+
+    int toRead = 0;
+    if (detectedEOL)
+    {
+        for (int i = 0; i < n; i++)
+        {
+            char b = buf[i];
+            if (b == detectedEOL)
+            {
+                toRead = i + 1;
+                break;
+            }
+        }
+    }
+
+    // let's hope the serial subsystem's read buffer is big enough to find a linefeed
+    if (!toRead)
+    {
+        return 0;
+    }
+
+    n = port->read(buf, toRead);
+
+    return n;
 }
 
-void RS232::Reset(int comport_number) //Tested 24/02/12
+int RS232::SendBuf(const char *buf, int size)
 {
-    //OpenComport(comport_number);
-    DWORD dtr=5;
-    EscapeCommFunction(Cport[comport_number],dtr);
-    //CloseComport(comport_number);
-}
+    if (port == NULL || !port->isOpen())
+        return 0;
+/// LETARTARE  for test
+//err(buf) ;
+    if (size <= 0)
+    {
+        err( qPrintable(QObject::tr("Unexpected: Told to send %d bytes\n")), size) ;
+        return 1;
+    }
 
+    char b[300] = {0};
+    memcpy(b, buf, size);
+#ifdef DIAG
+    printf("Sending to port %s [%s]:", port->portName().toLocal8Bit().constData(), b);
+    for (int x= 0; x < size; x++)
+    {
+        printf("%02X ", buf[x]);
+    }
+    printf("\n");
+    fflush(stdout);
 #endif
 
-void RS232::flush(int comport_number)
+    port->waitForBytesWritten(-1);// this usually doesn't do anything, but let's put it here in case
+
+#if 1
+    // On very fast PCs running Windows we have to slow down the sending of bytes to grbl
+    // because grbl loses bytes due to its interrupt service routine (ISR) taking too many clock
+    // cycles away from serial handling.
+    int result = 0;
+    for (int i = 0; i < size; i++)
+    {
+        result = port->write(&buf[i], 1);
+        if (result == 0)
+        {
+            err("Unable to write bytes to port probably due to outgoing queue full. Write data lost!");
+            break;
+        }
+        else if (result == -1)
+        {
+            err("Error writing to port. Write data lost!");
+            result = 0;
+            break;
+        }
+
+        if (charSendDelayMs > 0)
+        {
+            SLEEP(charSendDelayMs);
+        }
+    }
+
+#else
+    // DO NOT RUN THIS CODE
+    int result = port->write(buf, size);
+    if (result == 0)
+    {
+        err("Unable to write bytes to port probably due to outgoing queue full. Write data lost!");
+        /* the following code doesn't seem to help. Generate an error instead
+        int limit = 0;
+        while (!result && limit < 100)
+        {
+            SLEEP(100);
+            result = port->write(buf, size);
+            limit++;
+        }
+
+        if (!result)
+        {
+            err("Unable to write %d bytes to port!", size);
+        }
+        else if (result != size)
+            err("Unexpected: Retry send wrote %d bytes out of expected %d\n", result, size);
+        */
+    }
+    else if (result == -1)
+    {
+        err("Error writing to port. Write data lost!");
+        result = 0;
+    }
+#endif
+    return result;
+}
+
+
+void RS232::CloseComport()
+{
+    if (port != NULL)
+    {
+        port->close();
+        delete port;
+        port = NULL;
+    }
+}
+
+void RS232::Reset() //still to test
+{
+    if (port != NULL)
+        port->reset();
+}
+
+void RS232::flush()
 {
     int n=1;
     char buf[255];
-    while(n>0)
-        n=PollComport(comport_number,buf,255);
+
+    while (n > 0)
+        n = PollComport(buf,255);
+}
+
+bool RS232::isPortOpen()
+{
+    if (port == NULL)
+        return false;
+
+    return port->isOpen();
+}
+
+QString RS232::getDetectedLineFeed()
+{
+    return detectedLineFeed;
+}
+
+int RS232::bytesAvailable()
+{
+    int n = port->bytesAvailable();
+    return n;
+}
+
+void RS232::setCharSendDelayMs(int csd)
+{
+    charSendDelayMs = csd;
 }

@@ -6,20 +6,26 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>322</width>
-    <height>343</height>
+    <width>440</width>
+    <height>438</height>
    </rect>
   </property>
+  <property name="sizePolicy">
+   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
   <property name="windowTitle">
-   <string>Dialog</string>
+   <string>Grbl Settings</string>
   </property>
   <widget class="QPushButton" name="btnOk">
    <property name="geometry">
     <rect>
-     <x>220</x>
-     <y>40</y>
+     <x>50</x>
+     <y>390</y>
      <width>75</width>
-     <height>23</height>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
@@ -29,117 +35,60 @@
   <widget class="QPushButton" name="btnCancel">
    <property name="geometry">
     <rect>
-     <x>220</x>
-     <y>80</y>
+     <x>280</x>
+     <y>390</y>
      <width>75</width>
-     <height>23</height>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
     <string>Close</string>
    </property>
   </widget>
-  <widget class="QTableWidget" name="tableWidget">
+  <widget class="QTableWidget" name="table">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>10</x>
      <y>20</y>
-     <width>160</width>
-     <height>301</height>
+     <width>411</width>
+     <height>351</height>
     </rect>
    </property>
    <property name="sizePolicy">
-    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-     <horstretch>0</horstretch>
+    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+     <horstretch>10</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
    </property>
-   <property name="verticalScrollBarPolicy">
-    <enum>Qt::ScrollBarAlwaysOff</enum>
+   <property name="inputMethodHints">
+    <set>Qt::ImhNone</set>
    </property>
-   <property name="horizontalScrollBarPolicy">
-    <enum>Qt::ScrollBarAlwaysOff</enum>
+   <property name="autoScrollMargin">
+    <number>30</number>
    </property>
-   <property name="autoScroll">
+   <property name="cornerButtonEnabled">
     <bool>true</bool>
-   </property>
-   <property name="rowCount">
-    <number>10</number>
    </property>
    <property name="columnCount">
     <number>2</number>
    </property>
-   <attribute name="horizontalHeaderVisible">
-    <bool>false</bool>
+   <attribute name="horizontalHeaderCascadingSectionResizes">
+    <bool>true</bool>
    </attribute>
    <attribute name="horizontalHeaderDefaultSectionSize">
-    <number>100</number>
+    <number>40</number>
    </attribute>
-   <attribute name="verticalHeaderVisible">
-    <bool>false</bool>
+   <attribute name="horizontalHeaderMinimumSectionSize">
+    <number>40</number>
    </attribute>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
-   <row/>
+   <attribute name="horizontalHeaderStretchLastSection">
+    <bool>true</bool>
+   </attribute>
+   <attribute name="verticalHeaderDefaultSectionSize">
+    <number>30</number>
+   </attribute>
    <column/>
    <column/>
-   <item row="0" column="1">
-    <property name="text">
-     <string>steps/mm X</string>
-    </property>
-   </item>
-   <item row="1" column="1">
-    <property name="text">
-     <string>steps/mm Y</string>
-    </property>
-   </item>
-   <item row="2" column="1">
-    <property name="text">
-     <string>steps/mm Z</string>
-    </property>
-   </item>
-   <item row="3" column="1">
-    <property name="text">
-     <string>microseconds step pulse</string>
-    </property>
-   </item>
-   <item row="4" column="1">
-    <property name="text">
-     <string>mm/min default feed rate</string>
-    </property>
-   </item>
-   <item row="5" column="1">
-    <property name="text">
-     <string>mm/min default seek rate</string>
-    </property>
-   </item>
-   <item row="6" column="1">
-    <property name="text">
-     <string>mm/arc segment</string>
-    </property>
-   </item>
-   <item row="7" column="1">
-    <property name="text">
-     <string>step port invert mask</string>
-    </property>
-   </item>
-   <item row="8" column="1">
-    <property name="text">
-     <string>acceleration in mm/sec^2</string>
-    </property>
-   </item>
-   <item row="9" column="1">
-    <property name="text">
-     <string>cornering junction deviation in mm</string>
-    </property>
-   </item>
   </widget>
  </widget>
  <resources/>
